@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <random>
 
-template<class Container, class value_type = typename Container::value_type>
+template<class Container>
 void push_back_benchmark() noexcept {
     Container c;
 
@@ -15,7 +15,7 @@ void push_back_benchmark() noexcept {
     }
 }
 
-template<class Container, class value_type = typename Container::value_type>
+template<class Container>
 void push_front_benchmark() noexcept {
     Container c;
 
@@ -24,7 +24,19 @@ void push_front_benchmark() noexcept {
     }
 }
 
-template<class Container, class value_type = typename Container::value_type, class iterator = typename Container::iterator>
+template<class Container>
+void push_and_pop_benchmark() noexcept {
+    Container c;
+
+    for (int i = 0; i < 100000; ++i) {
+        c.push_back(i);
+        c.push_front(i);
+        c.pop_back();
+        c.pop_front();
+    }
+}
+
+template<class Container, class iterator = typename Container::iterator>
 void insert_benchmark() noexcept {
     Container c;
 

@@ -15,7 +15,7 @@
 NAMESPACE_CIEL_BEGIN
 
 // This class is used in std::vector implementation and it's like a double-ended vector.
-// When std::vector inserts beyond it's capacity, it defines a temp split_buffer to store insertions
+// When std::vector inserts beyond its capacity, it defines a temp split_buffer to store insertions
 // and push vector's elements into two sides, and swap out at last,
 // so that it can keep basic exception safety.
 // We complete its functionality so that it can be used as a normal container.
@@ -33,7 +33,7 @@ template<class, size_t, class>
 class small_vector;
 
 template<class T, class Allocator = std::allocator<T>>
-class split_buffer : public Allocator {
+class split_buffer : private Allocator {
 
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
@@ -1129,6 +1129,7 @@ public:
     auto swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value ||
                                             alloc_traits::is_always_equal::value) -> void {
         using std::swap;
+
         swap(begin_cap_, other.begin_cap_);
         swap(begin_, other.begin_);
         swap(end_, other.end_);
@@ -1139,7 +1140,7 @@ public:
 };  // class split_buffer
 
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) -> bool {
+CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept -> bool {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -1149,7 +1150,7 @@ CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, const split_bu
 
 // So that we can test more efficiently
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, std::initializer_list<T> rhs) -> bool {
+CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept -> bool {
     if (lhs.size() != rhs.size()) {
         return false;
     }

@@ -16,14 +16,14 @@
 NAMESPACE_CIEL_BEGIN
 
 // Differences between std::vector and this class:
-// 1. We don't provide specialization of vector for bool
-// 2. We don't do trivial destructions
+// 1. We don't provide specialization of vector for bool.
+// 2. We don't do trivial destructions.
 // 3. Inspired by Folly's FBVector, we have a is_trivially_relocatable trait,
-//    which is defaultly equal to std::is_trivially_copyable, you can partially specilize it with certain classes.
+//    which is defaultly equal to std::is_trivially_copyable, you can partially specialize it with certain classes.
 //    We will memcpy trivially relocatable objects in expansions.
 
 template<class T, class Allocator = std::allocator<T>>
-class vector : public Allocator {
+class vector : private Allocator {
 
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
@@ -918,6 +918,7 @@ public:
     auto swap(vector& other) noexcept(alloc_traits::propagate_on_container_swap::value ||
                                       alloc_traits::is_always_equal::value) -> void {
         using std::swap;
+
         swap(begin_, other.begin_);
         swap(end_, other.end_);
         swap(end_cap_, other.end_cap_);
@@ -927,7 +928,7 @@ public:
 };  // class vector
 
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) -> bool {
+CIEL_NODISCARD auto operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept -> bool {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -937,7 +938,7 @@ CIEL_NODISCARD auto operator==(const vector<T, Alloc>& lhs, const vector<T, Allo
 
 // So that we can test more efficiently
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const vector<T, Alloc>& lhs, std::initializer_list<T> rhs) -> bool {
+CIEL_NODISCARD auto operator==(const vector<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept -> bool {
     if (lhs.size() != rhs.size()) {
         return false;
     }

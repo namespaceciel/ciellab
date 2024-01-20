@@ -16,10 +16,10 @@
 NAMESPACE_CIEL_BEGIN
 
 // Differences between std::vector and this class:
-// 1. We don't provide specialization of vector for bool
-// 2. We don't do trivial destructions
+// 1. We don't provide specialization of vector for bool.
+// 2. We don't do trivial destructions.
 // 3. Inspired by Folly's FBVector, we have a is_trivially_relocatable trait,
-//    which is defaultly equal to std::is_trivially_copyable, you can partially specilize it with certain classes.
+//    which is defaultly equal to std::is_trivially_copyable, you can partially specialize it with certain classes.
 //    We will memcpy trivially relocatable objects in expansions.
 // 4. We only provide basic exception safety.
 // 5. It can keep BaseCapacity elements internally, which will avoid dynamic heap allocations.
@@ -28,7 +28,7 @@ NAMESPACE_CIEL_BEGIN
 //    If move constructing from a buffered small_vector, that will not be cleared.
 
 template<class T, size_t BaseCapacity = 8, class Allocator = std::allocator<T>>
-class small_vector : public Allocator {
+class small_vector : private Allocator {
 
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
@@ -978,7 +978,8 @@ public:
 
 
 template<class T, size_t S1, size_t S2, class Alloc>
-CIEL_NODISCARD auto operator==(const small_vector<T, S1, Alloc>& lhs, const small_vector<T, S2, Alloc>& rhs) -> bool {
+CIEL_NODISCARD auto operator==(const small_vector<T, S1, Alloc>& lhs,
+                               const small_vector<T, S2, Alloc>& rhs) noexcept -> bool {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -988,7 +989,7 @@ CIEL_NODISCARD auto operator==(const small_vector<T, S1, Alloc>& lhs, const smal
 
 // So that we can test more efficiently
 template<class T, size_t S, class Alloc>
-CIEL_NODISCARD auto operator==(const small_vector<T, S, Alloc>& lhs, std::initializer_list<T> rhs) -> bool {
+CIEL_NODISCARD auto operator==(const small_vector<T, S, Alloc>& lhs, std::initializer_list<T> rhs) noexcept -> bool {
     if (lhs.size() != rhs.size()) {
         return false;
     }

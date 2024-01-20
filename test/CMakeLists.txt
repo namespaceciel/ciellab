@@ -7,6 +7,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 
 add_executable(ciellab_test
         src/all.cpp
+        src/list_tests.cpp
         src/small_vector_tests.cpp
         src/split_buffer_tests.cpp
         src/vector_tests.cpp
