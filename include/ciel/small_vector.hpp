@@ -25,7 +25,6 @@ NAMESPACE_CIEL_BEGIN
 // 5. It can keep BaseCapacity elements internally, which will avoid dynamic heap allocations.
 //    Once the vector exceeds BaseCapacity elements, vector will allocate storage from the heap.
 // 6. Move constructors/assignments and swap can't be noexcept.
-//    If move constructing from a buffered small_vector, that will not be cleared.
 
 template<class T, size_t BaseCapacity = 8, class Allocator = std::allocator<T>>
 class small_vector : private Allocator {
@@ -366,6 +365,7 @@ public:
         } else {
             CIEL_TRY {
                 construct_at_end(other.begin(), other.end());
+                other.clear();
 
             } CIEL_CATCH (...) {
                 do_destroy();
@@ -397,6 +397,7 @@ public:
 
             CIEL_TRY {
                 construct_at_end(other.begin(), other.end());
+                other.clear();
 
             } CIEL_CATCH (...) {
                 do_destroy();
@@ -494,6 +495,7 @@ public:
 
         } else {
             construct_at_end(other.begin(), other.end());
+            other.clear();
         }
 
         return *this;

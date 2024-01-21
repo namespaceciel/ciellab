@@ -21,6 +21,7 @@ NAMESPACE_CIEL_BEGIN
 // 3. Inspired by Folly's FBVector, we have a is_trivially_relocatable trait,
 //    which is defaultly equal to std::is_trivially_copyable, you can partially specialize it with certain classes.
 //    We will memcpy trivially relocatable objects in expansions.
+// 4. We only provide basic exception safety.
 
 template<class T, class Allocator = std::allocator<T>>
 class vector : private Allocator {
