@@ -41,7 +41,10 @@ auto make_finally(F&& f) -> finally<F> {
 
 NAMESPACE_CIEL_END
 
-#define CIEL_CONCAT(a, b) a##b
+// It will be "ab" without forwarding, so all variables' names will be defer___LINE__.
+// Forwarding get the real line number like defer_12.
+#define CIEL_CONCAT_(a, b) a##b
+#define CIEL_CONCAT(a, b) CIEL_CONCAT_(a, b)
 
 #define CIEL_DEFER(x) \
     auto CIEL_CONCAT(defer_, __LINE__) = ciel::make_finally([&] { x; })
