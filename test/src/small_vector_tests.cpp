@@ -66,7 +66,7 @@ TEST(small_vector_tests, assignments) {
     ciel::small_vector<int> v2{};
 
     v2 = std::move(v1);
-    ASSERT_TRUE(!v1.empty());
+    ASSERT_TRUE(v1.empty());
     ASSERT_EQ(v2, std::initializer_list<int>({1, 2, 3, 4, 5}));
 
     ciel::small_vector<int> v3{};

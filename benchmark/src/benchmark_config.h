@@ -3,15 +3,51 @@
 
 #include <benchmark/benchmark.h>
 
+#include <ciel/type_traits.hpp>
+
 #include <algorithm>
 #include <random>
+
+struct trivially_relocatable_obj {
+    int* ptr;
+
+    trivially_relocatable_obj(int i = 0) : ptr(new int{i}) {}
+
+    trivially_relocatable_obj(const trivially_relocatable_obj& other)
+            : ptr(other.ptr ? new int{*other.ptr} : nullptr) {}
+
+    trivially_relocatable_obj(trivially_relocatable_obj&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+
+    trivially_relocatable_obj& operator=(trivially_relocatable_obj other) noexcept {
+        swap(other);
+        return *this;
+    }
+
+    ~trivially_relocatable_obj() {
+        delete ptr;
+    }
+
+    void swap(trivially_relocatable_obj& other) noexcept {
+        std::swap(ptr, other.ptr);
+    }
+
+};  // struct trivially_relocatable_obj
+
+NAMESPACE_CIEL_BEGIN
+
+template<>
+struct is_trivially_relocatable<trivially_relocatable_obj> : std::true_type {};
+
+NAMESPACE_CIEL_END
 
 template<class Container>
 void push_back_benchmark() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
-        c.push_back(i);
+        c.emplace_back(i);
     }
 }
 
@@ -20,7 +56,7 @@ void push_front_benchmark() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
-        c.push_front(i);
+        c.emplace_front(i);
     }
 }
 
@@ -29,8 +65,8 @@ void push_and_pop_benchmark() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
-        c.push_back(i);
-        c.push_front(i);
+        c.emplace_back(i);
+        c.emplace_front(i);
         c.pop_back();
         c.pop_front();
     }
@@ -77,6 +113,27 @@ void erase_benchmark() noexcept {
         if(++it == c.end()) {
             it = c.begin();
         }
+    }
+}
+
+template<class Container>
+void few_objects_benchmark() {
+    for (int i = 0; i < 1000; ++i) {
+        Container c{50, 123};
+
+        for (int j = 0; j < 50; ++j) {
+            c.emplace_back(j);
+        }
+    }
+}
+
+template<class Container>
+void trivially_relocatable_obj_benchmark() {
+    Container c(100000, trivially_relocatable_obj{});
+
+    for (int i = 0; i < 100; ++i) {
+        c.pop_back();
+        c.shrink_to_fit();
     }
 }
 

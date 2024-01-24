@@ -12,6 +12,13 @@ void vector_erase_std(benchmark::State&);
 void vector_erase_ciel(benchmark::State&);
 void small_vector_erase_ciel(benchmark::State&);
 
+void vector_few_objects_std(benchmark::State&);
+void vector_few_objects_ciel(benchmark::State&);
+void small_vector_few_objects_ciel(benchmark::State&);
+
+void vector_trivially_relocatable_obj_std(benchmark::State&);
+void vector_trivially_relocatable_obj_ciel(benchmark::State&);
+
 void deque_push_back_std(benchmark::State&);
 void split_buffer_push_back_ciel(benchmark::State&);
 
@@ -47,6 +54,13 @@ BENCHMARK(small_vector_insert_ciel);
 BENCHMARK(vector_erase_std);
 BENCHMARK(vector_erase_ciel);
 BENCHMARK(small_vector_erase_ciel);
+
+BENCHMARK(vector_few_objects_std);
+BENCHMARK(vector_few_objects_ciel);
+BENCHMARK(small_vector_few_objects_ciel);
+
+BENCHMARK(vector_trivially_relocatable_obj_std);
+BENCHMARK(vector_trivially_relocatable_obj_ciel);
 
 BENCHMARK(deque_push_back_std);
 BENCHMARK(split_buffer_push_back_ciel);

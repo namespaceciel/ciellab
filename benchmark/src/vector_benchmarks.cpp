@@ -60,3 +60,37 @@ void small_vector_erase_ciel(benchmark::State& state) {
         erase_benchmark<ciel::small_vector<int, 32>>();
     }
 }
+
+// few_objects
+void vector_few_objects_std(benchmark::State& state) {
+    for (auto _ : state) {
+        few_objects_benchmark<std::vector<int>>();
+    }
+}
+
+void vector_few_objects_ciel(benchmark::State& state) {
+    for (auto _ : state) {
+        few_objects_benchmark<ciel::vector<int>>();
+    }
+}
+
+void small_vector_few_objects_ciel(benchmark::State& state) {
+    for (auto _ : state) {
+        few_objects_benchmark<ciel::small_vector<int, 100>>();
+    }
+}
+
+static_assert(ciel::is_trivially_relocatable<trivially_relocatable_obj>::value, "");
+
+// trivially_relocatable_obj
+void vector_trivially_relocatable_obj_std(benchmark::State& state) {
+    for (auto _ : state) {
+        trivially_relocatable_obj_benchmark<std::vector<trivially_relocatable_obj>>();
+    }
+}
+
+void vector_trivially_relocatable_obj_ciel(benchmark::State& state) {
+    for (auto _ : state) {
+        trivially_relocatable_obj_benchmark<ciel::vector<trivially_relocatable_obj>>();
+    }
+}

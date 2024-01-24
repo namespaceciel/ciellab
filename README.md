@@ -28,85 +28,99 @@ L2 Unified 4096 KiB (x8)
 ### clang 17.0.6 -O3
 
 ```
------------------------------------------------------------------------
-Benchmark                             Time             CPU   Iterations
------------------------------------------------------------------------
-vector_push_back_std              43035 ns        42987 ns        16290
-vector_push_back_ciel             42915 ns        42856 ns        16511
-small_vector_push_back_ciel       43802 ns        43717 ns        15943
+--------------------------------------------------------------------------------
+Benchmark                                      Time             CPU   Iterations
+--------------------------------------------------------------------------------
+vector_push_back_std                       42769 ns        42699 ns        16359
+vector_push_back_ciel                      43092 ns        43030 ns        16321
+small_vector_push_back_ciel                43744 ns        43651 ns        15847
 
-vector_insert_std                 16376 ns        16327 ns        42344
-vector_insert_ciel                14449 ns        14412 ns        48577
-small_vector_insert_ciel          15408 ns        15286 ns        45609
+vector_insert_std                          16136 ns        16085 ns        42913
+vector_insert_ciel                         14226 ns        14187 ns        49474
+small_vector_insert_ciel                   15140 ns        15106 ns        46578
 
-vector_erase_std                  17510 ns        17459 ns        40000
-vector_erase_ciel                 17816 ns        17768 ns        39430
-small_vector_erase_ciel           19141 ns        19089 ns        36888
+vector_erase_std                           17484 ns        17439 ns        39838
+vector_erase_ciel                          17736 ns        17680 ns        39904
+small_vector_erase_ciel                    19124 ns        19063 ns        37146
 
-deque_push_back_std               80047 ns        79868 ns         8758
-split_buffer_push_back_ciel       42733 ns        42684 ns        16234
+vector_few_objects_std                    133778 ns       133371 ns         5275
+vector_few_objects_ciel                   128253 ns       127859 ns         5203
+small_vector_few_objects_ciel              17387 ns        17339 ns        40544
 
-deque_push_front_std             211442 ns       210942 ns         3282
-split_buffer_push_front_ciel      57376 ns        57247 ns        11971
+vector_trivially_relocatable_obj_std     8549512 ns      8530036 ns           83
+vector_trivially_relocatable_obj_ciel    3026774 ns      3022392 ns          227
 
-deque_erase_std                   25160 ns        25105 ns        27744
-split_buffer_erase_ciel            9931 ns         9853 ns        71777
+deque_push_back_std                        79794 ns        79577 ns         8772
+split_buffer_push_back_ciel                58080 ns        57942 ns        11864
 
-list_push_back_std              1985437 ns      1980059 ns          357
-list_push_back_ciel             2094203 ns      2088030 ns          330
+deque_push_front_std                      211574 ns       210932 ns         3320
+split_buffer_push_front_ciel               73042 ns        72851 ns         9534
 
-list_push_front_std             1978094 ns      1972454 ns          355
-list_push_front_ciel            2106473 ns      2101332 ns          331
+deque_erase_std                            25133 ns        25058 ns        28094
+split_buffer_erase_ciel                    10183 ns        10159 ns        65757
 
-list_push_and_pop_std           3145399 ns      3138435 ns          223
-list_push_and_pop_ciel          1106886 ns      1104616 ns          636
+list_push_back_std                       1962017 ns      1957221 ns          353
+list_push_back_ciel                      2086146 ns      2082452 ns          334
 
-list_insert_std                   18291 ns        18242 ns        38779
-list_insert_ciel                  20101 ns        20052 ns        34927
+list_push_front_std                      1965522 ns      1960747 ns          360
+list_push_front_ciel                     2083311 ns      2077101 ns          335
 
-list_erase_std                    18709 ns        18661 ns        37149
-list_erase_ciel                   23910 ns        23856 ns        29317
+list_push_and_pop_std                    3138169 ns      3131321 ns          224
+list_push_and_pop_ciel                   1107015 ns      1103760 ns          633
+
+list_insert_std                            17902 ns        17850 ns        40272
+list_insert_ciel                           20189 ns        20130 ns        35523
+
+list_erase_std                             18073 ns        18022 ns        37504
+list_erase_ciel                            24218 ns        24151 ns        29067
 ```
 
 ### gcc 13.2.0 -O3
 
 ```
------------------------------------------------------------------------
-Benchmark                             Time             CPU   Iterations
------------------------------------------------------------------------
-vector_push_back_std              42967 ns        42914 ns        16276
-vector_push_back_ciel             43139 ns        43063 ns        16136
-small_vector_push_back_ciel       44102 ns        43981 ns        15858
+--------------------------------------------------------------------------------
+Benchmark                                      Time             CPU   Iterations
+--------------------------------------------------------------------------------
+vector_push_back_std                       42949 ns        42878 ns        16334
+vector_push_back_ciel                      42854 ns        42783 ns        16272
+small_vector_push_back_ciel                43827 ns        43731 ns        15959
 
-vector_insert_std                 12237 ns        12205 ns        56028
-vector_insert_ciel                12642 ns        12609 ns        56152
-small_vector_insert_ciel          14324 ns        14288 ns        48540
+vector_insert_std                          12343 ns        12311 ns        56616
+vector_insert_ciel                         12650 ns        12604 ns        54285
+small_vector_insert_ciel                   14396 ns        14355 ns        49287
 
-vector_erase_std                  17996 ns        17942 ns        38851
-vector_erase_ciel                 17881 ns        17816 ns        35627
-small_vector_erase_ciel           19018 ns        18959 ns        37768
+vector_erase_std                           17258 ns        17198 ns        40730
+vector_erase_ciel                          17703 ns        17638 ns        39669
+small_vector_erase_ciel                    18478 ns        18421 ns        37928
 
-deque_push_back_std               80554 ns        80320 ns         8796
-split_buffer_push_back_ciel       42962 ns        42890 ns        16326
+vector_few_objects_std                    128878 ns       128498 ns         5403
+vector_few_objects_ciel                   125803 ns       125465 ns         5603
+small_vector_few_objects_ciel              17607 ns        17560 ns        39872
 
-deque_push_front_std              75310 ns        75082 ns         9325
-split_buffer_push_front_ciel      42703 ns        42605 ns        16549
+vector_trivially_relocatable_obj_std    17492002 ns     17450025 ns           40
+vector_trivially_relocatable_obj_ciel    3177720 ns      3172706 ns          218
 
-deque_erase_std                   25601 ns        25420 ns        27763
-split_buffer_erase_ciel            9155 ns         9132 ns        75627
+deque_push_back_std                        79012 ns        78762 ns         8870
+split_buffer_push_back_ciel                57344 ns        57218 ns        11954
 
-list_push_back_std              2097107 ns      2091015 ns          336
-list_push_back_ciel             2036256 ns      2030075 ns          348
+deque_push_front_std                       75021 ns        74840 ns         9327
+split_buffer_push_front_ciel               56711 ns        56591 ns        12304
 
-list_push_front_std             2096603 ns      2091806 ns          335
-list_push_front_ciel            2049332 ns      2044451 ns          346
+deque_erase_std                            24958 ns        24906 ns        27908
+split_buffer_erase_ciel                     8961 ns         8934 ns        78768
 
-list_push_and_pop_std           3597763 ns      3588103 ns          195
-list_push_and_pop_ciel           800034 ns       797859 ns          884
+list_push_back_std                       2088266 ns      2083168 ns          334
+list_push_back_ciel                      2007246 ns      1999934 ns          346
 
-list_insert_std                   20694 ns        20458 ns        31861
-list_insert_ciel                  17931 ns        17869 ns        37351
+list_push_front_std                      2105095 ns      2098157 ns          338
+list_push_front_ciel                     2045755 ns      2038270 ns          344
 
-list_erase_std                    20932 ns        20856 ns        33090
-list_erase_ciel                   23210 ns        23140 ns        30163
+list_push_and_pop_std                    3568076 ns      3556340 ns          197
+list_push_and_pop_ciel                    793893 ns       791424 ns          884
+
+list_insert_std                            19305 ns        19247 ns        36992
+list_insert_ciel                           17606 ns        17552 ns        39257
+
+list_erase_std                             20500 ns        20443 ns        33998
+list_erase_ciel                            23160 ns        23097 ns        30379
 ```
