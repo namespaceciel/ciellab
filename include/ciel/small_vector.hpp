@@ -1018,7 +1018,7 @@ auto erase_if(small_vector<T, S, Alloc>& c, Pred pred) -> typename small_vector<
 #if CIEL_STD_VER >= 17
 
 template<class Iter, class Alloc = std::allocator<typename std::iterator_traits<Iter>::value_type>>
-small_vector(Iter, Iter, Alloc = Alloc()) -> small_vector<typename std::iterator_traits<Iter>::value_type, Alloc>;
+small_vector(Iter, Iter, Alloc = Alloc()) -> small_vector<typename std::iterator_traits<Iter>::value_type, 8, Alloc>;
 
 #endif
 
