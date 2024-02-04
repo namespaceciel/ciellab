@@ -14,6 +14,6 @@ add_executable(ciellab_benchmark
 
 target_link_libraries(ciellab_benchmark ciellab benchmark::benchmark)
 
-add_subdirectory(benchmark-1.8.3)
+add_subdirectory(benchmark)
 
 target_compile_options(ciellab_benchmark PUBLIC -O3 -fexceptions -frtti)

@@ -17,7 +17,7 @@ add_executable(ciellab_test
 
 target_link_libraries(ciellab_test ciellab)
 
-add_subdirectory(googletest-1.14.0)
+add_subdirectory(googletest)
 
 target_link_libraries(ciellab_test GTest::gtest_main)
 include(GoogleTest)
