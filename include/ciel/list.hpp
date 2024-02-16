@@ -390,7 +390,7 @@ public:
     }
 
     auto operator=(const list& other) -> list& {
-        if (this == addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == addressof(other)) {
             return *this;
         }
 
@@ -411,7 +411,7 @@ public:
     }
 
     auto operator=(list&& other) noexcept(alloc_traits::is_always_equal::value) -> list& {
-        if (this == addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == addressof(other)) {
             return *this;
         }
 

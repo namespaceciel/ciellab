@@ -92,17 +92,17 @@ private:
 
         const size_type ms = max_size();
 
-        if (new_size > ms) CIEL_UNLIKELY {
-            THROW(std::length_error("ciel::split_buffer reserving size is beyond max_size"));
+        if CIEL_UNLIKELY (new_size > ms) {
+            ciel::THROW(std::length_error("ciel::split_buffer reserving size is beyond max_size"));
         }
 
         const size_type cap = capacity();
 
-        if (cap >= ms / 2) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (cap >= ms / 2) {
             return ms;
         }
 
-        return std::max(2 * cap, new_size);
+        return std::max(cap * 2, new_size);
     }
 
     template<class... Args>
@@ -164,6 +164,7 @@ private:
         while (end != begin) {
             alloc_traits::destroy(allocator_(), --end);
         }
+
         return begin;
     }
 
@@ -406,17 +407,19 @@ private:
         }
     }
 
-    auto move_range(pointer __from_s, pointer __from_e, pointer __to) -> void {
-        pointer old_end_ = end_;
-        difference_type __n = old_end_ - __to;
-        {
-            pointer p = __from_s + __n;
+    auto move_range(pointer from_s, pointer from_e, pointer to) -> void {
+        pointer old_end = end_;
+        difference_type n = old_end - to;
 
-            for (; p < __from_e; ++p) {
+        {
+            pointer p = from_s + n;
+
+            for (; p < from_e; ++p) {
                 construct_one_at_end(std::move(*p));
             }
         }
-        std::move_backward(__from_s, __from_s + __n, old_end_);
+
+        std::move_backward(from_s, from_s + n, old_end);
     }
 
     auto set_nullptr() noexcept -> void {
@@ -436,7 +439,7 @@ public:
     split_buffer(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
 
-        if (count > 0) CIEL_LIKELY {
+        if CIEL_LIKELY (count > 0) {
             begin_cap_ = alloc_traits::allocate(allocator_(), count);
             end_cap_ = begin_cap_ + count;
             begin_ = begin_cap_;
@@ -456,7 +459,7 @@ public:
     explicit split_buffer(const size_type count, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
 
-        if (count > 0) CIEL_LIKELY {
+        if CIEL_LIKELY (count > 0) {
             begin_cap_ = alloc_traits::allocate(allocator_(), count);
             end_cap_ = begin_cap_ + count;
             begin_ = begin_cap_;
@@ -493,7 +496,7 @@ public:
         : split_buffer(alloc) {
         const auto count = std::distance(first, last);
 
-        if (count > 0) CIEL_LIKELY {
+        if CIEL_LIKELY (count > 0) {
             begin_cap_ = alloc_traits::allocate(allocator_(), count);
             end_cap_ = begin_cap_ + count;
             begin_ = begin_cap_;
@@ -547,7 +550,7 @@ public:
     }
 
     auto operator=(const split_buffer& other) -> split_buffer& {
-        if (this == std::addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
 
@@ -570,7 +573,7 @@ public:
     auto operator=(split_buffer&& other)
         noexcept(alloc_traits::propagate_on_container_move_assignment::value ||
                  alloc_traits::is_always_equal::value) -> split_buffer& {
-        if (this == std::addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
 
@@ -684,16 +687,16 @@ public:
     }
 
     CIEL_NODISCARD auto at(const size_type pos) -> reference {
-        if (pos >= size()) CIEL_UNLIKELY {
-            THROW(std::out_of_range("pos is not within the range of ciel::split_buffer"));
+        if CIEL_UNLIKELY (pos >= size()) {
+            ciel::THROW(std::out_of_range("pos is not within the range of ciel::split_buffer"));
         }
 
         return begin_[pos];
     }
 
     CIEL_NODISCARD auto at(const size_type pos) const -> const_reference {
-        if (pos >= size()) CIEL_UNLIKELY {
-            THROW(std::out_of_range("pos is not within the range of ciel::split_buffer"));
+        if CIEL_UNLIKELY (pos >= size()) {
+            ciel::THROW(std::out_of_range("pos is not within the range of ciel::split_buffer"));
         }
 
         return begin_[pos];
@@ -848,7 +851,7 @@ public:
     }
 
     auto shrink_to_fit() -> void {
-        if (front_spare() == 0 && back_spare() == 0) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (front_spare() == 0 && back_spare() == 0) {
             return;
         }
 
@@ -901,12 +904,12 @@ public:
     //     // TODO
     //
     //     const auto count = std::distance(first, last);
-    //     if (count <= 0) CIEL_UNLIKELY {
+    //     if CIEL_UNLIKELY (count <= 0) {
     //         return pos;
     //     }
     //
     //     if (front_spare() >= static_cast<size_type>(count) &&
-    //             (distance(begin(), pos) < distance(pos, end()) ||
+    //             (std::distance(begin(), pos) < std::distance(pos, end()) ||
     //             back_spare() < static_cast<size_type>(count))) {
     //         // move left half to left
     //
@@ -995,7 +998,7 @@ public:
     }
 
     auto erase(iterator first, iterator last) noexcept -> iterator {
-        if (std::distance(first, last) <= 0) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (std::distance(first, last) <= 0) {
             return last;
         }
 
@@ -1034,7 +1037,7 @@ public:
     auto emplace_back(Args&& ... args) -> reference {
         if (back_spare() == 0) {
 
-            if (front_spare() > size()) CIEL_UNLIKELY {   // move size elements to get more than size / 2 vacant space
+            if CIEL_UNLIKELY (front_spare() > size()) {   // move size elements to get more than size / 2 vacant space
                 left_shift_n(std::max<size_type>(front_spare() / 2, 1));
 
                 construct_one_at_end(std::forward<Args>(args)...);
@@ -1074,7 +1077,7 @@ public:
     auto emplace_front(Args&& ... args) -> reference {
         if (front_spare() == 0) {
 
-            if (back_spare() > size()) CIEL_UNLIKELY {   // move size elements to get more than size / 2 vacant space
+            if CIEL_UNLIKELY (back_spare() > size()) {   // move size elements to get more than size / 2 vacant space
                 right_shift_n(std::max<size_type>(back_spare() / 2, 1));
 
                 construct_one_at_begin(std::forward<Args>(args)...);

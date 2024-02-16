@@ -2,21 +2,10 @@
 #define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
 #include <cassert>
-#include <initializer_list>
 
 // exception
 #ifdef __cpp_exceptions
 #define CIEL_HAS_EXCEPTIONS
-#endif
-
-#ifdef CIEL_HAS_EXCEPTIONS
-#define CIEL_TRY      try
-#define CIEL_CATCH(X) catch (X)
-#define CIEL_THROW    throw
-#else
-#define CIEL_TRY      if constexpr (true)
-#define CIEL_CATCH(X) if constexpr (false)
-#define CIEL_THROW
 #endif
 
 // rtti
@@ -72,51 +61,75 @@
 #endif
 
 // likely, unlikely
-#if CIEL_STD_VER >= 20
-#define CIEL_LIKELY [[likely]]
-#define CIEL_UNLIKELY [[unlikely]]
+#if CIEL_STD_VER >= 20 || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#define CIEL_LIKELY(x)   (x) [[likely]]
+#define CIEL_UNLIKELY(x) (x) [[unlikely]]
+
+#elif defined(__GNUC__) || defined(__clang__)
+#define CIEL_LIKELY(x)   (__builtin_expect(!!(x), true))
+#define CIEL_UNLIKELY(x) (__builtin_expect(!!(x), false))
+
 #else
-#define CIEL_LIKELY
-#define CIEL_UNLIKELY
+#define CIEL_LIKELY(x)   (x)
+#define CIEL_UNLIKELY(x) (x)
 #endif
+
+// __has_builtin
+#ifndef __has_builtin
+#define __has_builtin(x) false
+#endif
+
+// try catch throw
+#ifdef CIEL_HAS_EXCEPTIONS
+#define CIEL_TRY      try
+#define CIEL_CATCH(X) catch (X)
+#define CIEL_THROW    throw
+
+#else
+#define CIEL_TRY      if CIEL_CONSTEXPR_SINCE_CXX17 (true)
+#define CIEL_CATCH(X) if CIEL_CONSTEXPR_SINCE_CXX17 (false)
+#define CIEL_THROW
+#endif
+
+// unused
+#define CIEL_UNUSED(x) static_cast<void>(x)
 
 // namespace ciel
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 
-#define NAMESPACE_CIEL_END }
+#define NAMESPACE_CIEL_END   }  // namespace ciel
 
 NAMESPACE_CIEL_BEGIN
 
-[[noreturn]] inline void unreachable() {
-
+[[noreturn]] inline void unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__)    // MSVC
     __assume(false);
 
 #else    // GCC, Clang
     __builtin_unreachable();
-
 #endif
 }
 
 template<class Exception>
 [[noreturn]] inline void THROW(Exception&& e) {
-
 #ifdef CIEL_HAS_EXCEPTIONS
     throw e;
 
 #else
-    static_cast<void>(e);
+    CIEL_UNUSED(e);
     std::terminate();
-
 #endif
 }
 
 NAMESPACE_CIEL_END
 
-#define CIEL_PRECONDITION(cond) assert(cond)
+// assert
+#define CIEL_PRECONDITION(cond)  assert(cond)
 #define CIEL_POSTCONDITION(cond) assert(cond)
 
+// deduction guide for initializer_list
 #if CIEL_STD_VER >= 17
+#include <initializer_list>
 
 namespace std {
 
@@ -124,7 +137,6 @@ template<class T>
 initializer_list(initializer_list<T>) -> initializer_list<T>;
 
 }   // namespace std
-
 #endif
 
 #endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_

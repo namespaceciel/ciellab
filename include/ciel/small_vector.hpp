@@ -24,12 +24,14 @@ NAMESPACE_CIEL_BEGIN
 // 4. We only provide basic exception safety.
 // 5. It can keep BaseCapacity elements internally, which will avoid dynamic heap allocations.
 //    Once the vector exceeds BaseCapacity elements, vector will allocate storage from the heap.
-// 6. Move constructors/assignments and swap can't be noexcept.
+// 6. Move constructors/assignments can't be noexcept.
+// 7. We don't provide swap since it's too complicated.
 
 template<class T, size_t BaseCapacity = 8, class Allocator = std::allocator<T>>
 class small_vector : private Allocator {
 
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
+    static_assert(BaseCapacity > 0, "Please use ciel::vector instead");
 
 public:
     using value_type             = T;
@@ -72,17 +74,17 @@ private:
 
         const size_type ms = max_size();
 
-        if (new_size > ms) CIEL_UNLIKELY {
-            THROW(std::length_error("ciel::small_vector reserving size is beyond max_size"));
+        if CIEL_UNLIKELY (new_size > ms) {
+            ciel::THROW(std::length_error("ciel::small_vector reserving size is beyond max_size"));
         }
 
         const size_type cap = capacity();
 
-        if (cap >= ms / 2) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (cap >= ms / 2) {
             return ms;
         }
 
-        return std::max(2 * cap, new_size);
+        return std::max(cap * 2, new_size);
     }
 
     template<class... Args>
@@ -136,6 +138,7 @@ private:
         while (end != begin) {
             alloc_traits::destroy(allocator_(), --end);
         }
+
         return begin;
     }
 
@@ -241,17 +244,19 @@ private:
         do_deallocate();
     }
 
-    auto move_range(pointer __from_s, pointer __from_e, pointer __to) -> void {
-        pointer old_end_ = end_;
-        difference_type __n = old_end_ - __to;
-        {
-            pointer p = __from_s + __n;
+    auto move_range(pointer from_s, pointer from_e, pointer to) -> void {
+        pointer old_end = end_;
+        difference_type n = old_end - to;
 
-            for (; p < __from_e; ++p) {
+        {
+            pointer p = from_s + n;
+
+            for (; p < from_e; ++p) {
                 construct_one_at_end(std::move(*p));
             }
         }
-        std::move_backward(__from_s, __from_s + __n, old_end_);
+
+        std::move_backward(from_s, from_s + n, old_end);
     }
 
     auto point_to_buffer() noexcept -> void {
@@ -445,7 +450,7 @@ public:
     // TODO: operator= for different BaseCapacity
 
     auto operator=(const small_vector& other) -> small_vector& {
-        if (this == std::addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
 
@@ -470,7 +475,7 @@ public:
     }
 
     auto operator=(small_vector&& other) -> small_vector& {
-        if (this == std::addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
 
@@ -578,16 +583,16 @@ public:
     }
 
     CIEL_NODISCARD auto at(const size_type pos) -> reference {
-        if (pos >= size()) CIEL_UNLIKELY {
-            THROW(std::out_of_range("pos is not within the range of ciel::vector"));
+        if CIEL_UNLIKELY (pos >= size()) {
+            ciel::THROW(std::out_of_range("pos is not within the range of ciel::vector"));
         }
 
         return begin_[pos];
     }
 
     CIEL_NODISCARD auto at(const size_type pos) const -> const_reference {
-        if (pos >= size()) CIEL_UNLIKELY {
-            THROW(std::out_of_range("pos is not within the range of ciel::vector"));
+        if CIEL_UNLIKELY (pos >= size()) {
+            ciel::THROW(std::out_of_range("pos is not within the range of ciel::vector"));
         }
 
         return begin_[pos];
@@ -904,7 +909,7 @@ public:
     auto erase(iterator first, iterator last) -> iterator {
         const auto distance = std::distance(first, last);
 
-        if (distance <= 0) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (distance <= 0) {
             return last;
         }
 
@@ -953,9 +958,7 @@ public:
             return;
         }
 
-        if (count > capacity()) {
-            reserve(count);
-        }
+        reserve(count);
 
         construct_at_end(count - size());
     }
@@ -966,15 +969,10 @@ public:
             return;
         }
 
-        if (count > capacity()) {
-            reserve(count);
-        }
+        reserve(count);
 
         construct_at_end(count - size(), value);
     }
-
-    // auto swap(small_vector& other)
-    //         noexcept(std::is_nothrow_move_constructible<value_type>::value) -> void;    // TODO
 
 };    // small_vector
 
@@ -1002,7 +1000,7 @@ CIEL_NODISCARD auto operator==(const small_vector<T, S, Alloc>& lhs, std::initia
 template<class T, size_t S, class Alloc, class U>
 auto erase(small_vector<T, S, Alloc>& c, const U& value) -> typename small_vector<T, S, Alloc>::size_type {
     auto it = std::remove(c.begin(), c.end(), value);
-    const auto res = distance(it, c.end());
+    const auto res = std::distance(it, c.end());
     c.erase(it, c.end());
     return res;
 }
@@ -1010,7 +1008,7 @@ auto erase(small_vector<T, S, Alloc>& c, const U& value) -> typename small_vecto
 template<class T, size_t S, class Alloc, class Pred>
 auto erase_if(small_vector<T, S, Alloc>& c, Pred pred) -> typename small_vector<T, S, Alloc>::size_type {
     auto it = std::remove_if(c.begin(), c.end(), pred);
-    const auto res = distance(it, c.end());
+    const auto res = std::distance(it, c.end());
     c.erase(it, c.end());
     return res;
 }
@@ -1023,14 +1021,5 @@ small_vector(Iter, Iter, Alloc = Alloc()) -> small_vector<typename std::iterator
 #endif
 
 NAMESPACE_CIEL_END
-
-// namespace std {
-//
-// template<class T, size_t S, class Alloc>
-// auto swap(ciel::small_vector<T, S, Alloc>& lhs, ciel::small_vector<T, S, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) -> void {
-//     lhs.swap(rhs);
-// }
-//
-// }   // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_SMALL_VECTOR_HPP_

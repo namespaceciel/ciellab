@@ -64,17 +64,17 @@ private:
 
         const size_type ms = max_size();
 
-        if (new_size > ms) CIEL_UNLIKELY {
-            THROW(std::length_error("ciel::vector reserving size is beyond max_size"));
+        if CIEL_UNLIKELY (new_size > ms) {
+            ciel::THROW(std::length_error("ciel::vector reserving size is beyond max_size"));
         }
 
         const size_type cap = capacity();
 
-        if (cap >= ms / 2) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (cap >= ms / 2) {
             return ms;
         }
 
-        return std::max(2 * cap, new_size);
+        return std::max(cap * 2, new_size);
     }
 
     template<class... Args>
@@ -128,6 +128,7 @@ private:
         while (end != begin) {
             alloc_traits::destroy(allocator_(), --end);
         }
+
         return begin;
     }
 
@@ -245,17 +246,19 @@ private:
         }
     }
 
-    auto move_range(pointer __from_s, pointer __from_e, pointer __to) -> void {
-        pointer old_end_ = end_;
-        difference_type __n = old_end_ - __to;
-        {
-            pointer p = __from_s + __n;
+    auto move_range(pointer from_s, pointer from_e, pointer to) -> void {
+        pointer old_end = end_;
+        difference_type n = old_end - to;
 
-            for (; p < __from_e; ++p) {
+        {
+            pointer p = from_s + n;
+
+            for (; p < from_e; ++p) {
                 construct_one_at_end(std::move(*p));
             }
         }
-        std::move_backward(__from_s, __from_s + __n, old_end_);
+
+        std::move_backward(from_s, from_s + n, old_end);
     }
 
     auto set_nullptr() noexcept -> void {
@@ -274,7 +277,7 @@ public:
     vector(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
 
-        if (count > 0) CIEL_LIKELY {
+        if CIEL_LIKELY (count > 0) {
             begin_ = alloc_traits::allocate(allocator_(), count);
             end_cap_ = begin_ + count;
             end_ = begin_;
@@ -293,7 +296,7 @@ public:
     explicit vector(const size_type count, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
 
-        if (count > 0) CIEL_LIKELY {
+        if CIEL_LIKELY (count > 0) {
             begin_ = alloc_traits::allocate(allocator_(), count);
             end_cap_ = begin_ + count;
             end_ = begin_;
@@ -330,7 +333,7 @@ public:
         : vector(alloc) {
         const auto count = std::distance(first, last);
 
-        if (count > 0) CIEL_LIKELY {
+        if CIEL_LIKELY (count > 0) {
             begin_ = alloc_traits::allocate(allocator_(), count);
             end_cap_ = begin_ + count;
             end_ = begin_;
@@ -382,7 +385,7 @@ public:
     }
 
     auto operator=(const vector& other) -> vector& {
-        if (this == std::addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
 
@@ -405,7 +408,7 @@ public:
     auto operator=(vector&& other)
         noexcept(alloc_traits::propagate_on_container_move_assignment::value ||
                  alloc_traits::is_always_equal::value) -> vector& {
-        if (this == std::addressof(other)) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
 
@@ -506,16 +509,16 @@ public:
     }
 
     CIEL_NODISCARD auto at(const size_type pos) -> reference {
-        if (pos >= size()) CIEL_UNLIKELY {
-            THROW(std::out_of_range("pos is not within the range of ciel::vector"));
+        if CIEL_UNLIKELY (pos >= size()) {
+            ciel::THROW(std::out_of_range("pos is not within the range of ciel::vector"));
         }
 
         return begin_[pos];
     }
 
     CIEL_NODISCARD auto at(const size_type pos) const -> const_reference {
-        if (pos >= size()) CIEL_UNLIKELY {
-            THROW(std::out_of_range("pos is not within the range of ciel::vector"));
+        if CIEL_UNLIKELY (pos >= size()) {
+            ciel::THROW(std::out_of_range("pos is not within the range of ciel::vector"));
         }
 
         return begin_[pos];
@@ -641,7 +644,7 @@ public:
     }
 
     auto shrink_to_fit() -> void {
-        if (size() == capacity()) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (size() == capacity()) {
             return;
         }
 
@@ -847,7 +850,7 @@ public:
     auto erase(iterator first, iterator last) -> iterator {
         const auto distance = std::distance(first, last);
 
-        if (distance <= 0) CIEL_UNLIKELY {
+        if CIEL_UNLIKELY (distance <= 0) {
             return last;
         }
 
@@ -896,9 +899,7 @@ public:
             return;
         }
 
-        if (count > capacity()) {
-            reserve(count);
-        }
+        reserve(count);
 
         construct_at_end(count - size());
     }
@@ -909,9 +910,7 @@ public:
             return;
         }
 
-        if (count > capacity()) {
-            reserve(count);
-        }
+        reserve(count);
 
         construct_at_end(count - size(), value);
     }
@@ -950,7 +949,7 @@ CIEL_NODISCARD auto operator==(const vector<T, Alloc>& lhs, std::initializer_lis
 template<class T, class Alloc, class U>
 auto erase(vector<T, Alloc>& c, const U& value) -> typename vector<T, Alloc>::size_type {
     auto it = std::remove(c.begin(), c.end(), value);
-    const auto res = distance(it, c.end());
+    const auto res = std::distance(it, c.end());
     c.erase(it, c.end());
     return res;
 }
@@ -958,7 +957,7 @@ auto erase(vector<T, Alloc>& c, const U& value) -> typename vector<T, Alloc>::si
 template<class T, class Alloc, class Pred>
 auto erase_if(vector<T, Alloc>& c, Pred pred) -> typename vector<T, Alloc>::size_type {
     auto it = std::remove_if(c.begin(), c.end(), pred);
-    const auto res = distance(it, c.end());
+    const auto res = std::distance(it, c.end());
     c.erase(it, c.end());
     return res;
 }

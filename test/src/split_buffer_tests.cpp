@@ -109,7 +109,7 @@ TEST(split_buffer_tests, at) {
     ASSERT_EQ(v1.back(), 5);
 
 #ifdef CIEL_HAS_EXCEPTIONS
-    ASSERT_THROW((void)v1.at(-1), std::out_of_range);
+    ASSERT_THROW(CIEL_UNUSED(v1.at(-1)), std::out_of_range);
 #endif
 }
 

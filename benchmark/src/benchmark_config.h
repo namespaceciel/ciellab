@@ -191,7 +191,7 @@ void set_find_benchmark(Set& s) noexcept {
     std::mt19937_64 g(rd());
 
     for (int i = 0; i < 100000; ++i) {
-        (void)s.find(g());
+        CIEL_UNUSED(s.find(g()));
     }
 }
 
