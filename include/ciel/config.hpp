@@ -1,6 +1,10 @@
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 #define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
+#if !defined(__cplusplus) || (__cplusplus < 201103L)
+#error "Please use C++ with standard of at least 11"
+#endif
+
 #include <cassert>
 
 // exception
@@ -56,6 +60,16 @@
 // nodiscard
 #if CIEL_STD_VER >= 17
 #define CIEL_NODISCARD [[nodiscard]]
+
+#elif (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)  // clang, icc, clang-cl
+#define CIEL_NODISCARD __attribute__((warn_unused_result))
+
+#elif defined(_HAS_NODISCARD)
+#define CIEL_NODISCARD _NODISCARD
+
+#elif _MSC_VER >= 1700
+#define CIEL_NODISCARD _Check_return_
+
 #else
 #define CIEL_NODISCARD
 #endif
