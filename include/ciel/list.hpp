@@ -1,5 +1,5 @@
 #ifndef CIELLAB_INCLUDE_CIEL_LIST_HPP_
-#define CIELLAB_INCLUDE_CIEL_LIST_HPP_
+#define  CIELLAB_INCLUDE_CIEL_LIST_HPP_
 
 #include <algorithm>
 #include <cstddef>

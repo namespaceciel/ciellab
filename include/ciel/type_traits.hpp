@@ -1,5 +1,5 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
-#define CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
+#define  CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 
 #include <iterator>
 #include <type_traits>

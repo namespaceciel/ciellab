@@ -1,11 +1,12 @@
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
-#define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
+#define  CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
 #if !defined(__cplusplus) || (__cplusplus < 201103L)
 #error "Please use C++ with standard of at least 11"
 #endif
 
 #include <cassert>
+#include <exception>
 
 // exception
 #ifdef __cpp_exceptions
@@ -130,7 +131,7 @@ template<class Exception>
     throw e;
 
 #else
-    CIEL_UNUSED(e);
+    std::cerr << e.what() << "\n";
     std::terminate();
 #endif
 }
