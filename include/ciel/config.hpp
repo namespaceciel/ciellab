@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <exception>
+#include <iostream>
 
 // exception
 #ifdef __cpp_exceptions
