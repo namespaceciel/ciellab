@@ -1,5 +1,5 @@
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
-#define  CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
+#define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
 #if !defined(__cplusplus) || (__cplusplus < 201103L)
 #error "Please use C++ with standard of at least 11"
