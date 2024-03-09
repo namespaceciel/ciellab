@@ -96,8 +96,8 @@ public:
     template <class... Args1, class... Args2>
     explicit compressed_pair(std::piecewise_construct_t pc, std::tuple<Args1...> first_args,
                                                             std::tuple<Args2...> second_args)
-        : base1(pc, std::move(first_args), typename index_sequence_for<Args1...>::type()),
-          base2(pc, std::move(second_args), typename index_sequence_for<Args2...>::type()) {}
+        : base1(pc, std::move(first_args), index_sequence_for<Args1...>()),
+          base2(pc, std::move(second_args), index_sequence_for<Args2...>()) {}
 
     auto first() noexcept -> typename base1::reference {
         return static_cast<base1&>(*this).get();

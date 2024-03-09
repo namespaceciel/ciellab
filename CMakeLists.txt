@@ -11,6 +11,11 @@ add_library(ciellab INTERFACE)
 
 target_include_directories(ciellab INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+# Current split_reference_count atomic_shared_ptr's implementation needs 48-bit uintptr_t and 16-bit local_ref_count
+# to be packed in a std::atomic.
+# TODO: change to boost::atomic to support DWCAS.
+target_compile_options(ciellab INTERFACE -Wno-int-to-pointer-cast)
+
 if (CIELLAB_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)

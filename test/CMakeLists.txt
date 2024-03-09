@@ -6,13 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
 
 add_executable(ciellab_test
-        src/all.cpp
         src/finally_tests.cpp
         src/list_tests.cpp
         src/small_vector_tests.cpp
         src/split_buffer_tests.cpp
         src/vector_tests.cpp
         src/exception_safety_tests.cpp
+        src/shared_ptr_tests.cpp
+        src/atomic_shared_ptr_tests.cpp
 )
 
 target_link_libraries(ciellab_test ciellab)
