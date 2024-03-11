@@ -9,6 +9,8 @@
 #include <thread>
 #include <vector>
 
+namespace {     // To be included by different translate units.
+
 TEST(atomic_shared_ptr_test_suite, construction_empty) {
     atomic_shared_ptr<int> p;
 
@@ -146,6 +148,7 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
     ASSERT_EQ(l.use_count(), 4);
 }
 
+#if CIEL_STD_VER >= 20
 // FIXME
 //TEST(atomic_shared_ptr_test_suite, concurrent_store_and_loads) {
 //    constexpr size_t threads_num = 64;
@@ -154,29 +157,24 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 //    atomic_shared_ptr<size_t> s;
 //    std::latch go{threads_num};
 //
-//    std::vector<std::jthread> consumers;
+//    std::vector<std::thread> consumers;
 //    consumers.reserve(threads_num / 2);
 //
-//    std::vector<size_t> consumer_sums(threads_num / 2);
-//
 //    for (size_t i = 0; i < threads_num / 2; ++i) {
-//        consumers.emplace_back([i, &s, &consumer_sums, &go] {
+//        consumers.emplace_back([&s, &go] {
 //            go.arrive_and_wait();
-//            size_t local_sum = 0;
 //
 //            for (size_t j = 0; j < operations_num; ++j) {
 //                auto p = s.load();
 //
 //                if (p) {
-//                    local_sum += *p;
+//                    ASSERT_EQ(*p, 123);
 //                }
 //            }
-//
-//            consumer_sums[i] = local_sum;
 //        });
 //    }
 //
-//    std::vector<std::jthread> producers;
+//    std::vector<std::thread> producers;
 //    producers.reserve(threads_num / 2);
 //
 //    for (size_t i = 0; i < threads_num / 2; ++i) {
@@ -184,13 +182,20 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 //            go.arrive_and_wait();
 //
 //            for (size_t j = 0; j < operations_num; ++j) {
-//                s.store(shared_ptr<size_t>(new size_t(j)));
+//                s.store(shared_ptr<size_t>(new size_t(123)));
 //            }
 //        });
 //    }
+//
+//    for (auto& t : consumers) {
+//        t.join();
+//    }
+//
+//    for (auto& t : producers) {
+//        t.join();
+//    }
 //}
 
-#if CIEL_STD_VER >= 20
 TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
     constexpr size_t threads_num = 64;
     constexpr size_t operations_num = 10000;
@@ -236,5 +241,6 @@ TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
     ASSERT_EQ(total_produced, total_consumed);
 }
 #endif // CIEL_STD_VER >= 20
+}   // namespace
 
 #endif // CIELLAB_TEST_SRC_ATOMIC_SHARED_PTR_TEST_SUITE_HPP_

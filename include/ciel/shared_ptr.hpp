@@ -4,6 +4,10 @@
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 
+#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
+#include <ciel/hazard_pointers.hpp>
+#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
+
 #include <atomic>
 #include <memory>
 #include <type_traits>
@@ -24,10 +28,21 @@ class atomic_shared_ptr;
 
 }   // namespace split_reference_count
 
+namespace deferred_reclamation {
+
+template<class>
+class atomic_shared_ptr;
+
+}   // namespace deferred_reclamation
+
 class shared_weak_count {
 protected:
     std::atomic<size_t> shared_count_;      // The object will be destroyed after decrementing to zero.
     std::atomic<size_t> shared_and_weak_count_;     // The control block will be destroyed after decrementing to zero.
+
+#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
+    shared_weak_count* next_{nullptr};
+#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
 
     template<class>
     friend class shared_ptr;
@@ -35,14 +50,24 @@ protected:
     friend class weak_ptr;
     template<class>
     friend class split_reference_count::atomic_shared_ptr;
+    template<class>
+    friend class deferred_reclamation::atomic_shared_ptr;
 
     explicit shared_weak_count(const size_t shared_count = 1, const size_t shared_and_weak_count = 1) noexcept
         : shared_count_(shared_count), shared_and_weak_count_(shared_and_weak_count) {}
+
+#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
+    void retire() noexcept {
+        get_hazard_pointers<shared_weak_count>().retire(this);
+    }
+#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
 
 public:
     shared_weak_count(const shared_weak_count&) = delete;
     shared_weak_count& operator=(const shared_weak_count&) = delete;
 
+    // TODO: It seems like we don't have to make it virtual
+    // since we always call virtual delete_control_block() to delete from derivative's perspective.
     virtual ~shared_weak_count() noexcept = default;
 
     CIEL_NODISCARD size_t use_count() const noexcept {
@@ -73,14 +98,53 @@ public:
 
     void weak_count_release() noexcept {
         if (--shared_and_weak_count_ == 0) {
+#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
+            retire();
+#else
             delete_control_block();
+#endif
         }
+    }
+
+    CIEL_NODISCARD bool increment_if_not_zero() noexcept {
+        size_t old_count = shared_count_;
+        size_t new_count;
+
+        do {
+            new_count = old_count;
+
+            if (new_count == 0) {
+                return false;
+            }
+
+            ++new_count;
+
+        } while (shared_count_.compare_exchange_weak(old_count, new_count));
+
+        ++shared_and_weak_count_;
+
+        return true;
     }
 
     CIEL_NODISCARD virtual void* get_deleter(const std::type_info& type) noexcept = 0;
     virtual void delete_pointer() noexcept = 0;
     virtual void delete_control_block() noexcept = 0;
     virtual void* managed_pointer() const noexcept = 0;
+
+#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
+    shared_weak_count* get_next() const noexcept {
+        return next_;
+    }
+
+    void set_next(shared_weak_count* next) noexcept {
+        next_ = next;
+    }
+
+    void destroy() noexcept {
+        delete_control_block();
+    }
+
+#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
 
 };  // class shared_weak_count
 
@@ -170,6 +234,8 @@ private:
     friend class weak_ptr;
     template<class>
     friend class split_reference_count::atomic_shared_ptr;
+    template<class>
+    friend class deferred_reclamation::atomic_shared_ptr;
 
     element_type* ptr_;
     shared_weak_count* control_block_;
@@ -194,12 +260,12 @@ private:
         }
     }
 
-    // serves for enable_shared_from_this
+    // Serves for enable_shared_from_this.
     template<class Now, class Original, typename std::enable_if<std::is_convertible<Original*, const enable_shared_from_this<Now>*>::value, int>::type = 0>
     void enable_weak_this(const enable_shared_from_this<Now>* now_ptr, Original* original_ptr) noexcept {
         using RawNow = std::remove_cv_t<Now>;
 
-        // If now_ptr is not initialized, let it points to the right control block
+        // If now_ptr is not initialized, let it points to the right control block.
         if (now_ptr && now_ptr->weak_this_.expired()) {
             now_ptr->weak_this_ = shared_ptr<RawNow>(*this, const_cast<RawNow*>(static_cast<const Now*>(original_ptr)));
         }
@@ -337,7 +403,7 @@ public:
         CIEL_UNUSED(r.release());
     }
 
-    // FIXME: Unlike unique_ptr, the deleter of shared_ptr is invoked even if the managed pointer is null.
+    // FIXME(?): Unlike unique_ptr, the deleter of shared_ptr is invoked even if the managed pointer is null.
     ~shared_ptr() {
         if (control_block_ != nullptr) {
             control_block_->shared_count_release();
@@ -586,22 +652,8 @@ public:
             return shared_ptr<T>();
         }
 
-        size_t old_count = count_->shared_count_;
-        size_t new_count;
-
-        do {
-            if (old_count == 0) {
-                return shared_ptr<T>();
-            }
-
-            new_count = old_count;
-            ++new_count;
-
-        } while (!count_->shared_count_.compare_exchange_weak(old_count, new_count));
-
-        ++count_->shared_and_weak_count_;
-
-        return shared_ptr<T>(count_);   // private constructor used here and atomic_shared_ptr.
+        // private constructor used here and atomic_shared_ptr.
+        return count_->increment_if_not_zero() ? shared_ptr<T>(count_) : shared_ptr<T>();
     }
 
     template<class Y>
