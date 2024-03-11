@@ -73,12 +73,10 @@ public:
 
         auto& hp = get_hazard_pointers<shared_weak_count>();
 
-        while (true) {
+        do {
             current_control_block = hp.protect(control_block_);
-            if (current_control_block == nullptr || current_control_block->increment_if_not_zero()) {
-                break;
-            }
-        }
+
+        } while (current_control_block != nullptr && !current_control_block->increment_if_not_zero());
 
         return shared_ptr<T>{current_control_block};
     }
