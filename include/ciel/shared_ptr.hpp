@@ -202,13 +202,20 @@ public:
     }
 
     virtual void delete_pointer() noexcept override {
+        CIEL_PRECONDITION(ptr_() != nullptr);
+
         deleter_()(ptr_());
-        // ptr_() = nullptr;
+        deleter_().~deleter_type();
+
+        // TODO: comment this
+        ptr_() = nullptr;
     }
 
     virtual void delete_control_block() noexcept override {
-        this->~control_block_with_pointer();
-        control_block_alloc_traits::deallocate(allocator_(), this, 1);
+        control_block_allocator allocator = std::move(allocator_());
+        allocator_().~control_block_allocator();
+
+        control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
     virtual void* managed_pointer() const noexcept override {
@@ -242,6 +249,8 @@ private:
 
     template<class Deleter, class Allocator>
     CIEL_NODISCARD shared_weak_count* alloc_control_block(element_type* ptr, Deleter&& dlt, Allocator&& alloc) {
+        CIEL_PRECONDITION(ptr != nullptr);
+
         using alloc_traits               = std::allocator_traits<Allocator>;
         using control_block_type         = control_block_with_pointer<element_type, Deleter, Allocator>;
         using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_type>;
