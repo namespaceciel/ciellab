@@ -110,16 +110,15 @@ public:
 
     void store(shared_ptr<T> desired) noexcept {
         counted_control_block new_control_block{desired.control_block_};
+        desired.clear();
 
         counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
         // Help inflight loads to update those local refcounts to the global.
         if ((shared_weak_count*)old_control_block.control_block_ != nullptr) {
-            ((shared_weak_count*)old_control_block.control_block_)->add_ref(old_control_block.local_count_);
+            ((shared_weak_count*)old_control_block.control_block_)->shared_add_ref(old_control_block.local_count_);
             ((shared_weak_count*)old_control_block.control_block_)->shared_count_release();
         }
-
-        desired.clear();
     }
 
     CIEL_NODISCARD shared_ptr<T> load() const noexcept {
@@ -127,7 +126,7 @@ public:
         counted_control_block cur_control_block = increment_local_ref_count();
 
         if ((shared_weak_count*)cur_control_block.control_block_ != nullptr) {
-            ((shared_weak_count*)cur_control_block.control_block_)->add_ref();
+            ((shared_weak_count*)cur_control_block.control_block_)->shared_add_ref();
         }
 
         shared_ptr<T> result{(shared_weak_count*)cur_control_block.control_block_};  // private constructor

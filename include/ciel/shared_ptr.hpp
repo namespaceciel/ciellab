@@ -37,8 +37,8 @@ class atomic_shared_ptr;
 
 class shared_weak_count {
 protected:
-    std::atomic<size_t> shared_count_;      // The object will be destroyed after decrementing to zero.
-    std::atomic<size_t> shared_and_weak_count_;     // The control block will be destroyed after decrementing to zero.
+    std::atomic<size_t> shared_count_;  // The object will be destroyed after decrementing to zero.
+    std::atomic<size_t> weak_count_;    // weak_ref + (shared_count_ != 0), The control block will be destroyed after decrementing to zero.
 
 #ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
     shared_weak_count* next_{nullptr};
@@ -53,8 +53,8 @@ protected:
     template<class>
     friend class deferred_reclamation::atomic_shared_ptr;
 
-    explicit shared_weak_count(const size_t shared_count = 1, const size_t shared_and_weak_count = 1) noexcept
-        : shared_count_(shared_count), shared_and_weak_count_(shared_and_weak_count) {}
+    shared_weak_count() noexcept
+        : shared_count_(1), weak_count_(1) {}
 
 #ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
     void retire() noexcept {
@@ -74,30 +74,41 @@ public:
         return shared_count_;
     }
 
-    void add_ref() noexcept {
+    void shared_add_ref() noexcept {
+        CIEL_PRECONDITION(shared_count_ > 0);
+        CIEL_PRECONDITION(managed_pointer() != nullptr);
+
         ++shared_count_;
-        ++shared_and_weak_count_;
     }
 
-    void add_ref(const size_t count) noexcept {
+    void shared_add_ref(const size_t count) noexcept {
+        CIEL_PRECONDITION(shared_count_ > 0);
+        CIEL_PRECONDITION(managed_pointer() != nullptr);
+
         shared_count_ += count;
-        shared_and_weak_count_ += count;
     }
 
     void weak_add_ref() noexcept {
-        ++shared_and_weak_count_;
+        CIEL_PRECONDITION(weak_count_ > 0);
+
+        ++weak_count_;
     }
 
     void shared_count_release() noexcept {
+        CIEL_PRECONDITION(shared_count_ > 0);
+        CIEL_PRECONDITION(managed_pointer() != nullptr);
+
         if (--shared_count_ == 0) {
             delete_pointer();
-        }
 
-        weak_count_release();
+            weak_count_release();   // weak_count_ == weak_ref + (shared_count_ != 0)
+        }
     }
 
     void weak_count_release() noexcept {
-        if (--shared_and_weak_count_ == 0) {
+        CIEL_PRECONDITION(weak_count_ > 0);
+
+        if (--weak_count_ == 0) {
 #ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
             retire();
 #else
@@ -120,8 +131,6 @@ public:
             ++new_count;
 
         } while (shared_count_.compare_exchange_weak(old_count, new_count));
-
-        ++shared_and_weak_count_;
 
         return true;
     }
@@ -188,7 +197,11 @@ private:
 
 public:
     control_block_with_pointer(pointer ptr, deleter_type&& deleter, control_block_allocator&& alloc)
-        : compressed_(ciel::compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {}
+        : compressed_(ciel::compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {
+
+        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_PRECONDITION(ptr == ptr_());
+    }
 
     CIEL_NODISCARD virtual void* get_deleter(const std::type_info& type) noexcept override {
 #ifdef CIEL_HAS_RTTI
@@ -344,7 +357,7 @@ public:
         : ptr_(ptr), control_block_(r.control_block_) {
 
         if (control_block_ != nullptr) {
-            control_block_->add_ref();
+            control_block_->shared_add_ref();
         }
     }
 
@@ -360,7 +373,7 @@ public:
         : ptr_(r.ptr_), control_block_(r.control_block_) {
 
         if (control_block_ != nullptr) {
-            control_block_->add_ref();
+            control_block_->shared_add_ref();
         }
     }
 
@@ -369,7 +382,7 @@ public:
         : ptr_(r.ptr_), control_block_(r.control_block_) {
 
         if (control_block_ != nullptr) {
-            control_block_->add_ref();
+            control_block_->shared_add_ref();
         }
     }
 
@@ -393,7 +406,7 @@ public:
         : ptr_(r.ptr_), control_block_(r.count_) {
 
         if (control_block_ != nullptr) {
-            control_block_->add_ref();
+            control_block_->shared_add_ref();
         }
     }
 
