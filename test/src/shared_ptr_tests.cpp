@@ -76,11 +76,16 @@ TEST(shared_ptr_tests, alias_move_constructor) {
     ASSERT_EQ(dest->str(), "Derived");
 }
 
-// TODO: make_shared is not implemented yet.
-// TEST(shared_ptr_tests, make_shared) {
-//     ciel::shared_ptr<int> p = ciel::make_shared<int>(42);
-// }
-//
-// TEST(shared_ptr_tests, make_shared_non_trivial) {
-//     ciel::shared_ptr<std::string> s = ciel::make_shared<std::string>(1000, 'b');
-// }
+TEST(shared_ptr_tests, make_shared) {
+    ciel::shared_ptr<int> p = ciel::make_shared<int>(42);
+
+    ASSERT_EQ(*p, 42);
+    ASSERT_EQ(p.use_count(), 1);
+}
+
+TEST(shared_ptr_tests, make_shared_non_trivial) {
+    ciel::shared_ptr<std::string> s = ciel::make_shared<std::string>(1000, 'b');
+
+    ASSERT_EQ(*s, std::string(1000, 'b'));
+    ASSERT_EQ(s.use_count(), 1);
+}

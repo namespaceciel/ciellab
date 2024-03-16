@@ -135,7 +135,10 @@ public:
         return true;
     }
 
-    CIEL_NODISCARD virtual void* get_deleter(const std::type_info& type) noexcept = 0;
+    CIEL_NODISCARD virtual void* get_deleter(const std::type_info&) noexcept {
+        return nullptr;
+    }
+
     virtual void delete_pointer() noexcept = 0;
     virtual void delete_control_block() noexcept = 0;
     virtual void* managed_pointer() const noexcept = 0;
@@ -159,6 +162,8 @@ public:
 
 template<class element_type, class Deleter, class Allocator>
 class control_block_with_pointer final : public shared_weak_count {
+    static_assert(std::is_same<element_type, typename Allocator::value_type>::value, "");
+
 public:
     using pointer                    = element_type*;
     using deleter_type               = Deleter;
@@ -203,16 +208,12 @@ public:
         CIEL_PRECONDITION(ptr == ptr_());
     }
 
-    CIEL_NODISCARD virtual void* get_deleter(const std::type_info& type) noexcept override {
 #ifdef CIEL_HAS_RTTI
+    CIEL_NODISCARD virtual void* get_deleter(const std::type_info& type) noexcept override {
         return (type == typeid(deleter_type)) ? static_cast<void*>(&deleter_()) : nullptr;
-
-#else
-        CIEL_UNUSED(type);
-
-        return nullptr;
-#endif
     }
+
+#endif
 
     virtual void delete_pointer() noexcept override {
         CIEL_PRECONDITION(ptr_() != nullptr);
@@ -240,6 +241,65 @@ public:
 static_assert(sizeof(control_block_with_pointer<int, std::default_delete<int>, std::allocator<int>>)
                       - sizeof(shared_weak_count) == 8, "Empty Base Optimization is not working.");
 
+template<class element_type, class Allocator>
+class control_block_with_instance final : public shared_weak_count {
+    static_assert(std::is_same<element_type, typename Allocator::value_type>::value, "");
+
+public:
+    using pointer                    = element_type*;
+    using allocator_type             = Allocator;
+
+private:
+    using alloc_traits               = std::allocator_traits<allocator_type>;
+    using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_with_instance>;
+    using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_with_instance>;
+
+    ciel::compressed_pair<typename std::aligned_storage<sizeof(element_type), alignof(element_type)>::type,
+                          control_block_allocator> compressed_;
+
+    CIEL_NODISCARD pointer ptr_() noexcept {
+        return static_cast<pointer>(static_cast<void*>(&compressed_.first()));
+    }
+
+    CIEL_NODISCARD const element_type* ptr_() const noexcept {
+        return static_cast<const element_type*>(static_cast<const void*>(&compressed_.first()));
+    }
+
+    CIEL_NODISCARD control_block_allocator& allocator_() noexcept {
+        return compressed_.second();
+    }
+
+    CIEL_NODISCARD const control_block_allocator& allocator_() const noexcept {
+        return compressed_.second();
+    }
+
+public:
+    template<class... Args>
+    control_block_with_instance(allocator_type alloc, Args&&... args)
+        : compressed_(default_init_tag{}, alloc) {
+
+        alloc_traits::construct(alloc, ptr_(), std::forward<Args>(args)...);
+    }
+
+    virtual void delete_pointer() noexcept override {
+        allocator_type alloc(allocator_());
+
+        alloc_traits::destroy(alloc, ptr_());
+    }
+
+    virtual void delete_control_block() noexcept override {
+        control_block_allocator allocator = std::move(allocator_());
+        allocator_().~control_block_allocator();
+
+        control_block_alloc_traits::deallocate(allocator, this, 1);
+    }
+
+    virtual void* managed_pointer() const noexcept override {
+        return const_cast<void*>(static_cast<const void*>(&compressed_.first()));
+    }
+
+};  // class control_block_with_instance
+
 template<class T>
 class shared_ptr {
 public:
@@ -256,6 +316,8 @@ private:
     friend class split_reference_count::atomic_shared_ptr;
     template<class>
     friend class deferred_reclamation::atomic_shared_ptr;
+    template<class U, class Alloc, class... Args>
+    friend shared_ptr<U> allocate_shared(const Alloc&, Args&&...);
 
     element_type* ptr_;
     shared_weak_count* control_block_;
@@ -302,7 +364,10 @@ private:
     }
 
     shared_ptr(shared_weak_count* control_block) noexcept
-        : ptr_(control_block ? static_cast<pointer>(control_block->managed_pointer()) : nullptr), control_block_(control_block) {}
+        : ptr_(control_block ? static_cast<pointer>(control_block->managed_pointer()) : nullptr), control_block_(control_block) {
+
+        enable_weak_this(ptr_, ptr_);
+    }
 
 public:
     shared_ptr() noexcept
@@ -320,6 +385,8 @@ public:
         control_block_ = alloc_control_block(ptr, std::default_delete<T>(), std::allocator<T>());
 
         CIEL_UNUSED(holder.release());
+
+        enable_weak_this(ptr, ptr);
     }
 
     template<class Y, class Deleter, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
@@ -331,6 +398,8 @@ public:
         control_block_ = alloc_control_block(ptr, std::move(d), std::allocator<T>());
 
         CIEL_UNUSED(holder.release());
+
+        enable_weak_this(ptr, ptr);
     }
 
     template<class Deleter>
@@ -346,6 +415,8 @@ public:
         control_block_ = alloc_control_block(ptr, std::move(d), std::move(alloc));
 
         CIEL_UNUSED(holder.release());
+
+        enable_weak_this(ptr, ptr);
     }
 
     template<class Deleter, class Alloc>
@@ -403,11 +474,13 @@ public:
 
     template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
     explicit shared_ptr(const weak_ptr<Y>& r)
-        : ptr_(r.ptr_), control_block_(r.count_) {
+        : ptr_(r.ptr_), control_block_(r.control_block_ ? (r.control_block_->increment_if_not_zero() ? r.control_block_ : nullptr) : nullptr) {
 
-        if (control_block_ != nullptr) {
-            control_block_->shared_add_ref();
+        if (control_block_ == nullptr) {
+            ciel::THROW(std::bad_weak_ptr());
         }
+
+        enable_weak_this(r.get(), r.get());
     }
 
     template<class Y, class Deleter, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
@@ -421,6 +494,8 @@ public:
         } else {
             control_block_ = nullptr;
         }
+
+        enable_weak_this(r.get(), r.get());
 
         CIEL_UNUSED(r.release());
     }
@@ -519,7 +594,7 @@ public:
 
     template<class Y>
     CIEL_NODISCARD bool owner_before(const weak_ptr<Y>& other) const noexcept {
-        return control_block_ < other.count_;
+        return control_block_ < other.control_block_;
     }
 
     template<class D>
@@ -559,7 +634,7 @@ public:
     
 private:
     element_type* ptr_;
-    shared_weak_count* count_;
+    shared_weak_count* control_block_;
 
 public:
     template<class>
@@ -568,52 +643,52 @@ public:
     friend class weak_ptr;
 
     constexpr weak_ptr() noexcept
-        : ptr_(nullptr), count_(nullptr) {}
+        : ptr_(nullptr), control_block_(nullptr) {}
 
     weak_ptr(const weak_ptr& r) noexcept
-        : ptr_(r.ptr_), count_(r.count_) {
+        : ptr_(r.ptr_), control_block_(r.control_block_) {
 
-        if (count_ != nullptr) {
-            count_->weak_add_ref();
+        if (control_block_ != nullptr) {
+            control_block_->weak_add_ref();
         }
     }
 
     template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
     weak_ptr(const weak_ptr<Y>& r) noexcept
-        : ptr_(r.ptr_), count_(r.count_) {
+        : ptr_(r.ptr_), control_block_(r.control_block_) {
 
-        if (count_ != nullptr) {
-            count_->weak_add_ref();
+        if (control_block_ != nullptr) {
+            control_block_->weak_add_ref();
         }
     }
 
     template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
     weak_ptr(const shared_ptr<Y>& r) noexcept
-        : ptr_(r.ptr_), count_(r.control_block_) {
+        : ptr_(r.ptr_), control_block_(r.control_block_) {
 
-        if (count_ != nullptr) {
-            count_->weak_add_ref();
+        if (control_block_ != nullptr) {
+            control_block_->weak_add_ref();
         }
     }
 
     weak_ptr(weak_ptr&& r) noexcept
-        : ptr_(r.ptr_), count_(r.count_) {
+        : ptr_(r.ptr_), control_block_(r.control_block_) {
 
         r.ptr_ = nullptr;
-        r.count_ = nullptr;
+        r.control_block_ = nullptr;
     }
 
     template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
     weak_ptr(weak_ptr<Y>&& r) noexcept
-        : ptr_(r.ptr_), count_(r.count_) {
+        : ptr_(r.ptr_), control_block_(r.control_block_) {
 
         r.ptr_ = nullptr;
-        r.count_ = nullptr;
+        r.control_block_ = nullptr;
     }
 
     ~weak_ptr() {
-        if (count_ != nullptr) {
-            count_->weak_count_release();
+        if (control_block_ != nullptr) {
+            control_block_->weak_count_release();
         }
     }
 
@@ -646,11 +721,11 @@ public:
     }
 
     void reset() noexcept {
-        if (count_ != nullptr) {
-            count_->weak_count_release();
+        if (control_block_ != nullptr) {
+            control_block_->weak_count_release();
 
             ptr_ = nullptr;
-            count_ = nullptr;
+            control_block_ = nullptr;
         }
     }
 
@@ -658,11 +733,11 @@ public:
         using std::swap;
 
         swap(ptr_, r.ptr_);
-        swap(count_, r.count_);
+        swap(control_block_, r.control_block_);
     }
 
     CIEL_NODISCARD size_t use_count() const noexcept {
-        return count_ != nullptr ? count_->use_count() : 0;
+        return control_block_ != nullptr ? control_block_->use_count() : 0;
     }
 
     CIEL_NODISCARD bool expired() const noexcept {
@@ -670,22 +745,22 @@ public:
     }
 
     CIEL_NODISCARD shared_ptr<T> lock() const noexcept {
-        if (count_ == nullptr) {
+        if (control_block_ == nullptr) {
             return shared_ptr<T>();
         }
 
         // private constructor used here and atomic_shared_ptr.
-        return count_->increment_if_not_zero() ? shared_ptr<T>(count_) : shared_ptr<T>();
+        return control_block_->increment_if_not_zero() ? shared_ptr<T>(control_block_) : shared_ptr<T>();
     }
 
     template<class Y>
     CIEL_NODISCARD bool owner_before(const weak_ptr<Y>& other) const noexcept {
-        return count_ < other.count_;
+        return control_block_ < other.control_block_;
     }
 
     template<class Y>
     CIEL_NODISCARD bool owner_before(const shared_ptr<Y>& other) const noexcept {
-        return count_ < other.control_block_;
+        return control_block_ < other.control_block_;
     }
 
 };    // class weak_ptr
@@ -730,6 +805,40 @@ public:
     }
 
 };  // class enable_shared_from_this
+
+template<class T, class Alloc, class... Args>
+shared_ptr<T> allocate_shared(const Alloc& alloc, Args&&... args) {
+    static_assert(std::is_same<T, typename Alloc::value_type>::value, "");
+
+    using control_block_type = control_block_with_instance<T, Alloc>;
+    using alloc_traits = std::allocator_traits<std::allocator<control_block_type>>;
+
+    std::allocator<control_block_type> control_block_alloc(alloc);
+
+    struct alloc_deleter {
+    private:
+        std::allocator<control_block_type> alloc_;
+
+    public:
+        alloc_deleter(std::allocator<control_block_type> a) : alloc_(std::move(a)) {}
+
+        void operator()(control_block_type* ptr) noexcept {
+            alloc_traits::deallocate(alloc_, ptr, 1);
+        }
+
+    };  // struct alloc_deleter
+
+    std::unique_ptr<control_block_type, alloc_deleter> control_block{alloc_traits::allocate(control_block_alloc, 1), control_block_alloc};
+
+    alloc_traits::construct(control_block_alloc, control_block.get(), alloc, std::forward<Args>(args)...);
+
+    return shared_ptr<T>(control_block.release());
+}
+
+template<class T, class... Args>
+shared_ptr<T> make_shared(Args&&... args) {
+    return ciel::allocate_shared<T>(std::allocator<T>(), std::forward<Args>(args)...);
+}
 
 NAMESPACE_CIEL_END
 

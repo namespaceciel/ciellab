@@ -438,7 +438,7 @@ public:
 
             U current_value = src.load(std::memory_order_acquire);
 
-            if CIEL_LIKELY (current_value == result) {
+            if CIEL_LIKELY(current_value == result) {
                 return result;
 
             } else {
@@ -469,7 +469,7 @@ public:
             assert(my_slot.deamortized_reclaimer_ != nullptr);
             my_slot.deamortized_reclaimer_->do_reclamation_work();
 
-        } else if CIEL_UNLIKELY (++my_slot.num_retires_since_cleanup_ >= cleanup_threshold) {
+        } else if CIEL_UNLIKELY(++my_slot.num_retires_since_cleanup_ >= cleanup_threshold) {
             cleanup(my_slot);
         }
     }
