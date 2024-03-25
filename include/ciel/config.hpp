@@ -8,6 +8,7 @@
 #include <cassert>
 #include <exception>
 #include <iostream>
+#include <type_traits>
 
 // exception
 #ifdef __cpp_exceptions
@@ -131,7 +132,7 @@ NAMESPACE_CIEL_BEGIN
 #endif
 }
 
-template<class Exception>
+template<class Exception, typename std::enable_if<std::is_base_of<std::exception, Exception>::value, int>::type = 0>
 [[noreturn]] inline void THROW(Exception&& e) {
 #ifdef CIEL_HAS_EXCEPTIONS
     throw e;
