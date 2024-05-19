@@ -15,6 +15,7 @@
 #include <ciel/hazard_pointers.hpp>
 
 NAMESPACE_CIEL_BEGIN
+
 namespace deferred_reclamation {
 
 template<class T>
@@ -32,32 +33,37 @@ public:
     // Not an atomic operation, like any other atomics.
     atomic_shared_ptr(shared_ptr<T> desired) noexcept
         : control_block_(desired.control_block_) {
-
         desired.clear();
     }
 
     atomic_shared_ptr(const atomic_shared_ptr&) = delete;
-    void operator=(const atomic_shared_ptr&) = delete;
+    void
+    operator=(const atomic_shared_ptr&)
+        = delete;
 
     ~atomic_shared_ptr() {
         store(nullptr);
     }
 
-    void operator=(shared_ptr<T> desired) noexcept {
+    void
+    operator=(shared_ptr<T> desired) noexcept {
         store(desired);
     }
 
-    void operator=(std::nullptr_t) noexcept {
+    void
+    operator=(std::nullptr_t) noexcept {
         store(nullptr);
     }
 
-    CIEL_NODISCARD bool is_lock_free() const noexcept {
+    CIEL_NODISCARD bool
+    is_lock_free() const noexcept {
         CIEL_PRECONDITION(control_block_.is_lock_free() == true);
 
         return control_block_.is_lock_free();
     }
 
-    void store(shared_ptr<T> desired) noexcept {
+    void
+    store(shared_ptr<T> desired) noexcept {
         shared_weak_count* control_block = desired.control_block_;
         desired.clear();
 
@@ -68,7 +74,8 @@ public:
         }
     }
 
-    CIEL_NODISCARD shared_ptr<T> load() const noexcept {
+    CIEL_NODISCARD shared_ptr<T>
+    load() const noexcept {
         shared_weak_count* current_control_block;
 
         auto& hp = get_hazard_pointers<shared_weak_count>();
@@ -81,11 +88,13 @@ public:
         return shared_ptr<T>{current_control_block};
     }
 
-    CIEL_NODISCARD operator shared_ptr<T>() const noexcept {
+    CIEL_NODISCARD
+    operator shared_ptr<T>() const noexcept {
         return load();
     }
 
-    CIEL_NODISCARD shared_ptr<T> exchange(shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD shared_ptr<T>
+    exchange(shared_ptr<T> desired) noexcept {
         shared_weak_count* current_control_block = desired.control_block_;
         desired.clear();
 
@@ -94,9 +103,10 @@ public:
         return shared_ptr<T>{old_control_block};
     }
 
-    CIEL_NODISCARD bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD bool
+    compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         shared_weak_count* expected_control_block = expected.control_block_;
-        shared_weak_count* desired_control_block = desired.control_block_;
+        shared_weak_count* desired_control_block  = desired.control_block_;
 
         if (control_block_.compare_exchange_weak(expected_control_block, desired_control_block)) {
             if (expected_control_block != nullptr) {
@@ -111,7 +121,8 @@ public:
         return false;
     }
 
-    CIEL_NODISCARD bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD bool
+    compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         shared_weak_count* expected_control_block = expected.control_block_;
 
         do {
@@ -129,9 +140,10 @@ public:
     static_assert(is_always_lock_free == true, "");
 #endif // CIEL_STD_VER >= 17
 
-};  // class atomic_shared_ptr
+}; // class atomic_shared_ptr
 
-}   // namespace deferred_reclamation
+} // namespace deferred_reclamation
+
 NAMESPACE_CIEL_END
 
 #endif // CIEL_STD_VER >= 20

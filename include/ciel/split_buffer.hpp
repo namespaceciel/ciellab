@@ -34,33 +34,32 @@ class small_vector;
 
 template<class T, class Allocator = std::allocator<T>>
 class split_buffer : private Allocator {
-
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
 public:
-    using value_type             = T;
-    using allocator_type         = Allocator;
-    using size_type              = size_t;
-    using difference_type        = ptrdiff_t;
-    using reference              = value_type&;
-    using const_reference        = const value_type&;
-    using pointer                = typename std::allocator_traits<allocator_type>::pointer;
-    using const_pointer          = typename std::allocator_traits<allocator_type>::const_pointer;
+    using value_type      = T;
+    using allocator_type  = Allocator;
+    using size_type       = size_t;
+    using difference_type = ptrdiff_t;
+    using reference       = value_type&;
+    using const_reference = const value_type&;
+    using pointer         = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer   = typename std::allocator_traits<allocator_type>::const_pointer;
 
-    using iterator               = pointer;
-    using const_iterator         = const_pointer;
+    using iterator       = pointer;
+    using const_iterator = const_pointer;
 
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
-    using alloc_traits           = std::allocator_traits<allocator_type>;
+    using alloc_traits = std::allocator_traits<allocator_type>;
 
     struct new_allocation {
         owner<pointer> new_begin_cap_;
         size_type new_cap_;
 
-    };  // struct new_allocation
+    }; // struct new_allocation
 
     owner<pointer> begin_cap_;
     pointer begin_;
@@ -72,22 +71,26 @@ private:
     template<class, size_t, class>
     friend class small_vector;
 
-    auto reserve_cap_and_offset_to(const size_type cap, const size_type offset) -> void {
+    void
+    reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
         begin_cap_ = alloc_traits::allocate(allocator_(), cap);
-        end_cap_ = begin_cap_ + cap;
-        begin_ = begin_cap_ + offset;
-        end_ = begin_;
+        end_cap_   = begin_cap_ + cap;
+        begin_     = begin_cap_ + offset;
+        end_       = begin_;
     }
 
-    auto allocator_() noexcept -> allocator_type& {
+    allocator_type&
+    allocator_() noexcept {
         return static_cast<allocator_type&>(*this);
     }
 
-    auto allocator_() const noexcept -> const allocator_type& {
+    const allocator_type&
+    allocator_() const noexcept {
         return static_cast<const allocator_type&>(*this);
     }
 
-    auto recommend_cap(const size_type new_size) const -> size_type {
+    size_type
+    recommend_cap(const size_type new_size) const {
         CIEL_PRECONDITION(new_size > 0);
 
         const size_type ms = max_size();
@@ -106,14 +109,16 @@ private:
     }
 
     template<class... Args>
-    auto construct_one_at_end(Args&& ... args) -> void {
+    void
+    construct_one_at_end(Args&&... args) {
         CIEL_PRECONDITION(end_ < end_cap_);
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
         ++end_;
     }
 
-    auto construct_at_end(const size_type n) -> void {
+    void
+    construct_at_end(const size_type n) {
         CIEL_PRECONDITION(end_ + n <= end_cap_);
 
         for (size_type i = 0; i < n; ++i) {
@@ -122,7 +127,8 @@ private:
         }
     }
 
-    auto construct_at_end(const size_type n, const value_type& value) -> void {
+    void
+    construct_at_end(const size_type n, const value_type& value) {
         CIEL_PRECONDITION(end_ + n <= end_cap_);
 
         for (size_type i = 0; i < n; ++i) {
@@ -132,7 +138,8 @@ private:
     }
 
     template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
-    auto construct_at_end(Iter first, Iter last) -> void {
+    void
+    construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_);
 
         while (first != last) {
@@ -143,7 +150,8 @@ private:
     }
 
     template<class... Args>
-    auto construct_one_at_begin(Args&& ... args) -> void {
+    void
+    construct_one_at_begin(Args&&... args) {
         CIEL_PRECONDITION(begin_cap_ < begin_);
 
         alloc_traits::construct(allocator_(), begin_ - 1, std::forward<Args>(args)...);
@@ -151,14 +159,16 @@ private:
     }
 
     // std::is_trivially_destructible<value_type> -> std::true_type
-    auto alloc_range_destroy(pointer begin, pointer end, std::true_type) noexcept -> pointer {
+    pointer
+    alloc_range_destroy(pointer begin, pointer end, std::true_type) noexcept {
         CIEL_PRECONDITION(begin <= end);
 
         return begin;
     }
 
     // std::is_trivially_destructible<value_type> -> std::false_type
-    auto alloc_range_destroy(pointer begin, pointer end, std::false_type) noexcept -> pointer {
+    pointer
+    alloc_range_destroy(pointer begin, pointer end, std::false_type) noexcept {
         CIEL_PRECONDITION(begin <= end);
 
         while (end != begin) {
@@ -169,11 +179,12 @@ private:
     }
 
     // is_trivially_relocatable -> std::true_type
-    auto swap_out_buffer(split_buffer& sb, pointer pos, std::true_type) noexcept -> void {
+    void
+    swap_out_buffer(split_buffer& sb, pointer pos, std::true_type) noexcept {
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
         if (begin_cap_) {
             const size_type front_count = pos - begin_;
-            const size_type back_count = end_ - pos;
+            const size_type back_count  = end_ - pos;
 
             CIEL_PRECONDITION(sb.front_spare() >= front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
@@ -188,19 +199,20 @@ private:
         }
 
         begin_cap_ = sb.begin_cap_;
-        begin_ = sb.begin_;
-        end_ = sb.end_;
-        end_cap_ = sb.end_cap_;
+        begin_     = sb.begin_;
+        end_       = sb.end_;
+        end_cap_   = sb.end_cap_;
 
         sb.set_nullptr();
     }
 
     // is_trivially_relocatable -> std::false_type
-    auto swap_out_buffer(split_buffer& sb, pointer pos, std::false_type)
-            noexcept(std::is_nothrow_move_constructible<value_type>::value) -> void {
+    void
+    swap_out_buffer(split_buffer& sb, pointer pos,
+                    std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         if (begin_cap_) {
             const size_type front_count = pos - begin_;
-            const size_type back_count = end_ - pos;
+            const size_type back_count  = end_ - pos;
 
             CIEL_PRECONDITION(sb.front_spare() >= front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
@@ -218,15 +230,16 @@ private:
         }
 
         begin_cap_ = sb.begin_cap_;
-        begin_ = sb.begin_;
-        end_ = sb.end_;
-        end_cap_ = sb.end_cap_;
+        begin_     = sb.begin_;
+        end_       = sb.end_;
+        end_cap_   = sb.end_cap_;
 
         sb.set_nullptr();
     }
 
     // is_trivially_relocatable -> std::true_type
-    auto swap_out_buffer(split_buffer& sb, std::true_type) noexcept -> void {
+    void
+    swap_out_buffer(split_buffer& sb, std::true_type) noexcept {
         CIEL_PRECONDITION(sb.front_spare() >= size());
 
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
@@ -238,16 +251,16 @@ private:
         }
 
         begin_cap_ = sb.begin_cap_;
-        begin_ = sb.begin_;
-        end_ = sb.end_;
-        end_cap_ = sb.end_cap_;
+        begin_     = sb.begin_;
+        end_       = sb.end_;
+        end_cap_   = sb.end_cap_;
 
         sb.set_nullptr();
     }
 
     // is_trivially_relocatable -> std::false_type
-    auto swap_out_buffer(split_buffer& sb, std::false_type)
-            noexcept(std::is_nothrow_move_constructible<value_type>::value) -> void {
+    void
+    swap_out_buffer(split_buffer& sb, std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() >= size());
 
         if (begin_cap_) {
@@ -260,27 +273,29 @@ private:
         }
 
         begin_cap_ = sb.begin_cap_;
-        begin_ = sb.begin_;
-        end_ = sb.end_;
-        end_cap_ = sb.end_cap_;
+        begin_     = sb.begin_;
+        end_       = sb.end_;
+        end_cap_   = sb.end_cap_;
 
         sb.set_nullptr();
     }
 
-    auto swap_out_buffer(split_buffer& sb) noexcept -> void {
+    void
+    swap_out_buffer(split_buffer& sb) noexcept {
         do_destroy();
 
-        CIEL_PRECONDITION(sb.begin_cap_ == sb.begin_);  // TODO: maybe useless
+        CIEL_PRECONDITION(sb.begin_cap_ == sb.begin_); // TODO: maybe useless
 
         begin_cap_ = sb.begin_cap_;
-        begin_ = sb.begin_;
-        end_ = sb.end_;
-        end_cap_ = sb.end_cap_;
+        begin_     = sb.begin_;
+        end_       = sb.end_;
+        end_cap_   = sb.end_cap_;
 
         sb.set_nullptr();
     }
 
-    auto front_spare() const noexcept -> size_type {
+    size_type
+    front_spare() const noexcept {
         const difference_type res = std::distance(begin_cap_, begin_);
 
         CIEL_PRECONDITION(res >= 0);
@@ -288,7 +303,8 @@ private:
         return res;
     }
 
-    auto back_spare() const noexcept -> size_type {
+    size_type
+    back_spare() const noexcept {
         const difference_type res = std::distance(end_, end_cap_);
 
         CIEL_PRECONDITION(res >= 0);
@@ -297,23 +313,24 @@ private:
     }
 
     // Note that this will invalidate iterators
-    auto left_shift_n(const size_type n) noexcept -> void {
+    void
+    left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
 
         const size_type old_size = size();
 
         pointer new_begin = begin_ - n;
-        pointer new_end = new_begin;
+        pointer new_end   = new_begin;
 
-        if (old_size >= n) {    // n placement new, size - n move assign, n destroy
+        if (old_size >= n) { // n placement new, size - n move assign, n destroy
 
-            //          ----------
+            // ----------
             //
-            //  ----------
-            //  |      | |       |
+            // ----------
+            // |      | |       |
             // placement new
-            //      move assign
-            //            destroy
+            // move assign
+            //   destroy
 
             size_type i = 0;
             for (; i < n; ++i) {
@@ -326,17 +343,17 @@ private:
                 ++new_end;
             }
 
-            end_ = alloc_range_destroy(new_end, end_, std::is_trivially_destructible<value_type>{});
+            end_   = alloc_range_destroy(new_end, end_, std::is_trivially_destructible<value_type>{});
             begin_ = new_begin;
 
-        } else {    // size placement new, size destroy
+        } else { // size placement new, size destroy
 
-            //                ----------
+            // ----------
             //
-            //  ----------
-            //  |        |    |        |
+            // ----------
+            // |        |    |        |
             // placement new
-            //                 destroy
+            //  destroy
 
             for (size_type i = 0; i < old_size; ++i) {
                 alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
@@ -345,28 +362,30 @@ private:
 
             alloc_range_destroy(begin_, end_, std::is_trivially_destructible<value_type>{});
             begin_ = new_begin;
-            end_ = new_end;
+            end_   = new_end;
         }
     }
 
     // Note that this will invalidate iterators
-    auto right_shift_n(const size_type n) noexcept -> void {
+    void
+    right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
 
         const size_type old_size = size();
 
-        pointer new_end = end_ + n;;
+        pointer new_end = end_ + n;
+        ;
         pointer new_begin = new_end;
 
-        if (old_size >= n) {    // n placement new, size - n move assign, n destroy
+        if (old_size >= n) { // n placement new, size - n move assign, n destroy
 
-            //  ----------
+            // ----------
             //
-            //          ----------
-            //  |       | |      |
-            //         placement new
-            //      move assign
-            //  destroy
+            //         ----------
+            // |       | |      |
+            //        placement new
+            //     move assign
+            // destroy
 
             size_type i = 1;
             for (; i <= n; ++i) {
@@ -379,16 +398,16 @@ private:
 
             alloc_range_destroy(begin_, new_begin, std::is_trivially_destructible<value_type>{});
             begin_ = new_begin;
-            end_ = new_end;
+            end_   = new_end;
 
-        } else {    // size placement new, size destroy
+        } else { // size placement new, size destroy
 
-            //  ----------
+            // ----------
             //
-            //                ----------
-            //  |        |    |        |
-            //               placement new
-            //   destroy
+            //               ----------
+            // |        |    |        |
+            //              placement new
+            //  destroy
 
             for (size_type i = 1; i <= old_size; ++i) {
                 alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
@@ -396,19 +415,21 @@ private:
 
             alloc_range_destroy(begin_, end_, std::is_trivially_destructible<value_type>{});
             begin_ = new_begin;
-            end_ = new_end;
+            end_   = new_end;
         }
     }
 
-    auto do_destroy() noexcept -> void {
+    void
+    do_destroy() noexcept {
         if (begin_cap_) {
             clear();
             alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
         }
     }
 
-    auto move_range(pointer from_s, pointer from_e, pointer to) -> void {
-        pointer old_end = end_;
+    void
+    move_range(pointer from_s, pointer from_e, pointer to) {
+        pointer old_end   = end_;
         difference_type n = old_end - to;
 
         {
@@ -422,11 +443,12 @@ private:
         std::move_backward(from_s, from_s + n, old_end);
     }
 
-    auto set_nullptr() noexcept -> void {
+    void
+    set_nullptr() noexcept {
         begin_cap_ = nullptr;
-        begin_ = nullptr;
-        end_ = nullptr;
-        end_cap_ = nullptr;
+        begin_     = nullptr;
+        end_       = nullptr;
+        end_cap_   = nullptr;
     }
 
 public:
@@ -438,17 +460,16 @@ public:
 
     split_buffer(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
-
         if CIEL_LIKELY (count > 0) {
             begin_cap_ = alloc_traits::allocate(allocator_(), count);
-            end_cap_ = begin_cap_ + count;
-            begin_ = begin_cap_;
-            end_ = begin_;
+            end_cap_   = begin_cap_ + count;
+            begin_     = begin_cap_;
+            end_       = begin_;
 
             CIEL_TRY {
                 construct_at_end(count, value);
-
-            } CIEL_CATCH (...) {
+            }
+            CIEL_CATCH (...) {
                 clear();
                 alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
                 CIEL_THROW;
@@ -458,17 +479,16 @@ public:
 
     explicit split_buffer(const size_type count, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
-
         if CIEL_LIKELY (count > 0) {
             begin_cap_ = alloc_traits::allocate(allocator_(), count);
-            end_cap_ = begin_cap_ + count;
-            begin_ = begin_cap_;
-            end_ = begin_;
+            end_cap_   = begin_cap_ + count;
+            begin_     = begin_cap_;
+            end_       = begin_;
 
             CIEL_TRY {
                 construct_at_end(count);
-
-            } CIEL_CATCH (...) {
+            }
+            CIEL_CATCH (...) {
                 clear();
                 alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
                 CIEL_THROW;
@@ -484,8 +504,8 @@ public:
                 emplace_back(*first);
                 ++first;
             }
-
-        } CIEL_CATCH (...) {
+        }
+        CIEL_CATCH (...) {
             do_destroy();
             CIEL_THROW;
         }
@@ -498,14 +518,14 @@ public:
 
         if CIEL_LIKELY (count > 0) {
             begin_cap_ = alloc_traits::allocate(allocator_(), count);
-            end_cap_ = begin_cap_ + count;
-            begin_ = begin_cap_;
-            end_ = begin_;
+            end_cap_   = begin_cap_ + count;
+            begin_     = begin_cap_;
+            end_       = begin_;
 
             CIEL_TRY {
                 construct_at_end(first, last);
-
-            } CIEL_CATCH (...) {
+            }
+            CIEL_CATCH (...) {
                 clear();
                 alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
                 CIEL_THROW;
@@ -522,18 +542,20 @@ public:
 
     split_buffer(split_buffer&& other) noexcept
         : allocator_type(std::move(other.allocator_())),
-          begin_cap_(other.begin_cap_), begin_(other.begin_), end_(other.end_), end_cap_(other.end_cap_) {
-
+          begin_cap_(other.begin_cap_),
+          begin_(other.begin_),
+          end_(other.end_),
+          end_cap_(other.end_cap_) {
         other.set_nullptr();
     }
 
     split_buffer(split_buffer&& other, const allocator_type& alloc) {
         if (alloc == other.get_allocator()) {
             allocator_() = alloc;
-            begin_cap_ = other.begin_cap_;
-            begin_ = other.begin_;
-            end_ = other.end_;
-            end_cap_ = other.end_cap_;
+            begin_cap_   = other.begin_cap_;
+            begin_       = other.begin_;
+            end_         = other.end_;
+            end_cap_     = other.end_cap_;
 
             other.set_nullptr();
 
@@ -549,7 +571,8 @@ public:
         do_destroy();
     }
 
-    auto operator=(const split_buffer& other) -> split_buffer& {
+    split_buffer&
+    operator=(const split_buffer& other) {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
@@ -570,9 +593,9 @@ public:
         return *this;
     }
 
-    auto operator=(split_buffer&& other)
-        noexcept(alloc_traits::propagate_on_container_move_assignment::value ||
-                 alloc_traits::is_always_equal::value) -> split_buffer& {
+    split_buffer&
+    operator=(split_buffer&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
+                                             || alloc_traits::is_always_equal::value) {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
@@ -589,21 +612,23 @@ public:
         do_destroy();
 
         begin_cap_ = other.begin_cap_;
-        begin_ = other.begin_;
-        end_ = other.end_;
-        end_cap_ = other.end_cap_;
+        begin_     = other.begin_;
+        end_       = other.end_;
+        end_cap_   = other.end_cap_;
 
         other.set_nullptr();
 
         return *this;
     }
 
-    auto operator=(std::initializer_list<value_type> ilist) -> split_buffer& {
+    split_buffer&
+    operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
-    auto assign(const size_type count, const value_type& value) -> void {
+    void
+    assign(const size_type count, const value_type& value) {
         if (back_spare() + size() < count) {
             const size_type diff = count - back_spare() - size();
 
@@ -621,7 +646,8 @@ public:
             }
 
         } else if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});;
+            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
+            ;
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -634,15 +660,16 @@ public:
     }
 
     template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
-    auto assign(Iter first, Iter last) -> void {
+    void
+    assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
 
         if (back_spare() + size() < count) {
             const size_type diff = count - back_spare() - size();
-            
+
             if (front_spare() >= diff) {
                 left_shift_n(diff);
-                
+
             } else {
                 split_buffer sb(allocator_());
                 sb.reserve_cap_and_offset_to(count, 0);
@@ -654,7 +681,7 @@ public:
             }
 
         } else if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});;
+            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -669,24 +696,28 @@ public:
     }
 
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
-    auto assign(Iter first, Iter last) -> void {
+    void
+    assign(Iter first, Iter last) {
         clear();
-        
+
         while (first != last) {
             emplace_back(*first);
             ++first;
         }
     }
 
-    auto assign(std::initializer_list<value_type> ilist) -> void {
+    void
+    assign(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
-    CIEL_NODISCARD auto get_allocator() const noexcept -> allocator_type {
+    CIEL_NODISCARD allocator_type
+    get_allocator() const noexcept {
         return allocator_();
     }
 
-    CIEL_NODISCARD auto at(const size_type pos) -> reference {
+    CIEL_NODISCARD reference
+    at(const size_type pos) {
         if CIEL_UNLIKELY (pos >= size()) {
             ciel::THROW(std::out_of_range("pos is not within the range of ciel::split_buffer"));
         }
@@ -694,7 +725,8 @@ public:
         return begin_[pos];
     }
 
-    CIEL_NODISCARD auto at(const size_type pos) const -> const_reference {
+    CIEL_NODISCARD const_reference
+    at(const size_type pos) const {
         if CIEL_UNLIKELY (pos >= size()) {
             ciel::THROW(std::out_of_range("pos is not within the range of ciel::split_buffer"));
         }
@@ -702,111 +734,135 @@ public:
         return begin_[pos];
     }
 
-    CIEL_NODISCARD auto operator[](const size_type pos) -> reference {
+    CIEL_NODISCARD reference
+    operator[](const size_type pos) {
         CIEL_PRECONDITION(pos < size());
 
         return begin_[pos];
     }
 
-    CIEL_NODISCARD auto operator[](const size_type pos) const -> const_reference {
+    CIEL_NODISCARD const_reference
+    operator[](const size_type pos) const {
         CIEL_PRECONDITION(pos < size());
 
         return begin_[pos];
     }
 
-    CIEL_NODISCARD auto front() -> reference {
+    CIEL_NODISCARD reference
+    front() {
         CIEL_PRECONDITION(!empty());
 
         return begin_[0];
     }
 
-    CIEL_NODISCARD auto front() const -> const_reference {
+    CIEL_NODISCARD const_reference
+    front() const {
         CIEL_PRECONDITION(!empty());
 
         return begin_[0];
     }
 
-    CIEL_NODISCARD auto back() -> reference {
+    CIEL_NODISCARD reference
+    back() {
         CIEL_PRECONDITION(!empty());
 
         return *(end_ - 1);
     }
 
-    CIEL_NODISCARD auto back() const -> const_reference {
+    CIEL_NODISCARD const_reference
+    back() const {
         CIEL_PRECONDITION(!empty());
 
         return *(end_ - 1);
     }
 
-    CIEL_NODISCARD auto data() noexcept -> T* {
+    CIEL_NODISCARD T*
+    data() noexcept {
         return begin_;
     }
 
-    CIEL_NODISCARD auto data() const noexcept -> const T* {
+    CIEL_NODISCARD const T*
+    data() const noexcept {
         return begin_;
     }
 
-    CIEL_NODISCARD auto begin() noexcept -> iterator {
+    CIEL_NODISCARD iterator
+    begin() noexcept {
         return iterator(begin_);
     }
 
-    CIEL_NODISCARD auto begin() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    begin() const noexcept {
         return const_iterator(begin_);
     }
 
-    CIEL_NODISCARD auto cbegin() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    cbegin() const noexcept {
         return begin();
     }
 
-    CIEL_NODISCARD auto end() noexcept -> iterator {
+    CIEL_NODISCARD iterator
+    end() noexcept {
         return iterator(end_);
     }
 
-    CIEL_NODISCARD auto end() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    end() const noexcept {
         return const_iterator(end_);
     }
 
-    CIEL_NODISCARD auto cend() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    cend() const noexcept {
         return end();
     }
 
-    CIEL_NODISCARD auto rbegin() noexcept -> reverse_iterator {
+    CIEL_NODISCARD reverse_iterator
+    rbegin() noexcept {
         return reverse_iterator(end());
     }
 
-    CIEL_NODISCARD auto rbegin() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    rbegin() const noexcept {
         return const_reverse_iterator(end());
     }
 
-    CIEL_NODISCARD auto crbegin() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    crbegin() const noexcept {
         return rbegin();
     }
 
-    CIEL_NODISCARD auto rend() noexcept -> reverse_iterator {
+    CIEL_NODISCARD reverse_iterator
+    rend() noexcept {
         return reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD auto rend() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    rend() const noexcept {
         return const_reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD auto crend() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    crend() const noexcept {
         return rend();
     }
 
-    CIEL_NODISCARD auto empty() const noexcept -> bool {
+    CIEL_NODISCARD bool
+    empty() const noexcept {
         return begin_ == end_;
     }
 
-    CIEL_NODISCARD auto size() const noexcept -> size_type {
+    CIEL_NODISCARD size_type
+    size() const noexcept {
         return end_ - begin_;
     }
 
-    CIEL_NODISCARD auto max_size() const noexcept -> size_type {
+    CIEL_NODISCARD size_type
+    max_size() const noexcept {
         return alloc_traits::max_size(allocator_());
     }
 
-    auto reserve_front_spare(const size_type new_spare) -> void {
+    void
+    reserve_front_spare(const size_type new_spare) {
         if (new_spare <= front_spare()) {
             return;
         }
@@ -826,7 +882,8 @@ public:
         CIEL_POSTCONDITION(new_spare <= front_spare());
     }
 
-    auto reserve_back_spare(const size_type new_spare) -> void {
+    void
+    reserve_back_spare(const size_type new_spare) {
         if (new_spare <= back_spare()) {
             return;
         }
@@ -846,11 +903,13 @@ public:
         CIEL_POSTCONDITION(new_spare <= back_spare());
     }
 
-    CIEL_NODISCARD auto capacity() const noexcept -> size_type {
+    CIEL_NODISCARD size_type
+    capacity() const noexcept {
         return end_cap_ - begin_cap_;
     }
 
-    auto shrink_to_fit() -> void {
+    void
+    shrink_to_fit() {
         if CIEL_UNLIKELY (front_spare() == 0 && back_spare() == 0) {
             return;
         }
@@ -867,19 +926,20 @@ public:
         }
     }
 
-    auto clear() noexcept -> void {
+    void
+    clear() noexcept {
         end_ = alloc_range_destroy(begin_, end_, std::is_trivially_destructible<value_type>{});
     }
 
-    // auto insert(iterator pos, const value_type& value) -> iterator;
+    // iterator insert(iterator pos, const value_type& value);
     //
-    // auto insert(iterator pos, value_type&& value) -> iterator;
+    // iterator insert(iterator pos, value_type&& value);
     //
-    // auto insert(iterator pos, const size_type count, const value_type& value) -> iterator;
+    // iterator insert(iterator pos, const size_type count, const value_type& value);
     //
     // // We construct all at the end at first, then rotate them to the right place
     // template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
-    // auto insert(iterator pos, Iter first, Iter last) -> iterator {
+    // iterator insert(iterator pos, Iter first, Iter last) {
     //     // record these index because it may reallocate
     //     const auto pos_index = pos - begin();
     //     const size_type old_size = size();
@@ -900,7 +960,7 @@ public:
     // }
     //
     // template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
-    // auto insert(iterator pos, Iter first, Iter last) -> iterator {
+    // iterator insert(iterator pos, Iter first, Iter last) {
     //     // TODO
     //
     //     const auto count = std::distance(first, last);
@@ -972,12 +1032,12 @@ public:
     //     return iterator(new_pos);
     // }
     //
-    // auto insert(iterator pos, std::initializer_list<value_type> ilist) -> iterator {
+    // iterator insert(iterator pos, std::initializer_list<value_type> ilist) {
     //     return insert(pos, ilist.begin(), ilist.end());
     // }
     //
     // template<class... Args>
-    // auto emplace(iterator pos, Args&& ... args) -> iterator {
+    // iterator emplace(iterator pos, Args&& ... args) {
     //     if (pos == end()) {
     //         emplace_back(std::forward<Args>(args)...);
     //         return iterator(end_ - 1);
@@ -991,13 +1051,15 @@ public:
     //     return insert_n(pos, 1, std::forward<Args>(args)...);
     // }
 
-    auto erase(iterator pos) noexcept -> iterator {
+    iterator
+    erase(iterator pos) noexcept {
         CIEL_PRECONDITION(!empty());
 
         return erase(pos, pos + 1);
     }
 
-    auto erase(iterator first, iterator last) noexcept -> iterator {
+    iterator
+    erase(iterator first, iterator last) noexcept {
         if CIEL_UNLIKELY (std::distance(first, last) <= 0) {
             return last;
         }
@@ -1021,11 +1083,13 @@ public:
         return begin() + begin_first_distance;
     }
 
-    auto push_back(const value_type& value) -> void {
+    void
+    push_back(const value_type& value) {
         emplace_back(value);
     }
 
-    auto push_back(value_type&& value) -> void {
+    void
+    push_back(value_type&& value) {
         emplace_back(std::move(value));
     }
 
@@ -1034,10 +1098,10 @@ public:
     // so only if there is plenty of space at other side will we consider shifting.
     // This situation may be seen when it's used as queue's base container.
     template<class... Args>
-    auto emplace_back(Args&& ... args) -> reference {
+    reference
+    emplace_back(Args&&... args) {
         if (back_spare() == 0) {
-
-            if CIEL_UNLIKELY (front_spare() > size()) {   // move size elements to get more than size / 2 vacant space
+            if CIEL_UNLIKELY (front_spare() > size()) { // move size elements to get more than size / 2 vacant space
                 left_shift_n(std::max<size_type>(front_spare() / 2, 1));
 
                 construct_one_at_end(std::forward<Args>(args)...);
@@ -1059,25 +1123,28 @@ public:
         return back();
     }
 
-    auto pop_back() noexcept -> void {
+    void
+    pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
         end_ = alloc_range_destroy(end_ - 1, end_, std::is_trivially_destructible<value_type>{});
     }
 
-    auto push_front(const value_type& value) -> void {
+    void
+    push_front(const value_type& value) {
         emplace_front(value);
     }
 
-    auto push_front(value_type&& value) -> void {
+    void
+    push_front(value_type&& value) {
         emplace_front(std::move(value));
     }
 
     template<class... Args>
-    auto emplace_front(Args&& ... args) -> reference {
+    reference
+    emplace_front(Args&&... args) {
         if (front_spare() == 0) {
-
-            if CIEL_UNLIKELY (back_spare() > size()) {   // move size elements to get more than size / 2 vacant space
+            if CIEL_UNLIKELY (back_spare() > size()) { // move size elements to get more than size / 2 vacant space
                 right_shift_n(std::max<size_type>(back_spare() / 2, 1));
 
                 construct_one_at_begin(std::forward<Args>(args)...);
@@ -1090,7 +1157,7 @@ public:
 
                 sb.construct_one_at_begin(std::forward<Args>(args)...);
 
-                swap_out_buffer(sb, begin_,  is_trivially_relocatable<value_type>{});
+                swap_out_buffer(sb, begin_, is_trivially_relocatable<value_type>{});
             }
 
         } else {
@@ -1100,14 +1167,16 @@ public:
         return front();
     }
 
-    auto pop_front() noexcept -> void {
+    void
+    pop_front() noexcept {
         CIEL_PRECONDITION(!empty());
 
         alloc_range_destroy(begin_, begin_ + 1, std::is_trivially_destructible<value_type>{});
         ++begin_;
     }
 
-    auto resize(const size_type count) -> void {
+    void
+    resize(const size_type count) {
         if (size() >= count) {
             end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
             return;
@@ -1118,7 +1187,8 @@ public:
         construct_at_end(count - size());
     }
 
-    auto resize(const size_type count, const value_type& value) -> void {
+    void
+    resize(const size_type count, const value_type& value) {
         if (size() >= count) {
             end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
             return;
@@ -1129,8 +1199,9 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    auto swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value ||
-                                            alloc_traits::is_always_equal::value) -> void {
+    void
+    swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value
+                                       || alloc_traits::is_always_equal::value) {
         using std::swap;
 
         swap(begin_cap_, other.begin_cap_);
@@ -1140,10 +1211,11 @@ public:
         swap(allocator_(), other.allocator_());
     }
 
-};  // class split_buffer
+}; // class split_buffer
 
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept -> bool {
+CIEL_NODISCARD bool
+operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -1153,7 +1225,8 @@ CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, const split_bu
 
 // So that we can test more efficiently
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const split_buffer<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept -> bool {
+CIEL_NODISCARD bool
+operator==(const split_buffer<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -1173,11 +1246,11 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T, class Alloc>
-auto swap(ciel::split_buffer<T, Alloc>& lhs,
-          ciel::split_buffer<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) -> void {
+void
+swap(ciel::split_buffer<T, Alloc>& lhs, ciel::split_buffer<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 
-}   // namespace std
+} // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_

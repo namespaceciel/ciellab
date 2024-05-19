@@ -14,10 +14,10 @@ NAMESPACE_CIEL_BEGIN
 
 template<typename T>
 concept GarbageCollectible = requires(T* t, T* tp) {
-    { t->get_next() } -> std::convertible_to<T*>;
-    { t->set_next(tp) };
-    { t->destroy() };
-};
+                                 { t->get_next() } -> std::convertible_to<T*>;
+                                 { t->set_next(tp) };
+                                 { t->destroy() };
+                             };
 
 template<GarbageCollectible GarbageType>
 class hazard_pointers;
@@ -32,7 +32,8 @@ class hazard_pointers;
 // This does technically mean that we leak the HazardSlots, but that is
 // a price we are willing to pay.
 template<GarbageCollectible GarbageType>
-extern inline hazard_pointers<GarbageType>& get_hazard_pointers() {
+extern inline hazard_pointers<GarbageType>&
+get_hazard_pointers() {
     alignas(hazard_pointers<GarbageType>) static char buffer[sizeof(hazard_pointers<GarbageType>)];
     static auto* list = new (&buffer) hazard_pointers<GarbageType>{};
     return *list;
@@ -50,7 +51,7 @@ public:
 
 private:
     garbage_type* head_{nullptr};
-    garbage_type* tail_{nullptr};   // So that we can easily append another retired_list after tail_.
+    garbage_type* tail_{nullptr}; // So that we can easily append another retired_list after tail_.
 
 public:
     constexpr retired_list() noexcept = default;
@@ -58,7 +59,8 @@ public:
     explicit retired_list(garbage_type* head) noexcept
         : head_(head), tail_(head) {}
 
-    retired_list& operator=(garbage_type* head) noexcept {
+    retired_list&
+    operator=(garbage_type* head) noexcept {
         CIEL_PRECONDITION(head_ == nullptr);
         CIEL_PRECONDITION(tail_ == nullptr);
 
@@ -67,26 +69,32 @@ public:
     }
 
     retired_list(const retired_list&) = delete;
-    retired_list& operator=(const retired_list&) = delete;
+    retired_list&
+    operator=(const retired_list&)
+        = delete;
 
     retired_list(retired_list&& other) noexcept
         : head_(std::exchange(other.head_, nullptr)), tail_(std::exchange(other.tail_, nullptr)) {}
 
     ~retired_list() {
-        cleanup([](auto&&) noexcept { return false; });     // Every node is not protected anymore.
+        cleanup([](auto&&) noexcept {
+            return false;
+        }); // Every node is not protected anymore.
     }
 
     // p -> head_ -> ...
     // p will be new head_
-    void push(garbage_type* p) noexcept {
+    void
+    push(garbage_type* p) noexcept {
         p->set_next(std::exchange(head_, p));
 
-        if CIEL_UNLIKELY(p->get_next() == nullptr) {   // head_ and tail_ are nullptr
+        if CIEL_UNLIKELY (p->get_next() == nullptr) { // head_ and tail_ are nullptr
             tail_ = p;
         }
     }
 
-    void append(retired_list&& other) noexcept {
+    void
+    append(retired_list&& other) noexcept {
         if (head_ == nullptr) {
             CIEL_PRECONDITION(tail_ == nullptr);
 
@@ -102,7 +110,8 @@ public:
         }
     }
 
-    void swap(retired_list& other) noexcept {
+    void
+    swap(retired_list& other) noexcept {
         std::swap(head_, other.head_);
         std::swap(tail_, other.tail_);
     }
@@ -111,7 +120,8 @@ public:
     // then x->destroy() and remove x from the retired list.
     // Otherwise, keep x on the retired list waiting for the next cleanup.
     template<class F>
-    void cleanup(F&& is_protected) noexcept {
+    void
+    cleanup(F&& is_protected) noexcept {
         // Destroy continuously unprotected nodes starting from head_
         while (head_ && !is_protected(head_)) {
             garbage_type* old = std::exchange(head_, head_->get_next());
@@ -119,7 +129,7 @@ public:
         }
 
         if (head_) {
-            garbage_type* prev = head_;
+            garbage_type* prev    = head_;
             garbage_type* current = head_->get_next();
 
             while (current) {
@@ -136,7 +146,7 @@ public:
             tail_ = prev;
 
         } else {
-            tail_ = nullptr;    // empty
+            tail_ = nullptr; // empty
         }
     }
 
@@ -144,7 +154,8 @@ public:
     // if is_protected(x) == false, then x->destroy() and remove x from the retired list.
     // Otherwise, move x onto the "into" list.
     template<class F>
-    void eject_and_move(size_t n, retired_list& into, F&& is_protected) noexcept {
+    void
+    eject_and_move(size_t n, retired_list& into, F&& is_protected) noexcept {
         for (; head_ && n > 0; --n) {
             garbage_type* current = std::exchange(head_, head_->get_next());
 
@@ -161,7 +172,7 @@ public:
         }
     }
 
-};  // class retired_list
+}; // class retired_list
 
 inline constexpr std::size_t CACHE_LINE_ALIGNMENT = 128;
 
@@ -176,13 +187,14 @@ class deamortized_reclaimer;
 template<GarbageCollectible GarbageType>
 class alignas(CACHE_LINE_ALIGNMENT) hazard_slot {
 public:
-    using garbage_type = GarbageType;
+    using garbage_type       = GarbageType;
     using protected_set_type = std::unordered_set<garbage_type*>;
 
     explicit hazard_slot(const bool in_use) noexcept
         : in_use_(in_use) {}
 
-// TODO
+    // TODO
+
 public:
     // The *actual* "Hazard Pointer" that protects the object that it points to.
     // Other threads scan for the set of all such pointers before they clean up.
@@ -211,7 +223,7 @@ public:
 
     std::unique_ptr<deamortized_reclaimer<garbage_type>> deamortized_reclaimer_{nullptr};
 
-};  // class alignas(CACHE_LINE_ALIGNMENT) hazard_slot
+}; // class alignas(CACHE_LINE_ALIGNMENT) hazard_slot
 
 // A HazardSlotOwner owns exactly one HazardSlot entry in the global linked list of HazardSlots.
 // On creation, it acquires a free slot from the list, or appends a new slot if all of them are in use.
@@ -235,13 +247,14 @@ public:
 template<GarbageCollectible GarbageType>
 class deamortized_reclaimer {
 public:
-    using garbage_type = GarbageType;
+    using garbage_type       = GarbageType;
     using protected_set_type = std::unordered_set<garbage_type*>;
 
     explicit deamortized_reclaimer(hazard_slot<garbage_type>& slot, hazard_slot<garbage_type>* const head) noexcept
         : my_slot_(slot), head_slot_(head) {}
 
-    void do_reclamation_work() {
+    void
+    do_reclamation_work() {
         ++num_retires_;
 
         if (current_slot_ == nullptr) {
@@ -252,11 +265,11 @@ public:
             }
 
             // There are at least 2 * num_hazard_pointers objects awaiting reclamation
-            num_retires_ = 0;
+            num_retires_     = 0;
             num_hazard_ptrs_ = std::exchange(next_num_hazard_ptrs_, 0);
-            current_slot_ = head_slot_;
+            current_slot_    = head_slot_;
             protected_set_.swap(next_protected_set_);
-            next_protected_set_.clear();// The only not-O(1) operation, but its fast.
+            next_protected_set_.clear(); // The only not-O(1) operation, but its fast.
 
             eligible_.append(std::move(next_eligible_));
             next_eligible_.swap(my_slot_.retired_list_);
@@ -265,7 +278,9 @@ public:
         // Eject up to two elements from the eligible_ set. It has to be two because we waited until
         // we had 2 * num_hazard_ptrs eligible objects, so we want that to be processed by the time
         // we get through the hazard_pointer list again.
-        eligible_.eject_and_move(2, my_slot_.retired_list_, [&](auto p) noexcept { return protected_set_.count(p) > 0; });
+        eligible_.eject_and_move(2, my_slot_.retired_list_, [&](auto p) noexcept {
+            return protected_set_.count(p) > 0;
+        });
 
         ++next_num_hazard_ptrs_;
         next_protected_set_.insert(current_slot_->protected_ptr_.load());
@@ -289,13 +304,13 @@ private:
 
     size_t num_retires_{0};
 
-};  // struct deamortized_reclaimer
+}; // struct deamortized_reclaimer
 
 enum class ReclamationMethod {
-    AmortizedReclamation, // Reclamation happens in bulk in the retiring thread
-    DeamortizedReclamation// Reclamation happens spread out over the retiring thread
+    AmortizedReclamation,  // Reclamation happens in bulk in the retiring thread
+    DeamortizedReclamation // Reclamation happens spread out over the retiring thread
 
-};  // enum class ReclamationMethod
+}; // enum class ReclamationMethod
 
 // A simple and efficient implementation of Hazard Pointer deferred reclamation
 //
@@ -315,16 +330,17 @@ class hazard_pointers {
 public:
     // After this many retires, a thread will attempt to clean up the contents of
     // its local retired list, deleting any retired objects that are not protected.
-    constexpr static size_t cleanup_threshold = 2000;
+    static constexpr size_t cleanup_threshold = 2000;
 
-    using garbage_type = GarbageType;
+    using garbage_type       = GarbageType;
     using protected_set_type = std::unordered_set<garbage_type*>;
 
 public:
-    static inline const thread_local HazardSlotOwner local_slot{get_hazard_pointers<garbage_type>()};
+    inline static const thread_local HazardSlotOwner local_slot{get_hazard_pointers<garbage_type>()};
 
     // Find an available hazard slot, or allocate a new one if none available.
-    hazard_slot<garbage_type>* get_slot() {
+    hazard_slot<garbage_type>*
+    get_slot() {
         auto current = list_head_;
 
         while (true) {
@@ -336,14 +352,15 @@ public:
                 auto my_slot = new hazard_slot<garbage_type>{true};
 
                 if (mode_ == ReclamationMethod::DeamortizedReclamation) {
-                    my_slot->deamortized_reclaimer_ = std::make_unique<deamortized_reclaimer<garbage_type>>(*my_slot, list_head_);
+                    my_slot->deamortized_reclaimer_
+                        = std::make_unique<deamortized_reclaimer<garbage_type>>(*my_slot, list_head_);
                 }
 
                 hazard_slot<garbage_type>* next = nullptr;
 
                 while (!current->next_.compare_exchange_weak(next, my_slot)) {
                     current = next;
-                    next = nullptr;
+                    next    = nullptr;
                 }
 
                 return my_slot;
@@ -355,12 +372,14 @@ public:
     }
 
     // Give a slot back to the world so another thread can re-use it
-    void relinquish_slot(hazard_slot<garbage_type>* slot) {
+    void
+    relinquish_slot(hazard_slot<garbage_type>* slot) {
         slot->in_use_.store(false);
     }
 
     template<typename F>
-    void for_each_slot(F&& f) noexcept(std::is_nothrow_invocable_v<F&, hazard_slot<garbage_type>&>) {
+    void
+    for_each_slot(F&& f) noexcept(std::is_nothrow_invocable_v<F&, hazard_slot<garbage_type>&>) {
         auto current = list_head_;
 
         while (current) {
@@ -371,7 +390,8 @@ public:
 
     // Apply the function f to all currently announced hazard pointers
     template<typename F>
-    void scan_hazard_pointers(F&& f) noexcept(std::is_nothrow_invocable_v<F&, garbage_type*>) {
+    void
+    scan_hazard_pointers(F&& f) noexcept(std::is_nothrow_invocable_v<F&, garbage_type*>) {
         for_each_slot([&, f = std::forward<F>(f)](hazard_slot<garbage_type>& slot) {
             auto p = slot.protected_ptr_.load();
             if (p) {
@@ -380,12 +400,17 @@ public:
         });
     }
 
-    void cleanup(hazard_slot<garbage_type>& slot) {
+    void
+    cleanup(hazard_slot<garbage_type>& slot) {
         slot.num_retires_since_cleanup_ = 0;
         std::atomic_thread_fence(std::memory_order_seq_cst);
-        scan_hazard_pointers([&](auto p) { slot.protected_set_.insert(p); });
-        slot.retired_list_.cleanup([&](auto p) { return slot.protected_set_.count(p) > 0; });
-        slot.protected_set_.clear();     // Does not free memory, only clears contents
+        scan_hazard_pointers([&](auto p) {
+            slot.protected_set_.insert(p);
+        });
+        slot.retired_list_.cleanup([&](auto p) {
+            return slot.protected_set_.count(p) > 0;
+        });
+        slot.protected_set_.clear(); // Does not free memory, only clears contents
     }
 
     ReclamationMethod mode_{ReclamationMethod::AmortizedReclamation};
@@ -396,11 +421,10 @@ public:
     // Pre-populate the slot list with P slots, one for each hardware thread
     hazard_pointers()
         : list_head_(new hazard_slot<garbage_type>{false}) {
-
         auto current = list_head_;
         for (unsigned i = 1; i < std::thread::hardware_concurrency(); ++i) {
             current->next_ = new hazard_slot<garbage_type>{false};
-            current = current->next_;
+            current        = current->next_;
         }
     }
 
@@ -420,7 +444,8 @@ public:
     // the pointer to protect and some other value. In this case, the value of
     // f(ptr) is protected instead, but the full value *ptr is still returned.
     template<template<typename> typename Atomic, typename U, typename F>
-    U protect(const Atomic<U>& src, F&& f) {
+    U
+    protect(const Atomic<U>& src, F&& f) {
         static_assert(std::is_convertible_v<std::invoke_result_t<F, U>, garbage_type*>);
 
         auto& slot = local_slot.my_slot_->protected_ptr_;
@@ -438,7 +463,7 @@ public:
 
             U current_value = src.load(std::memory_order_acquire);
 
-            if CIEL_LIKELY(current_value == result) {
+            if CIEL_LIKELY (current_value == result) {
                 return result;
 
             } else {
@@ -449,19 +474,24 @@ public:
 
     // Protect the object pointed to by the pointer currently stored at src.
     template<template<typename> typename Atomic, typename U>
-    U protect(const Atomic<U>& src) {
-        return protect(src, [](auto&& x) { return std::forward<decltype(x)>(x); });
+    U
+    protect(const Atomic<U>& src) {
+        return protect(src, [](auto&& x) {
+            return std::forward<decltype(x)>(x);
+        });
     }
 
     // Unprotect the currently protected object
-    void release() {
+    void
+    release() {
         local_slot.my_slot->protected_ptr.store(nullptr, std::memory_order_release);
     }
 
     // Retire the given object
     //
     // The object managed by p must have reference count zero.
-    void retire(garbage_type* p) noexcept {
+    void
+    retire(garbage_type* p) noexcept {
         hazard_slot<garbage_type>& my_slot = *local_slot.my_slot_;
         my_slot.retired_list_.push(p);
 
@@ -469,23 +499,24 @@ public:
             assert(my_slot.deamortized_reclaimer_ != nullptr);
             my_slot.deamortized_reclaimer_->do_reclamation_work();
 
-        } else if CIEL_UNLIKELY(++my_slot.num_retires_since_cleanup_ >= cleanup_threshold) {
+        } else if CIEL_UNLIKELY (++my_slot.num_retires_since_cleanup_ >= cleanup_threshold) {
             cleanup(my_slot);
         }
     }
 
-    void enable_deamortized_reclamation() {
+    void
+    enable_deamortized_reclamation() {
         CIEL_PRECONDITION(mode_ == ReclamationMethod::AmortizedReclamation);
 
         for_each_slot([&](hazard_slot<garbage_type>& slot) {
             slot.deamortized_reclaimer = std::make_unique<deamortized_reclaimer>(slot, list_head_);
         });
 
-        mode_ = ReclamationMethod::DeamortizedReclamation;
+        mode_             = ReclamationMethod::DeamortizedReclamation;
         protection_order_ = std::memory_order_seq_cst;
     }
 
-};  // class hazard_pointers
+}; // class hazard_pointers
 
 NAMESPACE_CIEL_END
 

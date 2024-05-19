@@ -11,16 +11,19 @@
 struct trivially_relocatable_obj {
     int* ptr;
 
-    trivially_relocatable_obj(int i = 0) : ptr(new int{i}) {}
+    trivially_relocatable_obj(int i = 0)
+        : ptr(new int{i}) {}
 
     trivially_relocatable_obj(const trivially_relocatable_obj& other)
-            : ptr(other.ptr ? new int{*other.ptr} : nullptr) {}
+        : ptr(other.ptr ? new int{*other.ptr} : nullptr) {}
 
-    trivially_relocatable_obj(trivially_relocatable_obj&& other) noexcept : ptr(other.ptr) {
+    trivially_relocatable_obj(trivially_relocatable_obj&& other) noexcept
+        : ptr(other.ptr) {
         other.ptr = nullptr;
     }
 
-    trivially_relocatable_obj& operator=(trivially_relocatable_obj other) noexcept {
+    trivially_relocatable_obj&
+    operator=(trivially_relocatable_obj other) noexcept {
         swap(other);
         return *this;
     }
@@ -29,11 +32,12 @@ struct trivially_relocatable_obj {
         delete ptr;
     }
 
-    void swap(trivially_relocatable_obj& other) noexcept {
+    void
+    swap(trivially_relocatable_obj& other) noexcept {
         std::swap(ptr, other.ptr);
     }
 
-};  // struct trivially_relocatable_obj
+}; // struct trivially_relocatable_obj
 
 NAMESPACE_CIEL_BEGIN
 
@@ -43,7 +47,8 @@ struct is_trivially_relocatable<trivially_relocatable_obj> : std::true_type {};
 NAMESPACE_CIEL_END
 
 template<class Container>
-void push_back_benchmark() noexcept {
+void
+push_back_benchmark() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -52,7 +57,8 @@ void push_back_benchmark() noexcept {
 }
 
 template<class Container>
-void push_front_benchmark() noexcept {
+void
+push_front_benchmark() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -61,7 +67,8 @@ void push_front_benchmark() noexcept {
 }
 
 template<class Container>
-void push_and_pop_benchmark() noexcept {
+void
+push_and_pop_benchmark() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -73,7 +80,8 @@ void push_and_pop_benchmark() noexcept {
 }
 
 template<class Container, class iterator = typename Container::iterator>
-void insert_benchmark() noexcept {
+void
+insert_benchmark() noexcept {
     Container c;
 
     iterator it = c.begin();
@@ -82,42 +90,44 @@ void insert_benchmark() noexcept {
         it = c.insert(it, i);
 
         // Try to safely increment the iterator three times.
-        if(it == c.end()) {
+        if (it == c.end()) {
             it = c.begin();
         }
-        if(++it == c.end()) {
+        if (++it == c.end()) {
             it = c.begin();
         }
-        if(++it == c.end()) {
+        if (++it == c.end()) {
             it = c.begin();
         }
     }
 }
 
 template<class Container, class iterator = typename Container::iterator>
-void erase_benchmark() noexcept {
+void
+erase_benchmark() noexcept {
     Container c(1000);
 
     iterator it = c.begin();
 
-    for (int i = 0;  i < 1000; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         it = c.erase(it);
 
         // Try to safely increment the iterator three times.
-        if(it == c.end()) {
+        if (it == c.end()) {
             it = c.begin();
         }
-        if(++it == c.end()) {
+        if (++it == c.end()) {
             it = c.begin();
         }
-        if(++it == c.end()) {
+        if (++it == c.end()) {
             it = c.begin();
         }
     }
 }
 
 template<class Container>
-void few_objects_benchmark() {
+void
+few_objects_benchmark() {
     for (int i = 0; i < 1000; ++i) {
         Container c{50, 123};
 
@@ -128,7 +138,8 @@ void few_objects_benchmark() {
 }
 
 template<class Container>
-void trivially_relocatable_obj_benchmark() {
+void
+trivially_relocatable_obj_benchmark() {
     Container c(100000, trivially_relocatable_obj{});
 
     for (int i = 0; i < 100; ++i) {
@@ -147,7 +158,8 @@ struct sort_benchmark {
         std::generate(std::begin(arr), std::end(arr), g);
     }
 
-    auto operator()(void(*sort)(uint64_t*, uint64_t*)) noexcept -> void {
+    void
+    operator()(void (*sort)(uint64_t*, uint64_t*)) noexcept {
         sort(std::begin(arr), std::end(arr));
     }
 };
@@ -159,13 +171,15 @@ struct sorted_arr_sort_benchmark {
         std::iota(std::begin(arr), std::end(arr), 0);
     }
 
-    auto operator()(void(*sort)(uint64_t*, uint64_t*)) noexcept -> void {
+    void
+    operator()(void (*sort)(uint64_t*, uint64_t*)) noexcept {
         sort(std::begin(arr), std::end(arr));
     }
 };
 
 template<class Container, class value_type = typename Container::value_type>
-void set_insert_benchmark() noexcept {
+void
+set_insert_benchmark() noexcept {
     Container c;
     std::random_device rd;
     std::mt19937_64 g(rd());
@@ -177,7 +191,8 @@ void set_insert_benchmark() noexcept {
 
 // set insert sorted data to test balance performance
 template<class Container, class value_type = typename Container::value_type>
-void set_sorted_insert_benchmark() noexcept {
+void
+set_sorted_insert_benchmark() noexcept {
     Container c;
 
     for (uint64_t i = 0; i < 10000ULL; ++i) {
@@ -186,7 +201,8 @@ void set_sorted_insert_benchmark() noexcept {
 }
 
 template<class Set, class value_type = typename Set::value_type>
-void set_find_benchmark(Set& s) noexcept {
+void
+set_find_benchmark(Set& s) noexcept {
     std::random_device rd;
     std::mt19937_64 g(rd());
 
@@ -196,31 +212,33 @@ void set_find_benchmark(Set& s) noexcept {
 }
 
 template<class Set, class iterator = typename Set::iterator>
-void set_erase_benchmark(Set s) noexcept {
+void
+set_erase_benchmark(Set s) noexcept {
     iterator it = s.begin();
 
-    for (int i = 0;  i < 1000; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         it = s.erase(it);
 
         // Try to safely increment the iterator three times.
-        if(it == s.end()) {
+        if (it == s.end()) {
             it = s.begin();
         }
-        if(++it == s.end()) {
+        if (++it == s.end()) {
             it = s.begin();
         }
-        if(++it == s.end()) {
+        if (++it == s.end()) {
             it = s.begin();
         }
     }
 }
 
 template<class Set>
-void set_erase_value_benchmark(Set s) noexcept {
+void
+set_erase_value_benchmark(Set s) noexcept {
     std::random_device rd;
     std::mt19937_64 g(rd());
 
-    for (int i = 0;  i < 1000; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         s.erase(g() % 10000);
     }
 }

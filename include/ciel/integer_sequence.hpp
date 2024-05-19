@@ -13,11 +13,12 @@ struct integer_sequence {
 
     using value_type = T;
 
-    static constexpr auto size() noexcept -> size_t {
+    static constexpr size_t
+    size() noexcept {
         return sizeof...(Ints);
     }
 
-};  // struct integer_sequence
+}; // struct integer_sequence
 
 template<size_t... Ints>
 using index_sequence = integer_sequence<size_t, Ints...>;
@@ -36,7 +37,7 @@ struct merge_and_renumber<index_sequence<I1...>, index_sequence<I2...>> {
 
 template<size_t N>
 struct make_index_sequence_helper : merge_and_renumber<typename make_index_sequence_helper<N / 2>::type,
-        typename make_index_sequence_helper<N - N / 2>::type> {};
+                                                       typename make_index_sequence_helper<N - N / 2>::type> {};
 
 template<>
 struct make_index_sequence_helper<0> {
@@ -48,7 +49,7 @@ struct make_index_sequence_helper<1> {
     using type = index_sequence<0>;
 };
 
-}   // namespace details
+} // namespace details
 
 template<size_t N>
 using make_index_sequence = typename details::make_index_sequence_helper<N>::type;
@@ -63,7 +64,7 @@ struct make_integer_sequence_helper<T, N, index_sequence<Indices...>> {
     using type = integer_sequence<T, static_cast<T>(Indices)...>;
 };
 
-}   // namespace details
+} // namespace details
 
 template<class T, T N>
 using make_integer_sequence = typename details::make_integer_sequence_helper<T, N>::type;

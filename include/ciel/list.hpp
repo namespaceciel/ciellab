@@ -22,26 +22,29 @@ struct list_node_base {
     list_node_base* prev_;
     list_node_base* next_;
 
-    list_node_base() noexcept : prev_(this), next_(this) {}
+    list_node_base() noexcept
+        : prev_(this), next_(this) {}
 
-    list_node_base(list_node_base* p, list_node_base* n) noexcept : prev_(p), next_(n) {}
+    list_node_base(list_node_base* p, list_node_base* n) noexcept
+        : prev_(p), next_(n) {}
 
-    auto clear() noexcept -> void {
+    void
+    clear() noexcept {
         prev_ = this;
         next_ = this;
     }
 
-};    // struct list_node_base
+}; // struct list_node_base
 
 template<class T>
 struct list_node : list_node_base {
     T value_;
 
     template<class... Args>
-    list_node(list_node_base* p, list_node_base* n, Args&& ... args)
+    list_node(list_node_base* p, list_node_base* n, Args&&... args)
         : list_node_base(p, n), value_(std::forward<Args>(args)...) {}
 
-};    // struct list_node
+}; // struct list_node
 
 template<class T, class Pointer, class Reference>
 class list_iterator {
@@ -54,121 +57,142 @@ public:
     using iterator_concept  = std::bidirectional_iterator_tag;
 
 private:
-    using base_node_type    = list_node_base;
-    using node_type         = list_node<value_type>;
+    using base_node_type = list_node_base;
+    using node_type      = list_node<value_type>;
 
     base_node_type* it_;
 
 public:
-    list_iterator() noexcept: it_(nullptr) {}
+    list_iterator() noexcept
+        : it_(nullptr) {}
 
-    explicit list_iterator(const base_node_type* p) noexcept: it_(const_cast<base_node_type*>(p)) {}
+    explicit list_iterator(const base_node_type* p) noexcept
+        : it_(const_cast<base_node_type*>(p)) {}
 
     list_iterator(const list_iterator&) noexcept = default;
-    list_iterator(list_iterator&&) noexcept = default;
+    list_iterator(list_iterator&&) noexcept      = default;
 
     template<class P, class R>
-    list_iterator(const list_iterator<T, P, R>& other) noexcept : it_(const_cast<base_node_type*>(other.base())) {}
+    list_iterator(const list_iterator<T, P, R>& other) noexcept
+        : it_(const_cast<base_node_type*>(other.base())) {}
 
     ~list_iterator() = default;
 
-    auto operator=(const list_iterator&) noexcept -> list_iterator& = default;
-    auto operator=(list_iterator&&) noexcept -> list_iterator& = default;
+    list_iterator&
+    operator=(const list_iterator&) noexcept
+        = default;
+    list_iterator&
+    operator=(list_iterator&&) noexcept
+        = default;
 
-    CIEL_NODISCARD auto next() const noexcept -> list_iterator {
+    CIEL_NODISCARD list_iterator
+    next() const noexcept {
         return list_iterator(it_->next_);
     }
 
-    CIEL_NODISCARD auto prev() const noexcept -> list_iterator {
+    CIEL_NODISCARD list_iterator
+    prev() const noexcept {
         return list_iterator(it_->prev_);
     }
 
-    CIEL_NODISCARD auto operator*() const noexcept -> reference {
+    CIEL_NODISCARD reference
+    operator*() const noexcept {
         return static_cast<node_type*>(it_)->value_;
     }
 
-    CIEL_NODISCARD auto operator->() const noexcept -> pointer {
+    CIEL_NODISCARD pointer
+    operator->() const noexcept {
         return &static_cast<node_type*>(it_)->value_;
     }
 
-    auto operator++() noexcept -> list_iterator& {
+    list_iterator&
+    operator++() noexcept {
         it_ = it_->next_;
         return *this;
     }
 
-    CIEL_NODISCARD auto operator++(int) noexcept -> list_iterator {
+    CIEL_NODISCARD list_iterator
+    operator++(int) noexcept {
         list_iterator res(it_);
         ++(*this);
         return res;
     }
 
-    auto operator--() noexcept -> list_iterator& {
+    list_iterator&
+    operator--() noexcept {
         it_ = it_->prev_;
         return *this;
     }
 
-    CIEL_NODISCARD auto operator--(int) noexcept -> list_iterator {
+    CIEL_NODISCARD list_iterator
+    operator--(int) noexcept {
         list_iterator res(it_);
         --(*this);
         return res;
     }
 
-    CIEL_NODISCARD auto base() const noexcept -> base_node_type* {
+    CIEL_NODISCARD base_node_type*
+    base() const noexcept {
         return it_;
     }
 
-    CIEL_NODISCARD explicit operator bool() const noexcept {
+    CIEL_NODISCARD explicit
+    operator bool() const noexcept {
         return it_ != nullptr;
     }
 
-};    // class list_iterator
+}; // class list_iterator
 
 template<class T, class Pointer1, class Pointer2, class Reference1, class Reference2>
-CIEL_NODISCARD auto operator==(const list_iterator<T, Pointer1, Reference1>& lhs,
-                              const list_iterator<T, Pointer2, Reference2>& rhs) noexcept -> bool {
+CIEL_NODISCARD bool
+operator==(const list_iterator<T, Pointer1, Reference1>& lhs,
+           const list_iterator<T, Pointer2, Reference2>& rhs) noexcept {
     return lhs.base() == rhs.base();
 }
 
 template<class T, class Pointer1, class Pointer2, class Reference1, class Reference2>
-CIEL_NODISCARD auto operator!=(const list_iterator<T, Pointer1, Reference1>& lhs,
-                              const list_iterator<T, Pointer2, Reference2>& rhs) noexcept -> bool {
+CIEL_NODISCARD bool
+operator!=(const list_iterator<T, Pointer1, Reference1>& lhs,
+           const list_iterator<T, Pointer2, Reference2>& rhs) noexcept {
     return !(lhs == rhs);
 }
 
 template<class T, class Allocator = std::allocator<T>>
 class list {
 public:
-    using value_type             = T;
-    using allocator_type         = Allocator;
-    using size_type              = size_t;
-    using difference_type        = ptrdiff_t;
-    using reference              = value_type&;
-    using const_reference        = const value_type&;
+    using value_type      = T;
+    using allocator_type  = Allocator;
+    using size_type       = size_t;
+    using difference_type = ptrdiff_t;
+    using reference       = value_type&;
+    using const_reference = const value_type&;
 
-    using pointer                = typename std::allocator_traits<allocator_type>::pointer;
-    using const_pointer          = typename std::allocator_traits<allocator_type>::const_pointer;
+    using pointer       = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer = typename std::allocator_traits<allocator_type>::const_pointer;
 
-    using iterator               = list_iterator<value_type, pointer, reference>;
-    using const_iterator         = list_iterator<value_type, const_pointer, const_reference>;
+    using iterator       = list_iterator<value_type, pointer, reference>;
+    using const_iterator = list_iterator<value_type, const_pointer, const_reference>;
 
     using reverse_iterator       = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    ;
 
 private:
-    using base_node_type         = list_node_base;
-    using node_type              = list_node<value_type>;
+    using base_node_type = list_node_base;
+    using node_type      = list_node<value_type>;
 
-    using alloc_traits           = std::allocator_traits<allocator_type>;
-    using node_allocator         = typename alloc_traits::template rebind_alloc<node_type>;
-    using node_alloc_traits      = typename alloc_traits::template rebind_traits<node_type>;
+    using alloc_traits      = std::allocator_traits<allocator_type>;
+    using node_allocator    = typename alloc_traits::template rebind_alloc<node_type>;
+    using node_alloc_traits = typename alloc_traits::template rebind_traits<node_type>;
 
     base_node_type end_node_;
     node_type* free_node_;
     compressed_pair<size_type, node_allocator> size_node_allocator_;
 
-    auto do_destroy() noexcept -> void {
+    void
+    do_destroy() noexcept {
         iterator it = begin();
-        iterator e = end();
+        iterator e  = end();
 
         while (it != e) {
             auto* to_be_destroyed = static_cast<node_type*>(it.base());
@@ -184,10 +208,11 @@ private:
         }
     }
 
-    auto get_one_free_node() -> node_type* {
+    node_type*
+    get_one_free_node() {
         if (free_node_) {
             node_type* res = free_node_;
-            free_node_ = static_cast<node_type*>(free_node_->next_);
+            free_node_     = static_cast<node_type*>(free_node_->next_);
 
             return res;
         }
@@ -195,29 +220,35 @@ private:
         return node_alloc_traits::allocate(allocator_(), 1);
     }
 
-    auto store_one_free_node(node_type* free) noexcept -> void {
+    void
+    store_one_free_node(node_type* free) noexcept {
         free->next_ = free_node_;
-        free_node_ = free;
+        free_node_  = free;
     }
 
-    auto size_() noexcept -> size_type& {
+    size_type&
+    size_() noexcept {
         return size_node_allocator_.first();
     }
 
-    auto size_() const noexcept -> const size_type& {
+    const size_type&
+    size_() const noexcept {
         return size_node_allocator_.first();
     }
 
-    auto allocator_() noexcept -> node_allocator& {
+    node_allocator&
+    allocator_() noexcept {
         return size_node_allocator_.second();
     }
 
-    auto allocator_() const noexcept -> const node_allocator& {
+    const node_allocator&
+    allocator_() const noexcept {
         return size_node_allocator_.second();
     }
 
-    auto alloc_range_destroy(iterator begin, iterator end) noexcept -> iterator {
-        iterator loop = begin;
+    iterator
+    alloc_range_destroy(iterator begin, iterator end) noexcept {
+        iterator loop         = begin;
         iterator before_begin = begin.prev();
 
         while (loop != end) {
@@ -228,48 +259,50 @@ private:
             --size_();
             store_one_free_node(to_be_destroyed);
         }
-        
+
         before_begin.base()->next_ = end.base();
-        end.base()->prev_ = before_begin.base();
-        
+        end.base()->prev_          = before_begin.base();
+
         return end;
     }
 
     // insert before begin
     template<class... Arg>
-    auto alloc_range_construct_n(iterator begin, const size_type n, Arg&& ... arg) -> iterator {
-        iterator before_begin = begin.prev();
+    iterator
+    alloc_range_construct_n(iterator begin, const size_type n, Arg&&... arg) {
+        iterator before_begin          = begin.prev();
         iterator original_before_begin = before_begin;
 
         CIEL_TRY {
             for (size_type i = 0; i < n; ++i) {
                 node_type* construct_place = get_one_free_node();
-                
+
                 CIEL_TRY {
                     node_alloc_traits::construct(allocator_(), construct_place, before_begin.base(), begin.base(),
                                                  std::forward<Arg>(arg)...);
                     ++size_();
 
                     before_begin.base()->next_ = construct_place;
-                    begin.base()->prev_ = construct_place;
+                    begin.base()->prev_        = construct_place;
                     ++before_begin;
-
-                } CIEL_CATCH (...) {
+                }
+                CIEL_CATCH (...) {
                     store_one_free_node(construct_place);
                     CIEL_THROW;
                 }
             }
             return original_before_begin.next();
-
-        } CIEL_CATCH (...) {
+        }
+        CIEL_CATCH (...) {
             alloc_range_destroy(original_before_begin.next(), begin);
             CIEL_THROW;
         }
     }
 
     template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
-    auto alloc_range_construct(iterator begin, Iter first, Iter last) -> iterator {
-        iterator before_begin = begin.prev();
+    iterator
+    alloc_range_construct(iterator begin, Iter first, Iter last) {
+        iterator before_begin          = begin.prev();
         iterator original_before_begin = before_begin;
 
         CIEL_TRY {
@@ -283,17 +316,17 @@ private:
                     ++first;
 
                     before_begin.base()->next_ = construct_place;
-                    begin.base()->prev_ = construct_place;
+                    begin.base()->prev_        = construct_place;
                     ++before_begin;
-
-                } CIEL_CATCH (...) {
+                }
+                CIEL_CATCH (...) {
                     store_one_free_node(construct_place);
                     CIEL_THROW;
                 }
             }
             return original_before_begin.next();
-
-        } CIEL_CATCH (...) {
+        }
+        CIEL_CATCH (...) {
             alloc_range_destroy(original_before_begin.next(), begin);
             CIEL_THROW;
         }
@@ -308,11 +341,10 @@ public:
 
     list(const size_type count, const T& value, const allocator_type& alloc = allocator_type())
         : list(alloc) {
-        
         CIEL_TRY {
             alloc_range_construct_n(end(), count, value);
-            
-        } CIEL_CATCH (...) {
+        }
+        CIEL_CATCH (...) {
             do_destroy();
             CIEL_THROW;
         }
@@ -320,11 +352,10 @@ public:
 
     explicit list(const size_type count, const allocator_type& alloc = allocator_type())
         : list(alloc) {
-
         CIEL_TRY {
             alloc_range_construct_n(end(), count);
-
-        } CIEL_CATCH (...) {
+        }
+        CIEL_CATCH (...) {
             do_destroy();
             CIEL_THROW;
         }
@@ -333,19 +364,18 @@ public:
     template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
     list(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : list(alloc) {
-
         CIEL_TRY {
             alloc_range_construct(end(), first, last);
-
-        } CIEL_CATCH (...) {
+        }
+        CIEL_CATCH (...) {
             do_destroy();
             CIEL_THROW;
         }
     }
 
     list(const list& other)
-        : list(other.begin(), other.end(),
-               alloc_traits::select_on_container_copy_construction(other.get_allocator())) {}
+        : list(other.begin(), other.end(), alloc_traits::select_on_container_copy_construction(other.get_allocator())) {
+    }
 
     list(const list& other, const allocator_type& alloc)
         : list(other.begin(), other.end(), alloc) {}
@@ -354,28 +384,27 @@ public:
         : end_node_(other.end_node_),
           free_node_(other.free_node_),
           size_node_allocator_(other.size_(), std::move(other.allocator_())) {
-        
         end_node_.next_->prev_ = &end_node_;
         end_node_.prev_->next_ = &end_node_;
-        
+
         other.end_node_.clear();
         other.free_node_ = nullptr;
-        other.size_() = 0;
+        other.size_()    = 0;
     }
 
     list(list&& other, const allocator_type& alloc) {
         if (alloc == other.get_allocator()) {
-            end_node_ = other.end_node_;
-            free_node_ = other.free_node_;
-            size_() = other.size_();
+            end_node_    = other.end_node_;
+            free_node_   = other.free_node_;
+            size_()      = other.size_();
             allocator_() = alloc;
 
             end_node_.next_->prev_ = &end_node_;
             end_node_.prev_->next_ = &end_node_;
-            
+
             other.end_node_.clear();
             other.free_node_ = nullptr;
-            other.size_() = 0;
+            other.size_()    = 0;
 
         } else {
             list(other, alloc).swap(*this);
@@ -389,7 +418,8 @@ public:
         do_destroy();
     }
 
-    auto operator=(const list& other) -> list& {
+    list&
+    operator=(const list& other) {
         if CIEL_UNLIKELY (this == addressof(other)) {
             return *this;
         }
@@ -410,7 +440,8 @@ public:
         return *this;
     }
 
-    auto operator=(list&& other) noexcept(alloc_traits::is_always_equal::value) -> list& {
+    list&
+    operator=(list&& other) noexcept(alloc_traits::is_always_equal::value) {
         if CIEL_UNLIKELY (this == addressof(other)) {
             return *this;
         }
@@ -425,29 +456,31 @@ public:
         }
 
         do_destroy();
-        
-        end_node_ = other.end_node_;
+
+        end_node_  = other.end_node_;
         free_node_ = other.free_node_;
-        size_() = other.size_();
+        size_()    = other.size_();
 
         end_node_.next_->prev_ = &end_node_;
         end_node_.prev_->next_ = &end_node_;
-        
+
         other.end_node_.clear();
         other.free_node_ = nullptr;
-        other.size_() = 0;
-        
+        other.size_()    = 0;
+
         return *this;
     }
 
-    auto operator=(std::initializer_list<T> ilist) -> list& {
+    list&
+    operator=(std::initializer_list<T> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
-    auto assign(size_type count, const T& value) -> void {
+    void
+    assign(size_type count, const T& value) {
         iterator it = begin();
-        iterator e = end();
+        iterator e  = end();
 
         for (; count > 0 && it != e; --count, ++it) {
             *it = value;
@@ -462,9 +495,10 @@ public:
     }
 
     template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
-    auto assign(Iter first, Iter last) -> void {
+    void
+    assign(Iter first, Iter last) {
         iterator it = begin();
-        iterator e = end();
+        iterator e  = end();
 
         for (; first != last && it != e; ++first, ++it) {
             *it = *first;
@@ -478,175 +512,214 @@ public:
         }
     }
 
-    auto assign(std::initializer_list<T> ilist) -> void {
+    void
+    assign(std::initializer_list<T> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
-    CIEL_NODISCARD auto get_allocator() const noexcept -> allocator_type {
+    CIEL_NODISCARD allocator_type
+    get_allocator() const noexcept {
         return allocator_();
     }
 
-    CIEL_NODISCARD auto front() -> reference {
+    CIEL_NODISCARD reference
+    front() {
         CIEL_PRECONDITION(!empty());
 
         return *begin();
     }
 
-    CIEL_NODISCARD auto front() const -> const_reference {
+    CIEL_NODISCARD const_reference
+    front() const {
         CIEL_PRECONDITION(!empty());
 
         return *begin();
     }
 
-    CIEL_NODISCARD auto back() -> reference {
+    CIEL_NODISCARD reference
+    back() {
         CIEL_PRECONDITION(!empty());
 
         return *(--end());
     }
 
-    CIEL_NODISCARD auto back() const -> const_reference {
+    CIEL_NODISCARD const_reference
+    back() const {
         CIEL_PRECONDITION(!empty());
 
         return *(--end());
     }
 
-    CIEL_NODISCARD auto begin() noexcept -> iterator {
+    CIEL_NODISCARD iterator
+    begin() noexcept {
         return iterator(end_node_.next_);
     }
 
-    CIEL_NODISCARD auto begin() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    begin() const noexcept {
         return const_iterator(end_node_.next_);
     }
 
-    CIEL_NODISCARD auto cbegin() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    cbegin() const noexcept {
         return begin();
     }
 
-    CIEL_NODISCARD auto end() noexcept -> iterator {
+    CIEL_NODISCARD iterator
+    end() noexcept {
         return iterator(&end_node_);
     }
 
-    CIEL_NODISCARD auto end() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    end() const noexcept {
         return const_iterator(&end_node_);
     }
 
-    CIEL_NODISCARD auto cend() const noexcept -> const_iterator {
+    CIEL_NODISCARD const_iterator
+    cend() const noexcept {
         return end();
     }
 
-    CIEL_NODISCARD auto rbegin() noexcept -> reverse_iterator {
+    CIEL_NODISCARD reverse_iterator
+    rbegin() noexcept {
         return reverse_iterator(end());
     }
 
-    CIEL_NODISCARD auto rbegin() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    rbegin() const noexcept {
         return const_reverse_iterator(end());
     }
 
-    CIEL_NODISCARD auto crbegin() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    crbegin() const noexcept {
         return rbegin();
     }
 
-    CIEL_NODISCARD auto rend() noexcept -> reverse_iterator {
+    CIEL_NODISCARD reverse_iterator
+    rend() noexcept {
         return reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD auto rend() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    rend() const noexcept {
         return const_reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD auto crend() const noexcept -> const_reverse_iterator {
+    CIEL_NODISCARD const_reverse_iterator
+    crend() const noexcept {
         return rend();
     }
 
-    CIEL_NODISCARD auto empty() const noexcept -> bool {
+    CIEL_NODISCARD bool
+    empty() const noexcept {
         return size_() == 0;
     }
 
-    CIEL_NODISCARD auto size() const noexcept -> size_type {
+    CIEL_NODISCARD size_type
+    size() const noexcept {
         return size_();
     }
 
-    CIEL_NODISCARD auto max_size() const noexcept -> size_type {
+    CIEL_NODISCARD size_type
+    max_size() const noexcept {
         return node_alloc_traits::max_size(allocator_());
     }
 
-    auto clear() noexcept -> void {
+    void
+    clear() noexcept {
         alloc_range_destroy(begin(), end());
     }
 
-    auto insert(iterator pos, const T& value) -> iterator {
+    iterator
+    insert(iterator pos, const T& value) {
         return alloc_range_construct_n(pos, 1, value);
     }
 
-    auto insert(iterator pos, T&& value) -> iterator {
+    iterator
+    insert(iterator pos, T&& value) {
         return alloc_range_construct_n(pos, 1, std::move(value));
     }
 
-    auto insert(iterator pos, const size_type count, const T& value) -> iterator {
+    iterator
+    insert(iterator pos, const size_type count, const T& value) {
         return alloc_range_construct_n(pos, count, value);
     }
 
     template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
-    auto insert(iterator pos, Iter first, Iter last) -> iterator {
+    iterator
+    insert(iterator pos, Iter first, Iter last) {
         return alloc_range_construct(pos, first, last);
     }
 
-    auto insert(iterator pos, std::initializer_list<T> ilist) -> iterator {
+    iterator
+    insert(iterator pos, std::initializer_list<T> ilist) {
         return alloc_range_construct(pos, ilist.begin(), ilist.end());
     }
 
     template<class... Args>
-    auto emplace(iterator pos, Args&& ... args) -> iterator {
+    iterator
+    emplace(iterator pos, Args&&... args) {
         return alloc_range_construct_n(pos, 1, std::forward<Args>(args)...);
     }
 
-    auto erase(iterator pos) -> iterator {
+    iterator
+    erase(iterator pos) {
         return alloc_range_destroy(pos, pos.next());
     }
 
-    auto erase(iterator first, iterator last) -> iterator {
+    iterator
+    erase(iterator first, iterator last) {
         return alloc_range_destroy(first, last);
     }
 
-    auto push_back(const T& value) -> void {
+    void
+    push_back(const T& value) {
         emplace_back(value);
     }
 
-    auto push_back(T&& value) -> void {
+    void
+    push_back(T&& value) {
         emplace_back(std::move(value));
     }
 
     template<class... Args>
-    auto emplace_back(Args&& ... args) -> reference {
+    reference
+    emplace_back(Args&&... args) {
         return *alloc_range_construct_n(end(), 1, std::forward<Args>(args)...);
     }
 
-    auto pop_back() noexcept -> void {
+    void
+    pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
         alloc_range_destroy(end().prev(), end());
     }
 
-    auto push_front(const T& value) -> void {
+    void
+    push_front(const T& value) {
         emplace_front(value);
     }
 
-    auto push_front(T&& value) -> void {
+    void
+    push_front(T&& value) {
         emplace_front(std::move(value));
     }
 
     template<class... Args>
-    auto emplace_front(Args&& ... args) -> reference {
+    reference
+    emplace_front(Args&&... args) {
         return *alloc_range_construct_n(begin(), 1, std::forward<Args>(args)...);
     }
 
-    auto pop_front() noexcept -> void {
+    void
+    pop_front() noexcept {
         CIEL_PRECONDITION(!empty());
 
         alloc_range_destroy(begin(), begin().next());
     }
 
-    auto resize(const size_type count) -> void {
+    void
+    resize(const size_type count) {
         if (size() >= count) {
             iterator tmp = std::prev(end(), size() - count);
             alloc_range_destroy(tmp, end());
@@ -656,7 +729,8 @@ public:
         }
     }
 
-    auto resize(const size_type count, const value_type& value) -> void {
+    void
+    resize(const size_type count, const value_type& value) {
         if (size() >= count) {
             iterator tmp = std::prev(end(), size() - count);
             alloc_range_destroy(tmp, end());
@@ -666,7 +740,8 @@ public:
         }
     }
 
-    auto swap(list& other) noexcept(alloc_traits::is_always_equal::value) -> void {
+    void
+    swap(list& other) noexcept(alloc_traits::is_always_equal::value) {
         using std::swap;
 
         swap(end_node_, other.end_node_);
@@ -681,10 +756,11 @@ public:
         swap(size_node_allocator_, other.size_node_allocator_);
     }
 
-};    // class list
+}; // class list
 
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept -> bool {
+CIEL_NODISCARD bool
+operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -694,7 +770,8 @@ CIEL_NODISCARD auto operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& 
 
 // So that we can test more efficiently
 template<class T, class Alloc>
-CIEL_NODISCARD auto operator==(const list<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept -> bool {
+CIEL_NODISCARD bool
+operator==(const list<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -714,10 +791,11 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T, class Alloc>
-auto swap(ciel::list<T, Alloc>& lhs, ciel::list<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) -> void {
+void
+swap(ciel::list<T, Alloc>& lhs, ciel::list<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 
-}   // namespace std
+} // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_LIST_HPP_

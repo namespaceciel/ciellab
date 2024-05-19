@@ -9,13 +9,23 @@ struct ConstructAndAssignCounter {
     static size_t move;
 
     ConstructAndAssignCounter() noexcept = default;
-    ConstructAndAssignCounter(const ConstructAndAssignCounter&) noexcept { ++copy; }
-    ConstructAndAssignCounter(ConstructAndAssignCounter&&) noexcept { ++move; }
-    ConstructAndAssignCounter& operator=(const ConstructAndAssignCounter&) noexcept {
+
+    ConstructAndAssignCounter(const ConstructAndAssignCounter&) noexcept {
+        ++copy;
+    }
+
+    ConstructAndAssignCounter(ConstructAndAssignCounter&&) noexcept {
+        ++move;
+    }
+
+    ConstructAndAssignCounter&
+    operator=(const ConstructAndAssignCounter&) noexcept {
         ++copy;
         return *this;
     }
-    ConstructAndAssignCounter& operator=(ConstructAndAssignCounter&&) noexcept {
+
+    ConstructAndAssignCounter&
+    operator=(ConstructAndAssignCounter&&) noexcept {
         ++move;
         return *this;
     }
@@ -24,7 +34,7 @@ struct ConstructAndAssignCounter {
 size_t ConstructAndAssignCounter::copy = 0;
 size_t ConstructAndAssignCounter::move = 0;
 
-}   // namespace
+} // namespace
 
 TEST(small_vector_tests, constructors) {
     const ciel::small_vector<int> v1;
@@ -74,7 +84,7 @@ TEST(small_vector_tests, assignments) {
     ASSERT_EQ(v2, v3);
 
     // expansion
-    v3 = {1 ,2, 3, 4, 5, 6, 7, 8, 9, 10};
+    v3 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     ASSERT_EQ(v3, std::initializer_list<int>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}));
 
     // shrink

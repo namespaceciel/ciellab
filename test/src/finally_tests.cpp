@@ -4,9 +4,7 @@
 
 TEST(finally_tests, defer) {
     bool deferCalled = false;
-    {
-        CIEL_DEFER(deferCalled = true);
-    }
+    { CIEL_DEFER(deferCalled = true); }
     ASSERT_TRUE(deferCalled);
 }
 

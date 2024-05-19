@@ -9,13 +9,23 @@ struct ConstructAndAssignCounter {
     static size_t move;
 
     ConstructAndAssignCounter() noexcept = default;
-    ConstructAndAssignCounter(const ConstructAndAssignCounter&) noexcept { ++copy; }
-    ConstructAndAssignCounter(ConstructAndAssignCounter&&) noexcept { ++move; }
-    ConstructAndAssignCounter& operator=(const ConstructAndAssignCounter&) noexcept {
+
+    ConstructAndAssignCounter(const ConstructAndAssignCounter&) noexcept {
+        ++copy;
+    }
+
+    ConstructAndAssignCounter(ConstructAndAssignCounter&&) noexcept {
+        ++move;
+    }
+
+    ConstructAndAssignCounter&
+    operator=(const ConstructAndAssignCounter&) noexcept {
         ++copy;
         return *this;
     }
-    ConstructAndAssignCounter& operator=(ConstructAndAssignCounter&&) noexcept {
+
+    ConstructAndAssignCounter&
+    operator=(ConstructAndAssignCounter&&) noexcept {
         ++move;
         return *this;
     }
@@ -24,7 +34,7 @@ struct ConstructAndAssignCounter {
 size_t ConstructAndAssignCounter::copy = 0;
 size_t ConstructAndAssignCounter::move = 0;
 
-}   // namespace
+} // namespace
 
 TEST(split_buffer_tests, constructors) {
     const ciel::split_buffer<int> v1;
@@ -76,7 +86,7 @@ TEST(split_buffer_tests, assignments) {
     ASSERT_EQ(v3.size(), v3.capacity());
 
     // expansion
-    v3 = {1 ,2, 3, 4, 5, 6, 7, 8, 9, 10};
+    v3 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     ASSERT_EQ(v3, std::initializer_list<int>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}));
 
     // shrink
@@ -93,7 +103,7 @@ TEST(split_buffer_tests, assignments) {
     v3.shrink_to_fit();
 
     v3.reserve_front_spare(4);
-    v3.reserve_back_spare(2);   // will lend 2 from front spare
+    v3.reserve_back_spare(2); // will lend 2 from front spare
 
     v3.assign(7, 10);
     ASSERT_EQ(v3, std::initializer_list<int>({10, 10, 10, 10, 10, 10, 10}));
@@ -177,7 +187,7 @@ TEST(split_buffer_tests, resize) {
     v1.shrink_to_fit();
 
     v1.reserve_front_spare(4);
-    v1.reserve_back_spare(2);   // will lend 2 from front spare
+    v1.reserve_back_spare(2); // will lend 2 from front spare
 
     v1.resize(18, 19);
     ASSERT_EQ(v1, std::initializer_list<int>({5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44, 10, 10, 10, 19, 19, 19}));
@@ -217,8 +227,8 @@ TEST(split_buffer_tests, resize) {
 //     v1.reserve_back_spare(1);
 //     ASSERT_EQ(*v1.insert(v1.begin() + 1, 18), 18);
 //
-//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5, 42, 43, 6, 19, 31,
-//                                               32}));
+//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5, 42, 43, 6, 19,
+//                                               31, 32}));
 //
 //     v1.shrink_to_fit();
 //     v1.reserve_front_spare(1);
@@ -228,8 +238,8 @@ TEST(split_buffer_tests, resize) {
 //     v1.reserve_back_spare(1);
 //     ASSERT_EQ(*v1.insert(v1.begin() + 2, {16}), 16);
 //
-//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 16, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5, 42, 43, 6, 19,
-//                                               31, 17, 32}));
+//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 16, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5, 42, 43, 6,
+//                                               19, 31, 17, 32}));
 //
 //     // collect both sides' space
 //     v1.shrink_to_fit();
@@ -239,8 +249,8 @@ TEST(split_buffer_tests, resize) {
 //
 //     ASSERT_EQ(*v1.insert(v1.begin() + 2, 3, 65), 65);
 //
-//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 65, 65, 65, 16, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5, 42,
-//                                               43, 6, 19, 31, 17, 32}));
+//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 65, 65, 65, 16, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5,
+//                                               42, 43, 6, 19, 31, 17, 32}));
 //
 //     v1.shrink_to_fit();
 //
@@ -249,8 +259,8 @@ TEST(split_buffer_tests, resize) {
 //
 //     ASSERT_EQ(*v1.insert(v1.end() - 2, {45, 46, 47}), 45);
 //
-//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 65, 65, 65, 16, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5, 42,
-//                                               43, 6, 19, 31, 45, 46, 47, 17, 32}));
+//     ASSERT_EQ(v1, std::initializer_list<int>({22, 18, 65, 65, 65, 16, 41, 99, 99, 99, 99, 41, 21, 0, 1, 2, 3, 4, 5,
+//                                               42, 43, 6, 19, 31, 45, 46, 47, 17, 32}));
 // }
 
 TEST(split_buffer_tests, erase) {
