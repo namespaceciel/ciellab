@@ -160,27 +160,22 @@ operator!=(const list_iterator<T, Pointer1, Reference1>& lhs,
 template<class T, class Allocator = std::allocator<T>>
 class list {
 public:
-    using value_type      = T;
-    using allocator_type  = Allocator;
-    using size_type       = size_t;
-    using difference_type = ptrdiff_t;
-    using reference       = value_type&;
-    using const_reference = const value_type&;
-
-    using pointer       = typename std::allocator_traits<allocator_type>::pointer;
-    using const_pointer = typename std::allocator_traits<allocator_type>::const_pointer;
-
-    using iterator       = list_iterator<value_type, pointer, reference>;
-    using const_iterator = list_iterator<value_type, const_pointer, const_reference>;
-
+    using value_type             = T;
+    using allocator_type         = Allocator;
+    using size_type              = size_t;
+    using difference_type        = ptrdiff_t;
+    using reference              = value_type&;
+    using const_reference        = const value_type&;
+    using pointer                = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer          = typename std::allocator_traits<allocator_type>::const_pointer;
+    using iterator               = list_iterator<value_type, pointer, reference>;
+    using const_iterator         = list_iterator<value_type, const_pointer, const_reference>;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    ;
 
 private:
-    using base_node_type = list_node_base;
-    using node_type      = list_node<value_type>;
-
+    using base_node_type    = list_node_base;
+    using node_type         = list_node<value_type>;
     using alloc_traits      = std::allocator_traits<allocator_type>;
     using node_allocator    = typename alloc_traits::template rebind_alloc<node_type>;
     using node_alloc_traits = typename alloc_traits::template rebind_traits<node_type>;

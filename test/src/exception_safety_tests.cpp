@@ -136,7 +136,7 @@ TEST(exception_safety_tests, vector_strong) {
     ciel::vector<NothrowMoveStruct> v;
     ciel::vector<NothrowMoveStruct> state_holder;
 
-    for (size_t i = 0; i < 2000; ++i) {
+    for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.shrink_to_fit());
 
         STRONG_TEST_CASE(v.emplace_back(2));
@@ -151,7 +151,7 @@ TEST(exception_safety_tests, vector_basic) {
     ciel::vector<NothrowMoveStruct> v;
     can_throw = true;
 
-    for (size_t i = 0; i < 10000; ++i) {
+    for (size_t i = 0; i < 1000; ++i) {
         // Use random numbers to insert or erase at any position in v: v.begin() + g() % ciel::max<size_t>(v.size(), 1)
 
         BASIC_TEST_CASE(v.emplace_back());
@@ -181,7 +181,7 @@ TEST(exception_safety_tests, small_vector_strong) {
     ciel::small_vector<NothrowMoveStruct> v;
     ciel::small_vector<NothrowMoveStruct> state_holder;
 
-    for (size_t i = 0; i < 2000; ++i) {
+    for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.emplace_back(2));
 
         STRONG_TEST_CASE(v.reserve(g() % 4000));
@@ -194,7 +194,7 @@ TEST(exception_safety_tests, small_vector_basic) {
     ciel::small_vector<NothrowMoveStruct> v;
     can_throw = true;
 
-    for (size_t i = 0; i < 10000; ++i) {
+    for (size_t i = 0; i < 1000; ++i) {
         // Use random numbers to insert or erase at any position in v: v.begin() + g() % ciel::max<size_t>(v.size(), 1)
 
         BASIC_TEST_CASE(v.emplace_back());
@@ -223,7 +223,7 @@ TEST(exception_safety_tests, split_buffer_strong) {
     ciel::split_buffer<NothrowMoveStruct> v;
     ciel::split_buffer<NothrowMoveStruct> state_holder;
 
-    for (size_t i = 0; i < 2000; ++i) {
+    for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.emplace_back(2));
 
         STRONG_TEST_CASE(v.shrink_to_fit());
@@ -238,7 +238,7 @@ TEST(exception_safety_tests, split_buffer_basic) {
     ciel::split_buffer<NothrowMoveStruct> v;
     can_throw = true;
 
-    for (size_t i = 0; i < 10000; ++i) {
+    for (size_t i = 0; i < 1000; ++i) {
         // Use random numbers to insert or erase at any position in v: v.begin() + g() % ciel::max<size_t>(v.size(), 1)
 
         BASIC_TEST_CASE(v.emplace_back(1));
@@ -263,7 +263,7 @@ TEST(exception_safety_tests, list_strong) {
     ciel::list<NothrowMoveStruct> v;
     ciel::list<NothrowMoveStruct> state_holder;
 
-    for (size_t i = 0; i < 2000; ++i) {
+    for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.emplace_front(1));
 
         STRONG_TEST_CASE(v.emplace_back(2));
@@ -282,7 +282,7 @@ TEST(exception_safety_tests, list_basic) {
     ciel::list<NothrowMoveStruct> v;
     can_throw = true;
 
-    for (size_t i = 0; i < 10000; ++i) {
+    for (size_t i = 0; i < 1000; ++i) {
         BASIC_TEST_CASE(v.assign(10, 20));
 
         BASIC_TEST_CASE(v.assign(il));

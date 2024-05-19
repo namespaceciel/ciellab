@@ -7,7 +7,7 @@ test:
 	cd $(BUILD_DIR) && \
 	cmake $(PROJECT_SOURCE_DIR) && \
 	make ciellab_test -j $(NUM_JOB) && \
-	./test/ciellab_test
+	valgrind --tool=memcheck --leak-check=full ./test/ciellab_test
 .PHONY: test
 
 benchmark:

@@ -37,9 +37,10 @@ class atomic_shared_ptr;
 
 class shared_weak_count {
 protected:
-    std::atomic<size_t> shared_count_; // The object will be destroyed after decrementing to zero.
-    std::atomic<size_t>
-        weak_count_; // weak_ref + (shared_count_ != 0), The control block will be destroyed after decrementing to zero.
+    // The object will be destroyed after decrementing to zero.
+    std::atomic<size_t> shared_count_;
+    // weak_ref + (shared_count_ != 0), The control block will be destroyed after decrementing to zero.
+    std::atomic<size_t> weak_count_;
 
 #ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
     shared_weak_count* next_{nullptr};

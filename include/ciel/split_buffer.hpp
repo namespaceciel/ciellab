@@ -37,18 +37,16 @@ class split_buffer : private Allocator {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
 public:
-    using value_type      = T;
-    using allocator_type  = Allocator;
-    using size_type       = size_t;
-    using difference_type = ptrdiff_t;
-    using reference       = value_type&;
-    using const_reference = const value_type&;
-    using pointer         = typename std::allocator_traits<allocator_type>::pointer;
-    using const_pointer   = typename std::allocator_traits<allocator_type>::const_pointer;
-
-    using iterator       = pointer;
-    using const_iterator = const_pointer;
-
+    using value_type             = T;
+    using allocator_type         = Allocator;
+    using size_type              = size_t;
+    using difference_type        = ptrdiff_t;
+    using reference              = value_type&;
+    using const_reference        = const value_type&;
+    using pointer                = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer          = typename std::allocator_traits<allocator_type>::const_pointer;
+    using iterator               = pointer;
+    using const_iterator         = const_pointer;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 

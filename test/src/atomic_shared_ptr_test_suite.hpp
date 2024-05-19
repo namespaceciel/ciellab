@@ -198,7 +198,7 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 
 TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
     constexpr size_t threads_num    = 64;
-    constexpr size_t operations_num = 10000;
+    constexpr size_t operations_num = 1000;
 
     atomic_shared_ptr<size_t> s(shared_ptr<size_t>(new size_t(0)));
     std::latch go{threads_num};
