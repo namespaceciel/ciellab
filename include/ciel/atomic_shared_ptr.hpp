@@ -5,38 +5,41 @@
 #include <ciel/shared_ptr.hpp>
 
 NAMESPACE_CIEL_BEGIN
+
 namespace split_reference_count {
 
-// This is an over simplified split_reference_count implementation of atomic<shared_ptr<T>> only for educational purposes.
-// We don't consider any memory_orders, hence all are seq_cst.
+// This is an over simplified split_reference_count implementation of atomic<shared_ptr<T>> only for educational
+// purposes. We don't consider any memory_orders, hence all are seq_cst.
 //
 template<class T>
 class atomic_shared_ptr {
 private:
     struct counted_control_block {
         uintptr_t control_block_ : 48;
-        size_t local_count_ : 16;       // TODO: Use spin_lock as a backup when local_count_ is beyond 2 ^ 16
+        size_t local_count_      : 16; // TODO: Use spin_lock as a backup when local_count_ is beyond 2 ^ 16
 
         counted_control_block(shared_weak_count* other, const size_t local_count = 0) noexcept
             : control_block_((uintptr_t)other), local_count_(local_count) {
-
             CIEL_PRECONDITION((uintptr_t)other < (1ULL << 48));
         }
 
-        friend bool operator==(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
+        friend bool
+        operator==(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
             return lhs.control_block_ == rhs.control_block_ && lhs.local_count_ == rhs.local_count_;
         }
 
-        friend bool operator!=(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
+        friend bool
+        operator!=(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
             return !(lhs == rhs);
         }
 
-    };  // struct counted_control_block
+    }; // struct counted_control_block
 
     // TODO: local pointer?
     mutable std::atomic<counted_control_block> counted_control_block_;
 
-    counted_control_block increment_local_ref_count() const noexcept {
+    counted_control_block
+    increment_local_ref_count() const noexcept {
         counted_control_block old_control_block = counted_control_block_;
         counted_control_block new_control_block{nullptr};
 
@@ -51,7 +54,8 @@ private:
         return new_control_block;
     }
 
-    void decrement_local_ref_count(counted_control_block prev_control_block) const noexcept {
+    void
+    decrement_local_ref_count(counted_control_block prev_control_block) const noexcept {
         CIEL_PRECONDITION(prev_control_block.local_count_ > 0);
 
         counted_control_block old_control_block = counted_control_block_;
@@ -61,14 +65,13 @@ private:
             new_control_block = old_control_block;
             --new_control_block.local_count_;
 
-        } while (old_control_block.control_block_ == prev_control_block.control_block_ &&
-                 !counted_control_block_.compare_exchange_weak(old_control_block, new_control_block));
+        } while (old_control_block.control_block_ == prev_control_block.control_block_
+                 && !counted_control_block_.compare_exchange_weak(old_control_block, new_control_block));
 
         // Already pointing to another control_block by store().
         // store() already help us update the remote ref count, so we just decrement that.
-        if (old_control_block.control_block_ != prev_control_block.control_block_ &&
-            (shared_weak_count*)prev_control_block.control_block_ != nullptr) {
-
+        if (old_control_block.control_block_ != prev_control_block.control_block_
+            && (shared_weak_count*)prev_control_block.control_block_ != nullptr) {
             ((shared_weak_count*)prev_control_block.control_block_)->shared_count_release();
         }
     }
@@ -83,32 +86,37 @@ public:
     // Not an atomic operation, like any other atomics.
     atomic_shared_ptr(shared_ptr<T> desired) noexcept
         : counted_control_block_(desired.control_block_) {
-
         desired.clear();
     }
 
     atomic_shared_ptr(const atomic_shared_ptr&) = delete;
-    atomic_shared_ptr& operator=(const atomic_shared_ptr&) = delete;
+    atomic_shared_ptr&
+    operator=(const atomic_shared_ptr&)
+        = delete;
 
     ~atomic_shared_ptr() {
         store(nullptr);
     }
 
-    void operator=(shared_ptr<T> desired) noexcept {
+    void
+    operator=(shared_ptr<T> desired) noexcept {
         store(desired);
     }
 
-    void operator=(std::nullptr_t) noexcept {
+    void
+    operator=(std::nullptr_t) noexcept {
         store(nullptr);
     }
 
-    CIEL_NODISCARD bool is_lock_free() const noexcept {
+    CIEL_NODISCARD bool
+    is_lock_free() const noexcept {
         CIEL_PRECONDITION(counted_control_block_.is_lock_free() == true);
 
         return counted_control_block_.is_lock_free();
     }
 
-    void store(shared_ptr<T> desired) noexcept {
+    void
+    store(shared_ptr<T> desired) noexcept {
         counted_control_block new_control_block{desired.control_block_};
         desired.clear();
 
@@ -121,7 +129,8 @@ public:
         }
     }
 
-    CIEL_NODISCARD shared_ptr<T> load() const noexcept {
+    CIEL_NODISCARD shared_ptr<T>
+    load() const noexcept {
         // Atomically increment local ref count, so that store() after this can be safe.
         counted_control_block cur_control_block = increment_local_ref_count();
 
@@ -129,18 +138,20 @@ public:
             ((shared_weak_count*)cur_control_block.control_block_)->shared_add_ref();
         }
 
-        shared_ptr<T> result{(shared_weak_count*)cur_control_block.control_block_};  // private constructor
+        shared_ptr<T> result{(shared_weak_count*)cur_control_block.control_block_}; // private constructor
 
         decrement_local_ref_count(cur_control_block);
 
         return result;
     }
 
-    CIEL_NODISCARD operator shared_ptr<T>() const noexcept {
+    CIEL_NODISCARD
+    operator shared_ptr<T>() const noexcept {
         return load();
     }
 
-    CIEL_NODISCARD shared_ptr<T> exchange(shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD shared_ptr<T>
+    exchange(shared_ptr<T> desired) noexcept {
         counted_control_block new_control_block(desired.control_block_);
         desired.clear();
 
@@ -149,7 +160,8 @@ public:
         return shared_ptr<T>((shared_weak_count*)old_control_block.control_block_);
     }
 
-    CIEL_NODISCARD bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD bool
+    compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         counted_control_block expected_control_block(expected.control_block_);
         counted_control_block desired_control_block(desired.control_block_);
 
@@ -166,7 +178,8 @@ public:
         return false;
     }
 
-    CIEL_NODISCARD bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD bool
+    compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         counted_control_block expected_control_block(expected.control_block_);
 
         do {
@@ -184,9 +197,10 @@ public:
     static_assert(is_always_lock_free == true, "");
 #endif // CIEL_STD_VER >= 17
 
-};  // class atomic_shared_ptr
+}; // class atomic_shared_ptr
 
-}   // namespace split_reference_count
+} // namespace split_reference_count
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_ATOMIC_SHARED_PTR_HPP_

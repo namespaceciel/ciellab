@@ -64,7 +64,7 @@
 #if CIEL_STD_VER >= 17
 #define CIEL_NODISCARD [[nodiscard]]
 
-#elif (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)  // clang, icc, clang-cl
+#elif (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__) // clang, icc, clang-cl
 #define CIEL_NODISCARD __attribute__((warn_unused_result))
 
 #elif defined(_HAS_NODISCARD)
@@ -104,13 +104,15 @@
 
 #else
 #define CIEL_TRY      if CIEL_CONSTEXPR_SINCE_CXX17 (true)
-#define CIEL_CATCH(X) if CIEL_CONSTEXPR_SINCE_CXX17 (false)
+#define CIEL_CATCH(X) else
 #define CIEL_THROW
 #endif
 
 // unused
-#if defined(__GNUC__) && !defined(__clang__)    // simple (void) cast won't stop gcc
-inline void ciel_ignore_result(...) noexcept {}
+#if defined(__GNUC__) && !defined(__clang__) // simple (void) cast won't stop gcc
+inline void
+ciel_ignore_result(...) noexcept {}
+
 #define CIEL_UNUSED(x) ciel_ignore_result(x)
 #else
 #define CIEL_UNUSED(x) static_cast<void>(x)
@@ -118,22 +120,23 @@ inline void ciel_ignore_result(...) noexcept {}
 
 // namespace ciel
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
-
-#define NAMESPACE_CIEL_END   }  // namespace ciel
+#define NAMESPACE_CIEL_END   } // namespace ciel
 
 NAMESPACE_CIEL_BEGIN
 
-[[noreturn]] inline void unreachable() noexcept {
-#if defined(_MSC_VER) && !defined(__clang__)    // MSVC
+[[noreturn]] inline void
+unreachable() noexcept {
+#if defined(_MSC_VER) && !defined(__clang__) // MSVC
     __assume(false);
 
-#else    // GCC, Clang
+#else // GCC, Clang
     __builtin_unreachable();
 #endif
 }
 
 template<class Exception, typename std::enable_if<std::is_base_of<std::exception, Exception>::value, int>::type = 0>
-[[noreturn]] inline void THROW(Exception&& e) {
+[[noreturn]] inline void
+THROW(Exception&& e) {
 #ifdef CIEL_HAS_EXCEPTIONS
     throw e;
 
@@ -158,7 +161,7 @@ namespace std {
 template<class T>
 initializer_list(initializer_list<T>) -> initializer_list<T>;
 
-}   // namespace std
+} // namespace std
 #endif
 
 #endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_

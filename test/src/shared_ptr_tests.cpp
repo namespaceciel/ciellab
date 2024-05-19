@@ -9,25 +9,28 @@ public:
     Base() noexcept = default;
     virtual ~Base() = default;
 
-    virtual std::string str() const noexcept {
+    virtual std::string
+    str() const noexcept {
         return "Base";
     }
 
 private:
     Base(const Base&);
-    Base& operator=(const Base&);
+    Base&
+    operator=(const Base&);
 
-};  // class Base
+}; // class Base
 
 class Derived : public Base {
 public:
-    virtual std::string str() const noexcept {
+    virtual std::string
+    str() const noexcept {
         return "Derived";
     }
 
-};  // class Derived
+}; // class Derived
 
-}   // namespace
+} // namespace
 
 TEST(shared_ptr_tests, default_constuctor) {
     ciel::shared_ptr<int> s;
@@ -40,7 +43,7 @@ TEST(shared_ptr_tests, move_constructor) {
     ASSERT_EQ(*src, 1729);
 
     ciel::shared_ptr<int> dest(std::move(src));
-  
+
     ASSERT_FALSE(src);
     ASSERT_TRUE(dest);
     ASSERT_EQ(*dest, 1729);

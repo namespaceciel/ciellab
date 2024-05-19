@@ -12,9 +12,10 @@ namespace {
 
 std::random_device rd;
 std::mt19937_64 g(rd());
-bool can_throw;     // set this false to renew state_holder
+bool can_throw; // set this false to renew state_holder
 
-void may_throw() {
+void
+may_throw() {
     if (can_throw && g() % 5 == 0) {
         CIEL_THROW 1;
     }
@@ -38,7 +39,7 @@ struct NothrowMoveStruct {
     }
 
     NothrowMoveStruct(NothrowMoveStruct&& other) noexcept {
-        ptr = other.ptr;
+        ptr       = other.ptr;
         other.ptr = nullptr;
     }
 
@@ -48,7 +49,8 @@ struct NothrowMoveStruct {
         }
     }
 
-    auto operator=(const NothrowMoveStruct& other) -> NothrowMoveStruct& {
+    NothrowMoveStruct&
+    operator=(const NothrowMoveStruct& other) {
         if (this == std::addressof(other)) {
             return *this;
         }
@@ -66,25 +68,28 @@ struct NothrowMoveStruct {
         return *this;
     }
 
-    auto operator=(NothrowMoveStruct&& other) noexcept -> NothrowMoveStruct& {
+    NothrowMoveStruct&
+    operator=(NothrowMoveStruct&& other) noexcept {
         if (this == std::addressof(other)) {
             return *this;
         }
         if (ptr) {
             delete ptr;
         }
-        ptr = other.ptr;
+        ptr       = other.ptr;
         other.ptr = nullptr;
         return *this;
     }
 
-    explicit operator size_t() const noexcept {
+    explicit
+    operator size_t() const noexcept {
         return ptr ? *ptr : 1234;
     }
 
-};  // struct NothrowMoveStruct
+}; // struct NothrowMoveStruct
 
-[[maybe_unused]] auto operator==(const NothrowMoveStruct& lhs, const NothrowMoveStruct& rhs) -> bool {
+[[maybe_unused]] bool
+operator==(const NothrowMoveStruct& lhs, const NothrowMoveStruct& rhs) {
     if (lhs.ptr) {
         if (rhs.ptr) {
             return *lhs.ptr == *rhs.ptr;
@@ -100,29 +105,28 @@ struct NothrowMoveStruct {
     return true;
 }
 
-const std::initializer_list<NothrowMoveStruct> il{{11}, {12}, {13}, {}, {14}, {15}, {}, {16},
-                                                  {}, {17}, {18}, {}, {19}, {}, {20}};
+const std::initializer_list<NothrowMoveStruct> il{{11}, {12}, {13}, {}, {14}, {15}, {},  {16},
+                                                  {},   {17}, {18}, {}, {19}, {},   {20}};
 
-}   // namespace
+} // namespace
 
 #define STRONG_TEST_CASE(X)         \
-    can_throw = false;              \
+    can_throw    = false;           \
     state_holder = v;               \
     CIEL_TRY {                      \
         can_throw = true;           \
                                     \
         X;                          \
-                                    \
-    } CIEL_CATCH (...) {            \
+    }                               \
+    CIEL_CATCH (...) {              \
         ASSERT_EQ(v, state_holder); \
     }
 
-#define BASIC_TEST_CASE(X)          \
-    CIEL_TRY {                      \
-                                    \
-        X;                          \
-                                    \
-    } CIEL_CATCH (...) {}
+#define BASIC_TEST_CASE(X) \
+    CIEL_TRY {             \
+        X;                 \
+    }                      \
+    CIEL_CATCH (...) {}
 
 TEST(exception_safety_tests, vector_strong) {
     // These vector functions provide strong exception safety:
@@ -133,7 +137,6 @@ TEST(exception_safety_tests, vector_strong) {
     ciel::vector<NothrowMoveStruct> state_holder;
 
     for (size_t i = 0; i < 2000; ++i) {
-
         STRONG_TEST_CASE(v.shrink_to_fit());
 
         STRONG_TEST_CASE(v.emplace_back(2));
@@ -163,8 +166,8 @@ TEST(exception_safety_tests, vector_basic) {
 
         BASIC_TEST_CASE(v.emplace_back(1));
 
-        BASIC_TEST_CASE(v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1),
-                                v.begin() + g() % std::max<size_t>(v.size(), 1)));
+        BASIC_TEST_CASE(
+            v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1), v.begin() + g() % std::max<size_t>(v.size(), 1)));
 
         BASIC_TEST_CASE(v.insert(v.begin() + g() % std::max<size_t>(v.size(), 1), il));
     }
@@ -179,7 +182,6 @@ TEST(exception_safety_tests, small_vector_strong) {
     ciel::small_vector<NothrowMoveStruct> state_holder;
 
     for (size_t i = 0; i < 2000; ++i) {
-
         STRONG_TEST_CASE(v.emplace_back(2));
 
         STRONG_TEST_CASE(v.reserve(g() % 4000));
@@ -207,8 +209,8 @@ TEST(exception_safety_tests, small_vector_basic) {
 
         BASIC_TEST_CASE(v.emplace_back(1));
 
-        BASIC_TEST_CASE(v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1),
-                                v.begin() + g() % std::max<size_t>(v.size(), 1)));
+        BASIC_TEST_CASE(
+            v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1), v.begin() + g() % std::max<size_t>(v.size(), 1)));
 
         BASIC_TEST_CASE(v.insert(v.begin() + g() % std::max<size_t>(v.size(), 1), il));
     }
@@ -222,7 +224,6 @@ TEST(exception_safety_tests, split_buffer_strong) {
     ciel::split_buffer<NothrowMoveStruct> state_holder;
 
     for (size_t i = 0; i < 2000; ++i) {
-
         STRONG_TEST_CASE(v.emplace_back(2));
 
         STRONG_TEST_CASE(v.shrink_to_fit());
@@ -250,8 +251,8 @@ TEST(exception_safety_tests, split_buffer_basic) {
 
         BASIC_TEST_CASE(v.emplace_front(2));
 
-        BASIC_TEST_CASE(v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1),
-                                v.begin() + g() % std::max<size_t>(v.size(), 1)));
+        BASIC_TEST_CASE(
+            v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1), v.begin() + g() % std::max<size_t>(v.size(), 1)));
     }
 }
 
@@ -282,7 +283,6 @@ TEST(exception_safety_tests, list_basic) {
     can_throw = true;
 
     for (size_t i = 0; i < 10000; ++i) {
-
         BASIC_TEST_CASE(v.assign(10, 20));
 
         BASIC_TEST_CASE(v.assign(il));

@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-namespace {     // To be included by different translate units.
+namespace { // To be included by different translate units.
 
 TEST(atomic_shared_ptr_test_suite, construction_empty) {
     atomic_shared_ptr<int> p;
@@ -150,7 +150,7 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 
 #if CIEL_STD_VER >= 20
 // FIXME
-//TEST(atomic_shared_ptr_test_suite, concurrent_store_and_loads) {
+// TEST(atomic_shared_ptr_test_suite, concurrent_store_and_loads) {
 //    constexpr size_t threads_num = 64;
 //    constexpr size_t operations_num = 10000;
 //
@@ -197,7 +197,7 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 //}
 
 TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
-    constexpr size_t threads_num = 64;
+    constexpr size_t threads_num    = 64;
     constexpr size_t operations_num = 10000;
 
     atomic_shared_ptr<size_t> s(shared_ptr<size_t>(new size_t(0)));
@@ -216,7 +216,7 @@ TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
                 size_t local_sum_produced = 0;
                 size_t local_sum_consumed = 0;
 
-                for(size_t j = 0; j < operations_num; ++j) {
+                for (size_t j = 0; j < operations_num; ++j) {
                     shared_ptr<size_t> new_sp(new size_t(std::rand()));
                     local_sum_produced += *new_sp;
 
@@ -236,11 +236,12 @@ TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
     }
 
     const size_t total_produced = std::accumulate(local_sums_produced.begin(), local_sums_produced.end(), 0ULL);
-    const size_t total_consumed = std::accumulate(local_sums_consumed.begin(), local_sums_consumed.end(), 0ULL) + *(s.load());
+    const size_t total_consumed
+        = std::accumulate(local_sums_consumed.begin(), local_sums_consumed.end(), 0ULL) + *(s.load());
 
     ASSERT_EQ(total_produced, total_consumed);
 }
 #endif // CIEL_STD_VER >= 20
-}   // namespace
+} // namespace
 
 #endif // CIELLAB_TEST_SRC_ATOMIC_SHARED_PTR_TEST_SUITE_HPP_

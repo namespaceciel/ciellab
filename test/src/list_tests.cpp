@@ -127,7 +127,8 @@ TEST(list_tests, insertions) {
     ASSERT_EQ(l1, std::initializer_list<int>({98, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     l1.emplace(l1.begin().next(), 87654);
-    ASSERT_EQ(l1, std::initializer_list<int>({98, 87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
+    ASSERT_EQ(l1,
+              std::initializer_list<int>({98, 87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     l1.erase(l1.begin());
     ASSERT_EQ(l1, std::initializer_list<int>({87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
