@@ -1,0 +1,22 @@
+name: check_format
+
+on:
+  push: {}
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install clang-format
+        run: |
+            sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+            apt search clang-format
+            sudo apt install -y clang-format-18
+            sudo cp /usr/bin/clang-format-18 /usr/bin/clang-format
+            clang-format --version
+
+      - name: check format
+        run: make check_format
