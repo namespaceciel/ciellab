@@ -15,7 +15,9 @@ prepare:
 test: prepare
 	cd $(BUILD_DIR) && \
 	make ciellab_test -j $(NUM_JOB) && \
-	valgrind --tool=memcheck --leak-check=full ./test/ciellab_test
+	valgrind --tool=memcheck --leak-check=full ./test/ciellab_test > valgrind_output.txt 2>&1 && \
+	cat valgrind_output.txt && \
+	grep -q "ERROR SUMMARY: 0 errors" valgrind_output.txt || exit 1
 .PHONY: test
 
 benchmark: prepare
