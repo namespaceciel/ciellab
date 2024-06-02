@@ -4,7 +4,7 @@ project(ciellab LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(CIELLAB_BUILD_TESTS "Build unit tests" ${PROJECT_IS_TOP_LEVEL})
+option(CIELLAB_BUILD_TESTS      "Build unit tests" ${PROJECT_IS_TOP_LEVEL})
 option(CIELLAB_BUILD_BENCHMARKS "Build benchmarks" ${PROJECT_IS_TOP_LEVEL})
 
 add_library(ciellab INTERFACE)

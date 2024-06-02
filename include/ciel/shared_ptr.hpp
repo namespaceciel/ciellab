@@ -58,6 +58,8 @@ protected:
     shared_weak_count() noexcept
         : shared_count_(1), weak_count_(1) {}
 
+    ~shared_weak_count() = default;
+
 #ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
     void
     retire() noexcept {
@@ -70,10 +72,6 @@ public:
     shared_weak_count&
     operator=(const shared_weak_count&)
         = delete;
-
-    // TODO: It seems like we don't have to make it virtual
-    // since we always call virtual delete_control_block() to delete from derivative's perspective.
-    virtual ~shared_weak_count() noexcept = default;
 
     CIEL_NODISCARD size_t
     use_count() const noexcept {

@@ -6,25 +6,20 @@ namespace {
 
 class Base {
 public:
-    Base() noexcept = default;
-    virtual ~Base() = default;
-
     virtual std::string
     str() const noexcept {
         return "Base";
     }
 
-private:
-    Base(const Base&);
-    Base&
-    operator=(const Base&);
+protected:
+    ~Base() = default;
 
 }; // class Base
 
-class Derived : public Base {
+class Derived final : public Base {
 public:
     virtual std::string
-    str() const noexcept {
+    str() const noexcept override {
         return "Derived";
     }
 
@@ -33,7 +28,7 @@ public:
 } // namespace
 
 TEST(shared_ptr_tests, default_constuctor) {
-    ciel::shared_ptr<int> s;
+    const ciel::shared_ptr<int> s;
 }
 
 TEST(shared_ptr_tests, move_constructor) {
@@ -42,7 +37,7 @@ TEST(shared_ptr_tests, move_constructor) {
     ASSERT_TRUE(src);
     ASSERT_EQ(*src, 1729);
 
-    ciel::shared_ptr<int> dest(std::move(src));
+    const ciel::shared_ptr<int> dest(std::move(src));
 
     ASSERT_FALSE(src);
     ASSERT_TRUE(dest);
@@ -72,7 +67,7 @@ TEST(shared_ptr_tests, alias_move_constructor) {
     ASSERT_TRUE(src);
     ASSERT_EQ(src->str(), "Derived");
 
-    ciel::shared_ptr<Base> dest(std::move(src));
+    const ciel::shared_ptr<Base> dest(std::move(src));
 
     ASSERT_FALSE(src);
     ASSERT_TRUE(dest);
@@ -80,14 +75,14 @@ TEST(shared_ptr_tests, alias_move_constructor) {
 }
 
 TEST(shared_ptr_tests, make_shared) {
-    ciel::shared_ptr<int> p = ciel::make_shared<int>(42);
+    const ciel::shared_ptr<int> p = ciel::make_shared<int>(42);
 
     ASSERT_EQ(*p, 42);
     ASSERT_EQ(p.use_count(), 1);
 }
 
 TEST(shared_ptr_tests, make_shared_non_trivial) {
-    ciel::shared_ptr<std::string> s = ciel::make_shared<std::string>(1000, 'b');
+    const ciel::shared_ptr<std::string> s = ciel::make_shared<std::string>(1000, 'b');
 
     ASSERT_EQ(*s, std::string(1000, 'b'));
     ASSERT_EQ(s.use_count(), 1);
