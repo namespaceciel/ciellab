@@ -4,10 +4,6 @@
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 
-#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-#include <ciel/hazard_pointers.hpp>
-#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-
 #include <atomic>
 #include <memory>
 #include <type_traits>
@@ -20,20 +16,8 @@ template<class>
 class weak_ptr;
 template<class>
 class enable_shared_from_this;
-
-namespace split_reference_count {
-
 template<class>
 class atomic_shared_ptr;
-
-} // namespace split_reference_count
-
-namespace deferred_reclamation {
-
-template<class>
-class atomic_shared_ptr;
-
-} // namespace deferred_reclamation
 
 class shared_weak_count {
 protected:
@@ -42,30 +26,17 @@ protected:
     // weak_ref + (shared_count_ != 0), The control block will be destroyed after decrementing to zero.
     std::atomic<size_t> weak_count_;
 
-#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-    shared_weak_count* next_{nullptr};
-#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-
     template<class>
     friend class shared_ptr;
     template<class>
     friend class weak_ptr;
     template<class>
-    friend class split_reference_count::atomic_shared_ptr;
-    template<class>
-    friend class deferred_reclamation::atomic_shared_ptr;
+    friend class atomic_shared_ptr;
 
     shared_weak_count() noexcept
         : shared_count_(1), weak_count_(1) {}
 
     ~shared_weak_count() = default;
-
-#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-    void
-    retire() noexcept {
-        get_hazard_pointers<shared_weak_count>().retire(this);
-    }
-#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
 
 public:
     shared_weak_count(const shared_weak_count&) = delete;
@@ -118,11 +89,7 @@ public:
         CIEL_PRECONDITION(weak_count_ > 0);
 
         if (--weak_count_ == 0) {
-#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-            retire();
-#else
             delete_control_block();
-#endif
         }
     }
 
@@ -159,24 +126,6 @@ public:
     virtual void*
     managed_pointer() const noexcept
         = 0;
-
-#ifdef CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
-    shared_weak_count*
-    get_next() const noexcept {
-        return next_;
-    }
-
-    void
-    set_next(shared_weak_count* next) noexcept {
-        next_ = next;
-    }
-
-    void
-    destroy() noexcept {
-        delete_control_block();
-    }
-
-#endif // CIEL_DEFERRED_RECLAMATION_ATOMIC_SHARED_PTR_IMPLEMENTED
 
 }; // class shared_weak_count
 
@@ -351,9 +300,7 @@ private:
     template<class>
     friend class weak_ptr;
     template<class>
-    friend class split_reference_count::atomic_shared_ptr;
-    template<class>
-    friend class deferred_reclamation::atomic_shared_ptr;
+    friend class atomic_shared_ptr;
     template<class U, class Alloc, class... Args>
     friend shared_ptr<U>
     allocate_shared(const Alloc&, Args&&...);

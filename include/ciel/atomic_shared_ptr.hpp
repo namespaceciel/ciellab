@@ -6,8 +6,6 @@
 
 NAMESPACE_CIEL_BEGIN
 
-namespace split_reference_count {
-
 // This is an over simplified split_reference_count implementation of atomic<shared_ptr<T>> only for educational
 // purposes. We don't consider any memory_orders, hence all are seq_cst.
 //
@@ -198,8 +196,6 @@ public:
 #endif // CIEL_STD_VER >= 17
 
 }; // class atomic_shared_ptr
-
-} // namespace split_reference_count
 
 NAMESPACE_CIEL_END
 

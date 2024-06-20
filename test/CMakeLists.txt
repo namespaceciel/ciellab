@@ -14,7 +14,6 @@ add_executable(ciellab_test
     src/exception_safety_tests.cpp
     src/shared_ptr_tests.cpp
     src/atomic_shared_ptr_tests.cpp
-    src/atomic_shared_ptr2_tests.cpp
 )
 
 target_link_libraries(ciellab_test ciellab)
