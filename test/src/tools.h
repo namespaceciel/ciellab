@@ -69,4 +69,8 @@ struct MoveProxyTestClass {
     }
 };
 
+struct Base {};
+
+struct Derived : Base {};
+
 #endif // CIELLAB_TEST_TOOLS_H_

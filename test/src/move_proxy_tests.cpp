@@ -10,7 +10,7 @@ TEST(move_proxy_tests, all) {
 
     a = {{}};
 
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 1);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     std::initializer_list<ConstructAndAssignCounter> il{{}};
     a = il;
