@@ -1,40 +1,7 @@
+#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/vector.hpp>
-
-namespace {
-
-struct ConstructAndAssignCounter {
-    static size_t copy;
-    static size_t move;
-
-    ConstructAndAssignCounter() noexcept = default;
-
-    ConstructAndAssignCounter(const ConstructAndAssignCounter&) noexcept {
-        ++copy;
-    }
-
-    ConstructAndAssignCounter(ConstructAndAssignCounter&&) noexcept {
-        ++move;
-    }
-
-    ConstructAndAssignCounter&
-    operator=(const ConstructAndAssignCounter&) noexcept {
-        ++copy;
-        return *this;
-    }
-
-    ConstructAndAssignCounter&
-    operator=(ConstructAndAssignCounter&&) noexcept {
-        ++move;
-        return *this;
-    }
-};
-
-size_t ConstructAndAssignCounter::copy = 0;
-size_t ConstructAndAssignCounter::move = 0;
-
-} // namespace
 
 TEST(vector_tests, constructors) {
     const ciel::vector<int> v1;
@@ -218,102 +185,112 @@ TEST(vector_tests, erase) {
 }
 
 TEST(vector_tests, copy_and_move_behavior) {
-    ConstructAndAssignCounter::copy = 0;
-    ConstructAndAssignCounter::move = 0;
+    ConstructAndAssignCounter::reset();
 
-    ciel::vector<ConstructAndAssignCounter> v1(5);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    const ciel::vector<ConstructAndAssignCounter> v1(5);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     ciel::vector<ConstructAndAssignCounter> v2(6, ConstructAndAssignCounter{});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 6);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 6);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     const ciel::vector<ConstructAndAssignCounter> v3 = v1;
     const ciel::vector<ConstructAndAssignCounter> v4 = std::move(v2);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 11);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     const ciel::vector<ConstructAndAssignCounter> v5(v1.begin(), v1.end() - 1);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 15);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     ciel::vector<ConstructAndAssignCounter> v6({{}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 18);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 3);
+
+    v6.reserve(100);
+    ConstructAndAssignCounter::reset();
 
     v6 = {{}, {}, {}, {}};
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 22);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 7); // each construct and assign once
 
     v6.assign(7, {});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 29);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 7);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     v6.assign(v1.begin(), v1.end());
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 34);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     v6.assign({{}, {}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 38);
-
-    ASSERT_EQ(ConstructAndAssignCounter::move, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 8); // each construct and assign once
 }
 
 TEST(vector_tests, copy_and_move_behavior2) {
-    ConstructAndAssignCounter::copy = 0;
-    ConstructAndAssignCounter::move = 0;
-
     ciel::vector<ConstructAndAssignCounter> v1;
+    v1.reserve(50);
+    ConstructAndAssignCounter::reset();
 
     for (size_t i = 0; i < 10; ++i) {
         v1.emplace_back();
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
     for (size_t i = 0; i < 10; ++i) {
         v1.push_back({});
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 10);
 
     ConstructAndAssignCounter tmp;
 
     for (size_t i = 0; i < 10; ++i) {
         v1.push_back(std::move(tmp));
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 10);
 
     for (size_t i = 0; i < 10; ++i) {
         v1.push_back(tmp);
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 10);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 10);
+
+    ASSERT_EQ(v1.size(), 40);
 
     v1.reserve(100);
-    ConstructAndAssignCounter::move = 0;
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 40);
 
     v1.shrink_to_fit();
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 10);
-    ASSERT_EQ(ConstructAndAssignCounter::move, 40);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 40);
 }
 
 TEST(vector_tests, copy_and_move_behavior3) {
-    ConstructAndAssignCounter::copy = 0;
+    ConstructAndAssignCounter::reset();
 
     ciel::vector<ConstructAndAssignCounter> v1(10);
     v1.erase(v1.begin());
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     v1.erase(v1.begin() + 5, v1.begin() + 7);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     v1.insert(v1.begin(), ConstructAndAssignCounter{});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     constexpr ConstructAndAssignCounter tmp;
     v1.insert(v1.begin(), tmp);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 1);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 1);
 
     v1.insert(v1.begin(), 3, {});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 4);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 3);
 
     v1.insert(v1.begin(), {{}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 6);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     v1.shrink_to_fit(); // capacity turns to 14
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 6);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     v1.insert(v1.end() - 2, v1.begin(), v1.begin() + 2);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 8);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 2);
 }

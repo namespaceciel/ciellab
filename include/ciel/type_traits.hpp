@@ -66,6 +66,34 @@ template<class T>
 struct is_final = std::true_type;
 #endif
 
+// is_const_lvalue_reference
+template<class T>
+struct is_const_lvalue_reference : std::false_type {};
+
+template<class T>
+struct is_const_lvalue_reference<const T&> : std::true_type {};
+
+template<class T>
+inline constexpr bool is_const_lvalue_reference_v = is_const_lvalue_reference<T>::value;
+
+// is_const_rvalue_reference
+template<class T>
+struct is_const_rvalue_reference : std::false_type {};
+
+template<class T>
+struct is_const_rvalue_reference<const T&&> : std::true_type {};
+
+template<class T>
+inline constexpr bool is_const_rvalue_reference_v = is_const_rvalue_reference<T>::value;
+
+// is_const_reference
+template<class T>
+struct is_const_reference
+    : std::integral_constant<bool, is_const_lvalue_reference_v<T> || is_const_rvalue_reference_v<T>> {};
+
+template<class T>
+inline constexpr bool is_const_reference_v = is_const_reference<T>::value;
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_

@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include <ciel/config.hpp>
+#include <ciel/move_proxy.hpp>
 #include <ciel/split_buffer.hpp>
 #include <ciel/type_traits.hpp>
 
@@ -384,7 +385,6 @@ public:
             end_cap_     = other.end_cap_;
 
             other.point_to_buffer();
-            ;
 
         } else {
             CIEL_TRY {
@@ -408,7 +408,6 @@ public:
             end_cap_     = other.end_cap_;
 
             other.point_to_buffer();
-            ;
 
         } else {
             const auto count = other.size();
@@ -438,7 +437,6 @@ public:
             end_cap_ = other.end_cap_;
 
             other.point_to_buffer();
-            ;
 
         } else {
             const auto count = other.size();
@@ -459,7 +457,13 @@ public:
         }
     }
 
-    small_vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
+    small_vector(InitializerList init, const allocator_type& alloc = allocator_type())
+        : small_vector(init.begin(), init.end(), alloc) {}
+
+    small_vector(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
         : small_vector(init.begin(), init.end(), alloc) {}
 
     ~small_vector() {
@@ -527,8 +531,17 @@ public:
         return *this;
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     small_vector&
-    operator=(std::initializer_list<value_type> ilist) {
+    operator=(InitializerList ilist) {
+        assign(ilist.begin(), ilist.end());
+        return *this;
+    }
+
+    small_vector&
+    operator=(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
@@ -599,8 +612,16 @@ public:
         }
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     void
-    assign(std::initializer_list<value_type> ilist) {
+    assign(InitializerList ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    void
+    assign(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
@@ -908,29 +929,37 @@ public:
 
         } else { // enough back space
             const size_type old_count = count;
-            pointer __old_last        = end_;
-            auto __m                  = std::next(first, count);
-            difference_type __dx      = end_ - (begin_ + pos_index);
+            pointer old_last          = end_;
+            auto m                    = std::next(first, count);
+            difference_type dx        = end_ - (begin_ + pos_index);
 
-            if (count > __dx) {
-                __m = first;
-                std::advance(__m, __dx);
-                construct_at_end(__m, last);
-                count = __dx;
+            if (count > dx) {
+                m = first;
+                std::advance(m, dx);
+                construct_at_end(m, last);
+                count = dx;
             }
 
             if (count > 0) {
-                move_range(begin_ + pos_index, __old_last, begin_ + pos_index + old_count);
+                move_range(begin_ + pos_index, old_last, begin_ + pos_index + old_count);
 
-                std::copy(first, __m, begin_ + pos_index);
+                std::copy(first, m, begin_ + pos_index);
             }
         }
 
         return begin() + pos_index;
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     iterator
-    insert(iterator pos, std::initializer_list<value_type> ilist) {
+    insert(iterator pos, InitializerList ilist) {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    iterator
+    insert(iterator pos, std::initializer_list<move_proxy<value_type>> ilist) {
         return insert(pos, ilist.begin(), ilist.end());
     }
 

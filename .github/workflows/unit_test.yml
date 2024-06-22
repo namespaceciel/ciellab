@@ -13,8 +13,8 @@ jobs:
       - name: submodule
         run: git submodule update --init --recursive
 
-      - name: install valgrind
-        run: sudo apt install -y valgrind
+      - name: install valgrind and unbuffer
+        run: sudo apt install -y valgrind expect
 
       - name: test
         run: make test

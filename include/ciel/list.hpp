@@ -10,6 +10,7 @@
 
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
+#include <ciel/move_proxy.hpp>
 #include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
@@ -334,7 +335,7 @@ public:
     explicit list(const allocator_type& alloc)
         : free_node_(nullptr), size_node_allocator_(0, alloc) {}
 
-    list(const size_type count, const T& value, const allocator_type& alloc = allocator_type())
+    list(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : list(alloc) {
         CIEL_TRY {
             alloc_range_construct_n(end(), count, value);
@@ -406,7 +407,13 @@ public:
         }
     }
 
-    list(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
+    list(InitializerList init, const allocator_type& alloc = allocator_type())
+        : list(init.begin(), init.end(), alloc) {}
+
+    list(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
         : list(init.begin(), init.end(), alloc) {}
 
     ~list() {
@@ -466,14 +473,23 @@ public:
         return *this;
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     list&
-    operator=(std::initializer_list<T> ilist) {
+    operator=(InitializerList ilist) {
+        assign(ilist.begin(), ilist.end());
+        return *this;
+    }
+
+    list&
+    operator=(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
     void
-    assign(size_type count, const T& value) {
+    assign(size_type count, const value_type& value) {
         iterator it = begin();
         iterator e  = end();
 
@@ -507,8 +523,16 @@ public:
         }
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     void
-    assign(std::initializer_list<T> ilist) {
+    assign(InitializerList ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    void
+    assign(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
@@ -646,8 +670,16 @@ public:
         return alloc_range_construct(pos, first, last);
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     iterator
-    insert(iterator pos, std::initializer_list<T> ilist) {
+    insert(iterator pos, InitializerList ilist) {
+        return alloc_range_construct(pos, ilist.begin(), ilist.end());
+    }
+
+    iterator
+    insert(iterator pos, std::initializer_list<move_proxy<value_type>> ilist) {
         return alloc_range_construct(pos, ilist.begin(), ilist.end());
     }
 
@@ -668,12 +700,12 @@ public:
     }
 
     void
-    push_back(const T& value) {
+    push_back(const value_type& value) {
         emplace_back(value);
     }
 
     void
-    push_back(T&& value) {
+    push_back(value_type&& value) {
         emplace_back(std::move(value));
     }
 
@@ -691,12 +723,12 @@ public:
     }
 
     void
-    push_front(const T& value) {
+    push_front(const value_type& value) {
         emplace_front(value);
     }
 
     void
-    push_front(T&& value) {
+    push_front(value_type&& value) {
         emplace_front(std::move(value));
     }
 

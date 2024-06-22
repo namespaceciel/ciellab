@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include <ciel/config.hpp>
+#include <ciel/move_proxy.hpp>
 #include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
@@ -562,7 +563,13 @@ public:
         }
     }
 
-    split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
+    split_buffer(InitializerList init, const allocator_type& alloc = allocator_type())
+        : split_buffer(init.begin(), init.end(), alloc) {}
+
+    split_buffer(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
     ~split_buffer() {
@@ -619,8 +626,17 @@ public:
         return *this;
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     split_buffer&
-    operator=(std::initializer_list<value_type> ilist) {
+    operator=(InitializerList ilist) {
+        assign(ilist.begin(), ilist.end());
+        return *this;
+    }
+
+    split_buffer&
+    operator=(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
@@ -704,8 +720,16 @@ public:
         }
     }
 
+    template<class InitializerList,
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
+             = 0>
     void
-    assign(std::initializer_list<value_type> ilist) {
+    assign(InitializerList ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    void
+    assign(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 

@@ -1,40 +1,7 @@
+#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/split_buffer.hpp>
-
-namespace {
-
-struct ConstructAndAssignCounter {
-    static size_t copy;
-    static size_t move;
-
-    ConstructAndAssignCounter() noexcept = default;
-
-    ConstructAndAssignCounter(const ConstructAndAssignCounter&) noexcept {
-        ++copy;
-    }
-
-    ConstructAndAssignCounter(ConstructAndAssignCounter&&) noexcept {
-        ++move;
-    }
-
-    ConstructAndAssignCounter&
-    operator=(const ConstructAndAssignCounter&) noexcept {
-        ++copy;
-        return *this;
-    }
-
-    ConstructAndAssignCounter&
-    operator=(ConstructAndAssignCounter&&) noexcept {
-        ++move;
-        return *this;
-    }
-};
-
-size_t ConstructAndAssignCounter::copy = 0;
-size_t ConstructAndAssignCounter::move = 0;
-
-} // namespace
 
 TEST(split_buffer_tests, constructors) {
     const ciel::split_buffer<int> v1;
@@ -285,73 +252,77 @@ TEST(split_buffer_tests, erase) {
 }
 
 TEST(split_buffer_tests, copy_and_move_behavior) {
-    ConstructAndAssignCounter::copy = 0;
-    ConstructAndAssignCounter::move = 0;
+    ConstructAndAssignCounter::reset();
 
     const ciel::split_buffer<ConstructAndAssignCounter> v1(5);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     ciel::split_buffer<ConstructAndAssignCounter> v2(6, ConstructAndAssignCounter{});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 6);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 6);
 
     const ciel::split_buffer<ConstructAndAssignCounter> v3 = v1;
     const ciel::split_buffer<ConstructAndAssignCounter> v4 = std::move(v2);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 11);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
 
     const ciel::split_buffer<ConstructAndAssignCounter> v5(v1.begin(), v1.end() - 1);
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 15);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
 
     ciel::split_buffer<ConstructAndAssignCounter> v6({{}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 18);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     v6 = {{}, {}, {}, {}};
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 22);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 
     v6.assign(7, {});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 29);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 7);
 
     v6.assign(v1.begin(), v1.end());
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 34);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
 
     v6.assign({{}, {}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 38);
-
-    ASSERT_EQ(ConstructAndAssignCounter::move, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
 }
 
 TEST(split_buffer_tests, copy_and_move_behavior2) {
-    ConstructAndAssignCounter::copy = 0;
-
     ciel::split_buffer<ConstructAndAssignCounter> v1;
+    v1.reserve_back_spare(50);
+    ConstructAndAssignCounter::reset();
 
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 10; ++i) {
         v1.emplace_back();
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
 
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 10; ++i) {
         v1.push_back({});
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 10);
 
     ConstructAndAssignCounter tmp;
 
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 10; ++i) {
         v1.push_back(std::move(tmp));
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 0);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 10);
 
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 10; ++i) {
         v1.push_back(tmp);
     }
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 100);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 10);
 
+    ASSERT_EQ(v1.size(), 40);
+
+    // v1.reserve(100); // TODO
+    // ASSERT_EQ(ConstructAndAssignCounter::move(), 40);
+
+    ASSERT_GT(v1.capacity(), v1.size());
     v1.shrink_to_fit();
-    ASSERT_EQ(ConstructAndAssignCounter::copy, 100);
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 40);
 }
 
 // TEST(split_buffer_tests, copy_and_move_behavior3) {
-//     ConstructAndAssignCounter::copy = 0;
+//     ConstructAndAssignCounter::reset();
 //
 //     ciel::split_buffer<ConstructAndAssignCounter> v1(10);
 //     v1.erase(v1.begin());
