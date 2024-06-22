@@ -13,6 +13,9 @@ jobs:
       - name: submodule
         run: git submodule update --init --recursive
 
+      - name: apt update
+        run: sudo apt update
+
       - name: install valgrind and unbuffer
         run: sudo apt install -y valgrind expect
 
