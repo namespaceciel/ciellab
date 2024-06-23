@@ -564,11 +564,15 @@ public:
 
     CIEL_NODISCARD T&
     operator*() const noexcept {
+        CIEL_PRECONDITION(*this);
+
         return *get();
     }
 
     CIEL_NODISCARD T*
     operator->() const noexcept {
+        CIEL_PRECONDITION(*this);
+
         return get();
     }
 

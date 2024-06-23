@@ -69,6 +69,8 @@ public:
 
     element_type*
     operator->() const noexcept {
+        CIEL_PRECONDITION(*this);
+
         return get();
     }
 

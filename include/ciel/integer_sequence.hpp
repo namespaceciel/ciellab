@@ -56,10 +56,10 @@ using make_index_sequence = typename details::make_index_sequence_helper<N>::typ
 
 namespace details {
 
-template<typename T, size_t N, typename Indices = make_index_sequence<N>>
+template<class T, size_t N, class Indices = make_index_sequence<N>>
 struct make_integer_sequence_helper;
 
-template<typename T, size_t N, size_t... Indices>
+template<class T, size_t N, size_t... Indices>
 struct make_integer_sequence_helper<T, N, index_sequence<Indices...>> {
     using type = integer_sequence<T, static_cast<T>(Indices)...>;
 };
