@@ -15,7 +15,7 @@ public:
     move_proxy(Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value)
         : data_(std::forward<Args>(args)...) {}
 
-    operator T() const noexcept(std::is_nothrow_move_constructible<T>::value) {
+    operator T&&() const noexcept {
         return std::move(data_);
     }
 

@@ -213,7 +213,7 @@ TEST(vector_tests, copy_and_move_behavior) {
 
     v6 = {{}, {}, {}, {}};
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 7); // each construct and assign once
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 4);
 
     v6.assign(7, {});
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 7);
@@ -225,7 +225,7 @@ TEST(vector_tests, copy_and_move_behavior) {
 
     v6.assign({{}, {}, {}, {}});
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 8); // each construct and assign once
+    ASSERT_EQ(ConstructAndAssignCounter::move(), 4);
 }
 
 TEST(vector_tests, copy_and_move_behavior2) {
