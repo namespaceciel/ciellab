@@ -44,25 +44,35 @@ struct ConstructAndAssignCounter {
 };
 
 struct MoveProxyTestClass {
+    using value_type = ConstructAndAssignCounter;
+
     template<class InitializerList,
-             typename std::enable_if<
-                 std::is_same<typename std::remove_cv<typename std::remove_reference<InitializerList>::type>::type,
-                              std::initializer_list<ConstructAndAssignCounter>>::value,
-                 int>::type
+             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
              = 0>
     MoveProxyTestClass&
-    operator=(InitializerList&& il) noexcept {
+    operator=(InitializerList il) noexcept {
         for (auto&& t : il) {
-            CIEL_UNUSED(ConstructAndAssignCounter{std::forward<decltype(t)>(t)});
+            CIEL_UNUSED(value_type{std::forward<decltype(t)>(t)});
         }
 
         return *this;
     }
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     MoveProxyTestClass&
-    operator=(std::initializer_list<ciel::move_proxy<ConstructAndAssignCounter>> il) noexcept {
+    operator=(std::initializer_list<ciel::move_proxy<value_type>> il) noexcept {
         for (auto&& t : il) {
-            CIEL_UNUSED(ConstructAndAssignCounter{std::forward<decltype(t)>(t)});
+            CIEL_UNUSED(value_type{std::forward<decltype(t)>(t)});
+        }
+
+        return *this;
+    }
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    MoveProxyTestClass&
+    operator=(std::initializer_list<value_type> il) noexcept {
+        for (auto&& t : il) {
+            CIEL_UNUSED(value_type{std::forward<decltype(t)>(t)});
         }
 
         return *this;

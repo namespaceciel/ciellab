@@ -396,7 +396,12 @@ public:
     vector(InitializerList init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     vector(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
+        : vector(init.begin(), init.end(), alloc) {}
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
     ~vector() {
@@ -461,8 +466,16 @@ public:
         return *this;
     }
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     vector&
     operator=(std::initializer_list<move_proxy<value_type>> ilist) {
+        assign(ilist.begin(), ilist.end());
+        return *this;
+    }
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    vector&
+    operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
@@ -541,8 +554,15 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     void
     assign(std::initializer_list<move_proxy<value_type>> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    void
+    assign(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
@@ -895,8 +915,15 @@ public:
         return insert(pos, ilist.begin(), ilist.end());
     }
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     iterator
     insert(iterator pos, std::initializer_list<move_proxy<value_type>> ilist) {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    iterator
+    insert(iterator pos, std::initializer_list<value_type> ilist) {
         return insert(pos, ilist.begin(), ilist.end());
     }
 

@@ -569,7 +569,12 @@ public:
     split_buffer(InitializerList init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     split_buffer(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
+        : split_buffer(init.begin(), init.end(), alloc) {}
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
     ~split_buffer() {
@@ -635,8 +640,16 @@ public:
         return *this;
     }
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     split_buffer&
     operator=(std::initializer_list<move_proxy<value_type>> ilist) {
+        assign(ilist.begin(), ilist.end());
+        return *this;
+    }
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    split_buffer&
+    operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
@@ -728,8 +741,15 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_copyable<U>::value, int>::type = 0>
     void
     assign(std::initializer_list<move_proxy<value_type>> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
+    template<class U = value_type, typename std::enable_if<std::is_trivially_copyable<U>::value, int>::type = 0>
+    void
+    assign(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
