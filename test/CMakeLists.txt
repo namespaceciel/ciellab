@@ -17,6 +17,7 @@ add_executable(ciellab_test
     src/atomic_shared_ptr_tests.cpp
     src/move_proxy_tests.cpp
     src/observer_ptr_tests.cpp
+    src/type_traits_tests.cpp
 )
 
 target_link_libraries(ciellab_test ciellab)

@@ -46,7 +46,7 @@ struct is_trivially_relocatable<T, true> : std::true_type {};
 // useless_tag
 struct useless_tag {
     useless_tag(...) noexcept {}
-};
+}; // struct useless_tag
 
 // owner
 template<class T, class = typename std::enable_if<std::is_pointer<T>::value>::type>
@@ -84,6 +84,35 @@ struct is_const_rvalue_reference<const T&&> : std::true_type {};
 template<class T>
 struct is_const_reference
     : std::integral_constant<bool, is_const_lvalue_reference<T>::value || is_const_rvalue_reference<T>::value> {};
+
+// worth_move
+// FIXME: Current implementation returns true for const&& constructor and assignment.
+template<class T>
+struct worth_move {
+    static_assert(!std::is_const<T>::value, "");
+
+private:
+    using U = typename std::decay<T>::type;
+
+    struct helper {
+        operator const U&() noexcept;
+        operator U&&() noexcept;
+    }; // struct helper
+
+public:
+    static constexpr bool construct = std::is_class<T>::value && !std::is_trivial<T>::value
+                                   && std::is_move_constructible<T>::value && !std::is_constructible<T, helper>::value;
+    static constexpr bool assign = std::is_class<T>::value && !std::is_trivial<T>::value
+                                && std::is_move_assignable<T>::value && !std::is_assignable<T, helper>::value;
+    static constexpr bool value = construct || assign;
+
+}; // struct worth_move_constructing
+
+template<class T>
+static constexpr bool worth_move_constructing = worth_move<T>::construct;
+
+template<class T>
+static constexpr bool worth_move_assigning = worth_move<T>::assign;
 
 NAMESPACE_CIEL_END
 
