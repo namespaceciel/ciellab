@@ -2,7 +2,9 @@
 #define CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 
 #include <iterator>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include <ciel/config.hpp>
 
@@ -11,6 +13,22 @@ NAMESPACE_CIEL_BEGIN
 // void_t
 template<class...>
 using void_t = void;
+
+// conjunction
+// When the template pack is empty, derive from true_type.
+template<class...>
+struct conjunction : std::true_type {};
+
+// Otherwise, derive from the first false template member (if all true, choose the last one).
+template<class B1, class... Bn>
+struct conjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), conjunction<Bn...>, B1>::type {};
+
+// disjunction
+template<class...>
+struct disjunction : std::false_type {};
+
+template<class B1, class... Bn>
+struct disjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), B1, disjunction<Bn...>>::type {};
 
 // is_exactly_input_iterator
 template<class Iter, class = void>
@@ -37,11 +55,15 @@ struct is_input_iterator<Iter, void_t<typename std::iterator_traits<Iter>::itera
     : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
 
 // is_trivially_relocatable
-template<class T, bool = std::is_trivially_copyable<T>::value>
-struct is_trivially_relocatable : std::false_type {};
-
 template<class T>
-struct is_trivially_relocatable<T, true> : std::true_type {};
+struct is_trivially_relocatable : disjunction<std::is_empty<T>, std::is_trivially_copyable<T>> {};
+
+template<class First, class Second>
+struct is_trivially_relocatable<std::pair<First, Second>>
+    : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
+
+template<class... Types>
+struct is_trivially_relocatable<std::tuple<Types...>> : conjunction<is_trivially_relocatable<Types>...> {};
 
 // useless_tag
 struct useless_tag {
@@ -59,11 +81,11 @@ using is_final = std::is_final<T>;
 
 #elif __has_builtin(__is_final)
 template<class T>
-struct is_final : public std::integral_constant<bool, __is_final(T)> {};
+struct is_final : std::integral_constant<bool, __is_final(T)> {};
 
 #else
 template<class T>
-struct is_final = std::true_type;
+using is_final = std::true_type;
 #endif
 
 // is_const_lvalue_reference

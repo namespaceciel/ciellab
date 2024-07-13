@@ -11,6 +11,9 @@
 #include <ciel/type_traits.hpp>
 
 struct ConstructAndAssignCounter {
+    // To not be considered as trivially_relocatable.
+    char padding_{};
+
     static size_t copy_;
     static size_t move_;
 
