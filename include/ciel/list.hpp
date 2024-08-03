@@ -413,11 +413,11 @@ public:
     list(InitializerList init, const allocator_type& alloc = allocator_type())
         : list(init.begin(), init.end(), alloc) {}
 
-    template<class U = value_type, typename std::enable_if<worth_move_constructing<U>, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<worth_move_constructing<U>::value, int>::type = 0>
     list(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
         : list(init.begin(), init.end(), alloc) {}
 
-    template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>::value, int>::type = 0>
     list(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : list(init.begin(), init.end(), alloc) {}
 
@@ -698,13 +698,13 @@ public:
         return alloc_range_construct(pos, ilist.begin(), ilist.end());
     }
 
-    template<class U = value_type, typename std::enable_if<ciel::worth_move_constructing<U>, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::worth_move_constructing<U>::value, int>::type = 0>
     iterator
     insert(iterator pos, std::initializer_list<move_proxy<value_type>> ilist) {
         return alloc_range_construct(pos, ilist.begin(), ilist.end());
     }
 
-    template<class U = value_type, typename std::enable_if<!ciel::worth_move_constructing<U>, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::worth_move_constructing<U>::value, int>::type = 0>
     iterator
     insert(iterator pos, std::initializer_list<value_type> ilist) {
         return alloc_range_construct(pos, ilist.begin(), ilist.end());

@@ -131,10 +131,16 @@ public:
 }; // struct worth_move_constructing
 
 template<class T>
-static constexpr bool worth_move_constructing = worth_move<T>::construct;
+struct worth_move_constructing {
+    static constexpr bool value = worth_move<T>::construct;
+
+}; // worth_move_constructing
 
 template<class T>
-static constexpr bool worth_move_assigning = worth_move<T>::assign;
+struct worth_move_assigning {
+    static constexpr bool value = worth_move<T>::assign;
+
+}; // worth_move_assigning
 
 #if CIEL_STD_VER >= 20
 // is_complete_type
