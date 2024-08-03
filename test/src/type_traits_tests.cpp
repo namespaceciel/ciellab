@@ -143,3 +143,15 @@ TEST(type_traits_tests, worth_move_assigning) {
 
     static_assert(not ciel::worth_move_assigning<T11>, "");
 }
+
+#if CIEL_STD_VER >= 20
+TEST(type_traits_tests, is_complete_type) {
+    struct is_complete_type_test;
+
+    static_assert(not ciel::is_complete_type_v<is_complete_type_test>);
+
+    struct is_complete_type_test {};
+
+    static_assert(ciel::is_complete_type_v<is_complete_type_test>);
+}
+#endif // CIEL_STD_VER >= 20

@@ -136,6 +136,12 @@ static constexpr bool worth_move_constructing = worth_move<T>::construct;
 template<class T>
 static constexpr bool worth_move_assigning = worth_move<T>::assign;
 
+#if CIEL_STD_VER >= 20
+// is_complete_type
+template<class T, auto = [] {}>
+inline constexpr bool is_complete_type_v = requires { sizeof(T); };
+#endif // CIEL_STD_VER >= 20
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
