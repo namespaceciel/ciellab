@@ -110,10 +110,7 @@
 
 // unused
 #if defined(__GNUC__) && !defined(__clang__) // simple (void) cast won't stop gcc
-inline void
-ciel_ignore_result(...) noexcept {}
-
-#define CIEL_UNUSED(x) ciel_ignore_result(x)
+#define CIEL_UNUSED(x) [](...) {}(x)
 #else
 #define CIEL_UNUSED(x) static_cast<void>(x)
 #endif
