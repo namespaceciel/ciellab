@@ -54,13 +54,7 @@ public:
 private:
     using alloc_traits = std::allocator_traits<allocator_type>;
 
-    struct new_allocation {
-        owner<pointer> new_begin_cap_;
-        size_type new_cap_;
-
-    }; // struct new_allocation
-
-    owner<pointer> begin_cap_;
+    pointer begin_cap_;
     pointer begin_;
     pointer end_;
     pointer end_cap_;
@@ -179,7 +173,7 @@ private:
 
     // is_trivially_relocatable -> std::true_type
     void
-    swap_out_buffer(split_buffer& sb, pointer pos, std::true_type) noexcept {
+    swap_out_buffer(split_buffer&& sb, pointer pos, std::true_type) noexcept {
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
         if (begin_cap_) {
             const size_type front_count = pos - begin_;
@@ -207,7 +201,7 @@ private:
 
     // is_trivially_relocatable -> std::false_type
     void
-    swap_out_buffer(split_buffer& sb, pointer pos,
+    swap_out_buffer(split_buffer&& sb, pointer pos,
                     std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         if (begin_cap_) {
             const size_type front_count = pos - begin_;
@@ -238,7 +232,7 @@ private:
 
     // is_trivially_relocatable -> std::true_type
     void
-    swap_out_buffer(split_buffer& sb, std::true_type) noexcept {
+    swap_out_buffer(split_buffer&& sb, std::true_type) noexcept {
         CIEL_PRECONDITION(sb.front_spare() >= size());
 
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
@@ -259,7 +253,8 @@ private:
 
     // is_trivially_relocatable -> std::false_type
     void
-    swap_out_buffer(split_buffer& sb, std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
+    swap_out_buffer(split_buffer&& sb,
+                    std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() >= size());
 
         if (begin_cap_) {
@@ -280,7 +275,7 @@ private:
     }
 
     void
-    swap_out_buffer(split_buffer& sb) noexcept {
+    swap_out_buffer(split_buffer&& sb) noexcept {
         do_destroy();
 
         CIEL_PRECONDITION(sb.begin_cap_ == sb.begin_); // TODO: maybe useless
@@ -431,12 +426,8 @@ private:
         pointer old_end   = end_;
         difference_type n = old_end - to;
 
-        {
-            pointer p = from_s + n;
-
-            for (; p < from_e; ++p) {
-                construct_one_at_end(std::move(*p));
-            }
+        for (pointer p = from_s + n; p < from_e; ++p) {
+            construct_one_at_end(std::move(*p));
         }
 
         std::move_backward(from_s, from_s + n, old_end);
@@ -668,7 +659,7 @@ public:
 
                 sb.construct_at_end(count, value);
 
-                swap_out_buffer(sb);
+                swap_out_buffer(std::move(sb));
                 return;
             }
 
@@ -703,7 +694,7 @@ public:
 
                 sb.construct_at_end(first, last);
 
-                swap_out_buffer(sb);
+                swap_out_buffer(std::move(sb));
                 return;
             }
 
@@ -919,7 +910,7 @@ public:
         split_buffer sb(allocator_());
         sb.reserve_cap_and_offset_to(new_spare + size() + back_spare(), new_spare);
 
-        swap_out_buffer(sb, begin_, is_trivially_relocatable<value_type>{});
+        swap_out_buffer(std::move(sb), begin_, is_trivially_relocatable<value_type>{});
 
         CIEL_POSTCONDITION(new_spare <= front_spare());
     }
@@ -940,7 +931,7 @@ public:
         split_buffer sb(allocator_());
         sb.reserve_cap_and_offset_to(new_spare + size() + front_spare(), front_spare());
 
-        swap_out_buffer(sb, begin_, is_trivially_relocatable<value_type>{});
+        swap_out_buffer(std::move(sb), begin_, is_trivially_relocatable<value_type>{});
 
         CIEL_POSTCONDITION(new_spare <= back_spare());
     }
@@ -960,7 +951,7 @@ public:
             split_buffer sb(allocator_());
             sb.reserve_cap_and_offset_to(size(), size());
 
-            swap_out_buffer(sb, is_trivially_relocatable<value_type>{});
+            swap_out_buffer(std::move(sb), is_trivially_relocatable<value_type>{});
 
         } else if (begin_cap_) {
             alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
@@ -1155,7 +1146,7 @@ public:
 
                 sb.construct_one_at_end(std::forward<Args>(args)...);
 
-                swap_out_buffer(sb, is_trivially_relocatable<value_type>{});
+                swap_out_buffer(std::move(sb), is_trivially_relocatable<value_type>{});
             }
 
         } else {
@@ -1199,7 +1190,7 @@ public:
 
                 sb.construct_one_at_begin(std::forward<Args>(args)...);
 
-                swap_out_buffer(sb, begin_, is_trivially_relocatable<value_type>{});
+                swap_out_buffer(std::move(sb), begin_, is_trivially_relocatable<value_type>{});
             }
 
         } else {
