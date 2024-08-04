@@ -14,10 +14,17 @@ prepare:
 
 test: prepare
 	cd $(BUILD_DIR) && \
-	make ciellab_test -j $(NUM_JOB) && \
-	unbuffer valgrind --tool=memcheck --leak-check=full ./test/ciellab_test | tee valgrind_output.txt && \
-	grep -q "ERROR SUMMARY: 0 errors" valgrind_output.txt
+	make ciellab_test_11_exceptions_on_rtti_on ciellab_test_23_exceptions_off_rtti_off -j $(NUM_JOB) && \
+	./test/ciellab_test_11_exceptions_on_rtti_on && \
+	./test/ciellab_test_23_exceptions_off_rtti_off
 .PHONY: test
+
+valgrind: prepare
+	cd $(BUILD_DIR) && \
+	make ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
+	unbuffer valgrind --tool=memcheck --leak-check=full ./test/ciellab_test_11_exceptions_on_rtti_on | tee valgrind_output.txt && \
+	grep -q "ERROR SUMMARY: 0 errors" valgrind_output.txt
+.PHONY: valgrind
 
 benchmark: prepare
 	cd $(BUILD_DIR) && \

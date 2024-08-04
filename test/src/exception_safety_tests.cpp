@@ -1,3 +1,5 @@
+#ifdef CIEL_HAS_EXCEPTIONS
+
 #include <gtest/gtest.h>
 
 #include <ciel/list.hpp>
@@ -17,7 +19,7 @@ bool can_throw; // set this false to renew state_holder
 void
 may_throw() {
     if (can_throw && g() % 5 == 0) {
-        CIEL_THROW 1;
+        ciel::throw_exception(std::exception{});
     }
 }
 
@@ -293,3 +295,5 @@ TEST(exception_safety_tests, list_basic) {
 
 #undef STRONG_TEST_CASE
 #undef BASIC_TEST_CASE
+
+#endif // CIEL_HAS_EXCEPTIONS

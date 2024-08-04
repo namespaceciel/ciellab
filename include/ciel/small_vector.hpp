@@ -53,7 +53,8 @@ private:
     owner<pointer> begin_; // begin_ is always pointing to buffer_ or allocations on the heap
     pointer end_;
     pointer end_cap_;
-    typename std::aligned_storage<sizeof(value_type), alignof(value_type)>::type buffer_[BaseCapacity];
+
+    typename aligned_storage<sizeof(value_type), alignof(value_type)>::type buffer_[BaseCapacity];
 
     allocator_type&
     allocator_() noexcept {
@@ -77,7 +78,7 @@ private:
         const size_type ms = max_size();
 
         if CIEL_UNLIKELY (new_size > ms) {
-            ciel::THROW(std::length_error("ciel::small_vector reserving size is beyond max_size"));
+            ciel::throw_exception(std::length_error("ciel::small_vector reserving size is beyond max_size"));
         }
 
         const size_type cap = capacity();
@@ -653,7 +654,7 @@ public:
     CIEL_NODISCARD reference
     at(const size_type pos) {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::THROW(std::out_of_range("pos is not within the range of ciel::vector"));
+            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::vector"));
         }
 
         return begin_[pos];
@@ -662,7 +663,7 @@ public:
     CIEL_NODISCARD const_reference
     at(const size_type pos) const {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::THROW(std::out_of_range("pos is not within the range of ciel::vector"));
+            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::vector"));
         }
 
         return begin_[pos];

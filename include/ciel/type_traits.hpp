@@ -148,6 +148,17 @@ template<class T, auto = [] {}>
 inline constexpr bool is_complete_type_v = requires { sizeof(T); };
 #endif // CIEL_STD_VER >= 20
 
+// aligned_storage
+template<size_t size, size_t alignment>
+struct aligned_storage {
+    static_assert(sizeof(unsigned char) == 1, "");
+
+    class type {
+        alignas(alignment) unsigned char buffer_[size];
+    };
+
+}; // aligned_storage
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_

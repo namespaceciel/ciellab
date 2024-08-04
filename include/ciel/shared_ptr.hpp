@@ -234,8 +234,8 @@ private:
     using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_with_instance>;
     using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_with_instance>;
 
-    ciel::compressed_pair<typename std::aligned_storage<sizeof(element_type), alignof(element_type)>::type,
-                          control_block_allocator>
+    compressed_pair<typename aligned_storage<sizeof(element_type), alignof(element_type)>::type,
+                    control_block_allocator>
         compressed_;
 
     CIEL_NODISCARD pointer
@@ -290,7 +290,7 @@ public:
 template<class T>
 class shared_ptr {
 public:
-    using element_type = std::remove_extent_t<T>;
+    using element_type = typename std::remove_extent<T>::type;
     using pointer      = element_type*;
     using weak_type    = weak_ptr<T>;
 
@@ -322,7 +322,8 @@ private:
         control_block_type* control_block = control_block_alloc_traits::allocate(allocator, 1);
 
         CIEL_TRY {
-            control_block_alloc_traits::construct(allocator, control_block, ptr, std::move(dlt), std::move(alloc));
+            control_block_alloc_traits::construct(allocator, control_block, ptr, std::forward<Deleter>(dlt),
+                                                  std::forward<Allocator>(alloc));
             return control_block;
         }
         CIEL_CATCH (...) {
@@ -338,7 +339,7 @@ private:
         = 0>
     void
     enable_weak_this(const enable_shared_from_this<Now>* now_ptr, Original* original_ptr) noexcept {
-        using RawNow = std::remove_cv_t<Now>;
+        using RawNow = typename std::remove_cv<Now>::type;
 
         // If now_ptr is not initialized, let it points to the right control block.
         if (now_ptr && now_ptr->weak_this_.expired()) {
@@ -463,7 +464,7 @@ public:
           control_block_(r.control_block_ ? (r.control_block_->increment_if_not_zero() ? r.control_block_ : nullptr)
                                           : nullptr) {
         if (control_block_ == nullptr) {
-            ciel::THROW(std::bad_weak_ptr());
+            ciel::throw_exception(std::bad_weak_ptr());
         }
 
         enable_weak_this(r.get(), r.get());
@@ -609,7 +610,8 @@ public:
     CIEL_NODISCARD D*
     get_deleter() const noexcept {
 #ifdef CIEL_HAS_RTTI
-        return control_block_ ? static_cast<D*>(control_block_->get_deleter(typeid(std::remove_cv_t<D>))) : nullptr;
+        return control_block_ ? static_cast<D*>(control_block_->get_deleter(typeid(typename std::remove_cv<D>::type)))
+                              : nullptr;
 #else
         return nullptr;
 #endif
@@ -640,7 +642,7 @@ shared_ptr(std::unique_ptr<T, D>) -> shared_ptr<T>;
 template<class T>
 class weak_ptr {
 public:
-    using element_type = std::remove_extent_t<T>;
+    using element_type = typename std::remove_extent<T>::type;
     using pointer      = element_type*;
 
 private:
