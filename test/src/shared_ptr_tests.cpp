@@ -87,3 +87,28 @@ TEST(shared_ptr_tests, make_shared_non_trivial) {
     ASSERT_EQ(*s, std::string(1000, 'b'));
     ASSERT_EQ(s.use_count(), 1);
 }
+
+TEST(shared_ptr_tests, custom_deleter) {
+    int count = 0;
+
+    {
+        const ciel::shared_ptr<int> s{new int{123}, [&count](int*) {
+                                          ++count;
+                                      }};
+
+        ASSERT_EQ(*s, 123);
+        ASSERT_EQ(s.use_count(), 1);
+    }
+
+    ASSERT_EQ(count, 1);
+
+    {
+        const ciel::shared_ptr<int> s{nullptr, [&count](int*) {
+                                          ++count;
+                                      }};
+
+        ASSERT_EQ(s.use_count(), 1);
+    }
+
+    ASSERT_EQ(count, 2);
+}
