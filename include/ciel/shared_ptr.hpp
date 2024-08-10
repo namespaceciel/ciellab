@@ -47,58 +47,58 @@ public:
 
     CIEL_NODISCARD size_t
     use_count() const noexcept {
-        return shared_count_;
+        return shared_count_.load(std::memory_order_relaxed);
     }
 
     void
     shared_add_ref(const size_t count = 1) noexcept {
-        CIEL_PRECONDITION(shared_count_ > 0);
+        const size_t previous = shared_count_.fetch_add(count, std::memory_order_relaxed);
 
-        shared_count_ += count;
+        CIEL_POSTCONDITION(previous != 0);
+        CIEL_UNUSED(previous);
     }
 
     void
     weak_add_ref() noexcept {
-        CIEL_PRECONDITION(weak_count_ > 0);
+        const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
-        ++weak_count_;
+        CIEL_POSTCONDITION(previous != 0);
+        CIEL_UNUSED(previous);
     }
 
     void
     shared_count_release() noexcept {
-        CIEL_PRECONDITION(shared_count_ > 0);
+        const size_t off = 1;
+        // A decrement-release + an acquire fence is recommended by Boost's documentation:
+        // https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html
+        // Alternatively, an acquire-release decrement would work, but might be less efficient
+        // since the acquire is only relevant if the decrement zeros the counter.
+        if (shared_count_.fetch_sub(off, std::memory_order_release) == off) {
+            std::atomic_thread_fence(std::memory_order_acquire);
 
-        if (--shared_count_ == 0) {
             delete_pointer();
-
             weak_count_release(); // weak_count_ == weak_ref + (shared_count_ != 0)
         }
     }
 
     void
     weak_count_release() noexcept {
-        CIEL_PRECONDITION(weak_count_ > 0);
-
-        if (--weak_count_ == 0) {
+        const size_t off = 1;
+        if (weak_count_.fetch_sub(off, std::memory_order_release) == off) {
             delete_control_block();
         }
     }
 
     CIEL_NODISCARD bool
     increment_if_not_zero() noexcept {
-        size_t old_count = shared_count_;
-        size_t new_count;
+        size_t old_count = shared_count_.load(std::memory_order_relaxed);
 
         do {
-            new_count = old_count;
-
-            if (new_count == 0) {
+            if (old_count == 0) {
                 return false;
             }
 
-            ++new_count;
-
-        } while (!shared_count_.compare_exchange_weak(old_count, new_count));
+        } while (!shared_count_.compare_exchange_weak(old_count, old_count + 1, std::memory_order_relaxed));
 
         return true;
     }

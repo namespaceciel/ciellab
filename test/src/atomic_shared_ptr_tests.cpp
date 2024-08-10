@@ -1,10 +1,7 @@
+#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/atomic_shared_ptr.hpp>
-
-#if CIEL_STD_VER >= 20
-#include <latch>
-#endif // CIEL_STD_VER >= 20
 
 #include <numeric>
 #include <thread>
@@ -147,7 +144,6 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
     ASSERT_EQ(l.use_count(), 4);
 }
 
-#if CIEL_STD_VER >= 20
 // FIXME
 // TEST(atomic_shared_ptr_test_suite, concurrent_store_and_loads) {
 //    constexpr size_t threads_num = 64;
@@ -200,7 +196,7 @@ TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
     constexpr size_t operations_num = 200;
 
     ciel::atomic_shared_ptr<size_t> s(ciel::make_shared<size_t>(0));
-    std::latch go{threads_num};
+    SimpleLatch go{threads_num};
 
     std::vector<size_t> local_sums_produced(threads_num);
     std::vector<size_t> local_sums_consumed(threads_num);
@@ -240,4 +236,3 @@ TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
 
     ASSERT_EQ(total_produced, total_consumed);
 }
-#endif // CIEL_STD_VER >= 20

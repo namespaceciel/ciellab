@@ -1,31 +1,10 @@
+#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/shared_ptr.hpp>
 
-namespace {
-
-class Base {
-public:
-    virtual std::string
-    str() const noexcept {
-        return "Base";
-    }
-
-protected:
-    ~Base() = default;
-
-}; // class Base
-
-class Derived final : public Base {
-public:
-    virtual std::string
-    str() const noexcept override {
-        return "Derived";
-    }
-
-}; // class Derived
-
-} // namespace
+#include <thread>
+#include <vector>
 
 TEST(shared_ptr_tests, default_constuctor) {
     const ciel::shared_ptr<int> s;
@@ -111,4 +90,31 @@ TEST(shared_ptr_tests, custom_deleter) {
     }
 
     ASSERT_EQ(count, 2);
+}
+
+TEST(shared_ptr_tests, concurrent_store_and_loads) {
+    constexpr size_t threads_num    = 64;
+    constexpr size_t operations_num = 10000;
+
+    ciel::shared_ptr<size_t> s{new size_t{123}};
+    SimpleLatch go{threads_num};
+
+    std::vector<std::thread> consumers;
+    consumers.reserve(threads_num);
+
+    for (size_t i = 0; i < threads_num; ++i) {
+        consumers.emplace_back([&s, &go] {
+            go.arrive_and_wait();
+
+            for (size_t j = 0; j < operations_num; ++j) {
+                CIEL_UNUSED(ciel::shared_ptr<size_t>{s});
+            }
+        });
+    }
+
+    for (auto& t : consumers) {
+        t.join();
+    }
+
+    ASSERT_EQ(s.use_count(), 1);
 }

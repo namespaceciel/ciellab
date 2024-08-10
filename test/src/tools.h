@@ -1,8 +1,11 @@
 #ifndef CIELLAB_TEST_TOOLS_H_
 #define CIELLAB_TEST_TOOLS_H_
 
+#include <condition_variable>
 #include <cstddef>
 #include <initializer_list>
+#include <mutex>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -85,8 +88,49 @@ struct MoveProxyTestClass {
 
 }; // struct MoveProxyTestClass
 
-struct Base {};
+class Base {
+public:
+    virtual std::string
+    str() const noexcept {
+        return "Base";
+    }
 
-struct Derived : Base {};
+protected:
+    ~Base() = default;
+
+}; // class Base
+
+class Derived final : public Base {
+public:
+    virtual std::string
+    str() const noexcept override {
+        return "Derived";
+    }
+
+}; // class Derived
+
+class SimpleLatch {
+public:
+    SimpleLatch(const size_t count_down) noexcept
+        : count_down_(count_down) {}
+
+    void
+    arrive_and_wait() noexcept {
+        std::unique_lock<std::mutex> lock(mutex_);
+
+        if (--count_down_ == 0) {
+            cv_.notify_all();
+
+        } else {
+            cv_.wait(lock);
+        }
+    }
+
+private:
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    size_t count_down_;
+
+}; // class SimpleLatch
 
 #endif // CIELLAB_TEST_TOOLS_H_
