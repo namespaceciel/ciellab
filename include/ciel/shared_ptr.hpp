@@ -291,11 +291,11 @@ private:
     element_type* ptr_;
     shared_weak_count* control_block_;
 
-    template<class Deleter, class Allocator>
+    template<class Y, class Deleter, class Allocator>
     CIEL_NODISCARD shared_weak_count*
-    alloc_control_block(element_type* ptr, Deleter&& dlt, Allocator&& alloc) {
+    alloc_control_block(Y* ptr, Deleter&& dlt, Allocator&& alloc) {
         using alloc_traits               = std::allocator_traits<Allocator>;
-        using control_block_type         = control_block_with_pointer<element_type, Deleter, Allocator>;
+        using control_block_type         = control_block_with_pointer<Y, Deleter, Allocator>;
         using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_type>;
         using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_type>;
 
@@ -354,7 +354,7 @@ public:
         : ptr_(ptr) {
         std::unique_ptr<Y> holder(ptr);
 
-        control_block_ = alloc_control_block(ptr, std::default_delete<T>(), std::allocator<T>());
+        control_block_ = alloc_control_block(ptr, std::default_delete<Y>(), std::allocator<Y>());
 
         CIEL_UNUSED(holder.release());
 
@@ -365,7 +365,7 @@ public:
     shared_ptr(Y* ptr, Deleter d)
         : ptr_(ptr) {
         CIEL_TRY {
-            control_block_ = alloc_control_block(ptr, std::move(d), std::allocator<T>());
+            control_block_ = alloc_control_block(ptr, std::move(d), std::allocator<Y>());
         }
         CIEL_CATCH (...) {
             d(ptr);
@@ -379,7 +379,7 @@ public:
     shared_ptr(std::nullptr_t ptr, Deleter d)
         : ptr_(nullptr) {
         CIEL_TRY {
-            control_block_ = alloc_control_block(ptr, std::move(d), std::allocator<T>());
+            control_block_ = alloc_control_block(ptr_, std::move(d), std::allocator<T>());
         }
         CIEL_CATCH (...) {
             d(ptr);
@@ -406,7 +406,7 @@ public:
     shared_ptr(std::nullptr_t ptr, Deleter d, Alloc alloc)
         : ptr_(nullptr) {
         CIEL_TRY {
-            control_block_ = alloc_control_block(ptr, std::move(d), std::move(alloc));
+            control_block_ = alloc_control_block(ptr_, std::move(d), std::move(alloc));
         }
         CIEL_CATCH (...) {
             d(ptr);

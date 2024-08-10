@@ -6,6 +6,10 @@
 #include <ciel/observer_ptr.hpp>
 
 TEST(observer_ptr_tests, all) {
+    struct Base {};
+
+    struct Derived : Base {};
+
     ciel::observer_ptr<int> p1;
     ciel::observer_ptr<int> p2{nullptr};
 

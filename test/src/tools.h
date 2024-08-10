@@ -88,27 +88,6 @@ struct MoveProxyTestClass {
 
 }; // struct MoveProxyTestClass
 
-class Base {
-public:
-    virtual std::string
-    str() const noexcept {
-        return "Base";
-    }
-
-protected:
-    ~Base() = default;
-
-}; // class Base
-
-class Derived final : public Base {
-public:
-    virtual std::string
-    str() const noexcept override {
-        return "Derived";
-    }
-
-}; // class Derived
-
 class SimpleLatch {
 public:
     SimpleLatch(const size_t count_down) noexcept

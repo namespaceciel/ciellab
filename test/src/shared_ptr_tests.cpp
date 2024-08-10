@@ -41,16 +41,45 @@ TEST(shared_ptr_tests, move_assign) {
 }
 
 TEST(shared_ptr_tests, alias_move_constructor) {
-    ciel::shared_ptr<Derived> src(new Derived);
+    class Base {
+    public:
+        virtual std::string
+        str() const noexcept {
+            return "Base";
+        }
 
-    ASSERT_TRUE(src);
-    ASSERT_EQ(src->str(), "Derived");
+    protected:
+        ~Base() = default;
 
-    const ciel::shared_ptr<Base> dest(std::move(src));
+    }; // class Base
 
-    ASSERT_FALSE(src);
-    ASSERT_TRUE(dest);
-    ASSERT_EQ(dest->str(), "Derived");
+    class Derived final : public Base {
+    public:
+        virtual std::string
+        str() const noexcept override {
+            return "Derived";
+        }
+
+    }; // class Derived
+
+    {
+        ciel::shared_ptr<Derived> src{new Derived{}};
+
+        ASSERT_TRUE(src);
+        ASSERT_EQ(src->str(), "Derived");
+
+        const ciel::shared_ptr<Base> dest{std::move(src)};
+
+        ASSERT_FALSE(src);
+        ASSERT_TRUE(dest);
+        ASSERT_EQ(dest->str(), "Derived");
+    }
+
+    {
+        // We shall not call the deleter on the base class pointer.
+        const ciel::shared_ptr<Base> s1{new Derived{}};
+        const ciel::shared_ptr<Base> s2 = ciel::make_shared<Derived>();
+    }
 }
 
 TEST(shared_ptr_tests, make_shared) {
