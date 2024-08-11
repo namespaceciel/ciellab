@@ -55,7 +55,6 @@ public:
         const size_t previous = shared_count_.fetch_add(count, std::memory_order_relaxed);
 
         CIEL_POSTCONDITION(previous != 0);
-        CIEL_UNUSED(previous);
     }
 
     void
@@ -63,7 +62,6 @@ public:
         const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
         CIEL_POSTCONDITION(previous != 0);
-        CIEL_UNUSED(previous);
     }
 
     void

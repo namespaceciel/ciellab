@@ -20,6 +20,11 @@
 #define CIEL_HAS_RTTI
 #endif
 
+// debug_mode
+#ifndef NDEBUG
+#define CIEL_IS_DEBUGGING
+#endif
+
 // standard_version
 #if __cplusplus <= 201103L
 #define CIEL_STD_VER 11
@@ -145,9 +150,26 @@ throw_exception(Exception&& e) {
 
 NAMESPACE_CIEL_END
 
+// assume
+#if defined(__clang__)
+#define CIEL_ASSUME(cond) __builtin_assume(cond)
+#elif defined(_MSC_VER)
+#define CIEL_ASSUME(cond) __assume(cond)
+#elif defined(__GNUC__)
+#define CIEL_ASSUME(cond) __attribute__((assume(cond)))
+#else
+#define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
+#endif
+
 // assert
-#define CIEL_PRECONDITION(cond)  assert(cond)
-#define CIEL_POSTCONDITION(cond) assert(cond)
+#ifdef CIEL_IS_DEBUGGING
+#define CIEL_ASSERT(cond) assert(cond)
+#else
+#define CIEL_ASSERT(cond) CIEL_ASSUME(cond)
+#endif
+
+#define CIEL_PRECONDITION(cond)  CIEL_ASSERT(cond)
+#define CIEL_POSTCONDITION(cond) CIEL_ASSERT(cond)
 
 // deduction guide for initializer_list
 #if CIEL_STD_VER >= 17
