@@ -119,17 +119,17 @@ private:
         }
     }
 
-    // std::is_trivially_destructible<value_type> -> std::true_type
+    template<class U = value_type, typename std::enable_if<std::is_trivially_destructible<U>::value, int>::type = 0>
     pointer
-    alloc_range_destroy(pointer begin, pointer end, std::true_type) noexcept {
+    alloc_range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
 
         return begin;
     }
 
-    // std::is_trivially_destructible<value_type> -> std::false_type
+    template<class U = value_type, typename std::enable_if<!std::is_trivially_destructible<U>::value, int>::type = 0>
     pointer
-    alloc_range_destroy(pointer begin, pointer end, std::false_type) noexcept {
+    alloc_range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
 
         while (end != begin) {
@@ -139,9 +139,9 @@ private:
         return begin;
     }
 
-    // is_trivially_relocatable -> std::true_type
+    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb, pointer pos, std::true_type) noexcept {
+    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb, pointer pos) noexcept {
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
         if (begin_) {
             const size_type front_count = pos - begin_;
@@ -166,10 +166,10 @@ private:
         sb.set_nullptr();
     }
 
-    // is_trivially_relocatable -> std::false_type
+    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb, pointer pos,
-                    std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
+    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb,
+                    pointer pos) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         if (begin_) {
             const size_type front_count = pos - begin_;
             const size_type back_count  = end_ - pos;
@@ -196,9 +196,9 @@ private:
         sb.set_nullptr();
     }
 
-    // is_trivially_relocatable -> std::true_type
+    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb, std::true_type) noexcept {
+    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb) noexcept {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
@@ -216,10 +216,10 @@ private:
         sb.set_nullptr();
     }
 
-    // is_trivially_relocatable -> std::false_type
+    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb,
-                    std::false_type) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
+    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb) noexcept(
+        std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         if (begin_) {
@@ -230,19 +230,6 @@ private:
             clear();
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
-
-        begin_   = sb.begin_cap_;
-        end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
-
-        sb.set_nullptr();
-    }
-
-    void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb) noexcept {
-        do_destroy();
-
-        CIEL_PRECONDITION(sb.begin_cap_ == sb.begin_);
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
@@ -479,17 +466,12 @@ public:
     void
     assign(const size_type count, const value_type& value) {
         if (capacity() < count) {
-            split_buffer<value_type, allocator_type> sb(allocator_());
-            sb.reserve_cap_and_offset_to(count, 0);
-
-            sb.construct_at_end(count, value);
-
-            swap_out_buffer(std::move(sb));
+            vector{count, value, allocator_()}.swap(*this);
             return;
         }
 
         if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
+            end_ = alloc_range_destroy(begin_ + count, end_);
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -507,17 +489,12 @@ public:
         const size_type count = std::distance(first, last);
 
         if (capacity() < count) {
-            split_buffer<value_type, allocator_type> sb(allocator_());
-            sb.reserve_cap_and_offset_to(count, 0);
-
-            sb.construct_at_end(first, last);
-
-            swap_out_buffer(std::move(sb));
+            vector{first, last, allocator_()}.swap(*this);
             return;
         }
 
         if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
+            end_ = alloc_range_destroy(begin_ + count, end_);
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -721,7 +698,7 @@ public:
         split_buffer<value_type, allocator_type> sb(allocator_());
         sb.reserve_cap_and_offset_to(new_cap, size());
 
-        swap_out_buffer(std::move(sb), is_trivially_relocatable<value_type>{});
+        swap_out_buffer(std::move(sb));
     }
 
     CIEL_NODISCARD size_type
@@ -739,7 +716,7 @@ public:
             split_buffer<value_type, allocator_type> sb(allocator_());
             sb.reserve_cap_and_offset_to(size(), size());
 
-            swap_out_buffer(std::move(sb), is_trivially_relocatable<value_type>{});
+            swap_out_buffer(std::move(sb));
 
         } else {
             alloc_traits::deallocate(allocator_(), begin_, capacity());
@@ -749,7 +726,7 @@ public:
 
     void
     clear() noexcept {
-        end_ = alloc_range_destroy(begin_, end_, std::is_trivially_destructible<value_type>{});
+        end_ = alloc_range_destroy(begin_, end_);
     }
 
     iterator
@@ -776,7 +753,7 @@ public:
 
             sb.construct_at_end(count, value);
 
-            swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
+            swap_out_buffer(std::move(sb), pos_pointer);
 
         } else { // enough back space
             const size_type old_count = count;
@@ -834,7 +811,7 @@ public:
 
             sb.construct_at_end(first, last);
 
-            swap_out_buffer(std::move(sb), begin_ + pos_index, is_trivially_relocatable<value_type>{});
+            swap_out_buffer(std::move(sb), begin_ + pos_index);
 
         } else { // enough back space
             const size_type old_count = count;
@@ -894,7 +871,7 @@ public:
 
             sb.construct_one_at_end(std::forward<Args>(args)...);
 
-            swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
+            swap_out_buffer(std::move(sb), pos_pointer);
 
         } else if (pos_pointer == end_) { // equal to emplace_back
             construct_one_at_end(std::forward<Args>(args)...);
@@ -926,7 +903,7 @@ public:
         const auto index = first - begin();
 
         iterator new_end = std::move(last, end(), first);
-        end_             = alloc_range_destroy(new_end, end_, std::is_trivially_destructible<value_type>{});
+        end_             = alloc_range_destroy(new_end, end_);
 
         return begin() + index;
     }
@@ -950,7 +927,7 @@ public:
 
             sb.construct_one_at_end(std::forward<Args>(args)...);
 
-            swap_out_buffer(std::move(sb), is_trivially_relocatable<value_type>{});
+            swap_out_buffer(std::move(sb));
 
         } else {
             construct_one_at_end(std::forward<Args>(args)...);
@@ -963,13 +940,13 @@ public:
     pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
-        end_ = alloc_range_destroy(end_ - 1, end_, std::is_trivially_destructible<value_type>{});
+        end_ = alloc_range_destroy(end_ - 1, end_);
     }
 
     void
     resize(const size_type count) {
         if (size() >= count) {
-            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
+            end_ = alloc_range_destroy(begin_ + count, end_);
             return;
         }
 
@@ -981,7 +958,7 @@ public:
     void
     resize(const size_type count, const value_type& value) {
         if (size() >= count) {
-            end_ = alloc_range_destroy(begin_ + count, end_, std::is_trivially_destructible<value_type>{});
+            end_ = alloc_range_destroy(begin_ + count, end_);
             return;
         }
 
