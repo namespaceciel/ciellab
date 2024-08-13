@@ -754,56 +754,12 @@ public:
 
     iterator
     insert(iterator pos, const value_type& value) {
-        CIEL_PRECONDITION(begin() <= pos);
-        CIEL_PRECONDITION(pos <= end());
-
-        const size_type pos_index = pos - begin();
-        pointer pos_pointer       = begin_ + pos_index;
-
-        if (end_ == end_cap_) { // expansion
-            split_buffer<value_type, allocator_type> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
-
-            sb.construct_one_at_end(value);
-
-            swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
-
-        } else if (pos_pointer == end_) { // equal to emplace_back
-            construct_one_at_end(value);
-
-        } else {
-            move_range(pos_pointer, end_, pos_pointer + 1);
-            *pos_pointer = value;
-        }
-
-        return begin() + pos_index;
+        return emplace(pos, value);
     }
 
     iterator
     insert(iterator pos, value_type&& value) {
-        CIEL_PRECONDITION(begin() <= pos);
-        CIEL_PRECONDITION(pos <= end());
-
-        const size_type pos_index = pos - begin();
-        pointer pos_pointer       = begin_ + pos_index;
-
-        if (end_ == end_cap_) { // expansion
-            split_buffer<value_type, allocator_type> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
-
-            sb.construct_one_at_end(std::move(value));
-
-            swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
-
-        } else if (pos_pointer == end_) { // equal to emplace_back
-            construct_one_at_end(std::move(value));
-
-        } else {
-            move_range(pos_pointer, end_, pos_pointer + 1);
-            *pos_pointer = std::move(value);
-        }
-
-        return begin() + pos_index;
+        return emplace(pos, std::move(value));
     }
 
     iterator
