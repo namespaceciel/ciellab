@@ -909,13 +909,14 @@ public:
 
     iterator
     erase(iterator pos) {
-        CIEL_PRECONDITION(!empty());
-
         return erase(pos, pos + 1);
     }
 
     iterator
     erase(iterator first, iterator last) {
+        CIEL_PRECONDITION(begin() <= first);
+        CIEL_PRECONDITION(last <= end());
+
         const auto distance = std::distance(first, last);
 
         if CIEL_UNLIKELY (distance <= 0) {
