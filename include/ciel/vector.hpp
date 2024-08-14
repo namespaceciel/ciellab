@@ -150,10 +150,10 @@ private:
             CIEL_PRECONDITION(sb.front_spare() == front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
-            memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * front_count);
+            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * front_count);
             // sb.begin_ = sb.begin_cap_;
 
-            memcpy(sb.end_, pos, sizeof(value_type) / sizeof(unsigned char) * back_count);
+            std::memcpy(sb.end_, pos, sizeof(value_type) / sizeof(unsigned char) * back_count);
             sb.end_ += back_count;
 
             alloc_traits::deallocate(allocator_(), begin_, capacity());
@@ -203,7 +203,7 @@ private:
 
         // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
         if (begin_) {
-            memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * size());
+            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * size());
             // sb.begin_ = sb.begin_cap_;
 
             alloc_traits::deallocate(allocator_(), begin_, capacity());
@@ -263,6 +263,35 @@ private:
         begin_   = nullptr;
         end_     = nullptr;
         end_cap_ = nullptr;
+    }
+
+    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    iterator
+    erase_impl(iterator first, iterator last, const size_type distance) noexcept {
+        CIEL_PRECONDITION(first < last);
+        CIEL_PRECONDITION(distance != 0);
+
+        const auto index      = first - begin();
+        const auto back_count = end() - last;
+
+        alloc_range_destroy(first, last);
+        std::memmove(first, last, sizeof(value_type) / sizeof(unsigned char) * back_count);
+        end_ -= distance;
+
+        return begin() + index;
+    }
+
+    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    iterator
+    erase_impl(iterator first, iterator last, const size_type) {
+        CIEL_PRECONDITION(first < last);
+
+        const auto index = first - begin();
+
+        iterator new_end = std::move(last, end(), first);
+        end_             = alloc_range_destroy(new_end, end_);
+
+        return begin() + index;
     }
 
 public:
@@ -886,7 +915,10 @@ public:
 
     iterator
     erase(iterator pos) {
-        return erase(pos, pos + 1);
+        CIEL_PRECONDITION(begin() <= pos);
+        CIEL_PRECONDITION(pos < end());
+
+        return erase_impl(pos, pos + 1, 1);
     }
 
     iterator
@@ -900,12 +932,7 @@ public:
             return last;
         }
 
-        const auto index = first - begin();
-
-        iterator new_end = std::move(last, end(), first);
-        end_             = alloc_range_destroy(new_end, end_);
-
-        return begin() + index;
+        return erase_impl(first, last, distance);
     }
 
     void
