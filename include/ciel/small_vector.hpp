@@ -31,7 +31,7 @@ NAMESPACE_CIEL_BEGIN
 template<class T, size_t BaseCapacity = 8, class Allocator = std::allocator<T>>
 class small_vector : private Allocator {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
-    static_assert(BaseCapacity > 0, "Please use ciel::vector instead");
+    static_assert(BaseCapacity != 0, "Please use ciel::vector instead");
 
 public:
     using value_type             = T;
@@ -1097,6 +1097,9 @@ public:
     }
 
 }; // small_vector
+
+template<class T, size_t BaseCapacity, class Allocator>
+struct is_trivially_relocatable<small_vector<T, BaseCapacity, Allocator>> : std::false_type {};
 
 template<class T, size_t S1, size_t S2, class Alloc>
 CIEL_NODISCARD bool

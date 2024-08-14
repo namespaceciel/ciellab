@@ -6,6 +6,7 @@
 #include <utility>
 
 #include <ciel/config.hpp>
+#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -80,6 +81,9 @@ public:
     }
 
 }; // class observer_ptr
+
+template<class T>
+struct is_trivially_relocatable<observer_ptr<T>> : std::true_type {};
 
 template<class W>
 observer_ptr<W>

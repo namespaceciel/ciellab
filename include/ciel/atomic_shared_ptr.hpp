@@ -197,6 +197,9 @@ public:
 
 }; // class atomic_shared_ptr
 
+template<class T>
+struct is_trivially_relocatable<atomic_shared_ptr<T>> : std::true_type {};
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_ATOMIC_SHARED_PTR_HPP_

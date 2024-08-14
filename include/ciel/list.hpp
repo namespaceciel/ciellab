@@ -812,6 +812,9 @@ public:
 
 }; // class list
 
+template<class T, class Allocator>
+struct is_trivially_relocatable<list<T, Allocator>> : std::false_type {};
+
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {

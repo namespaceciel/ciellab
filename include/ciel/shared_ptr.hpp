@@ -617,6 +617,9 @@ public:
 
 }; // class shared_ptr
 
+template<class T>
+struct is_trivially_relocatable<shared_ptr<T>> : std::true_type {};
+
 template<class Deleter, class T>
 CIEL_NODISCARD Deleter*
 get_deleter(const shared_ptr<T>& p) noexcept {
@@ -778,6 +781,9 @@ public:
 
 }; // class weak_ptr
 
+template<class T>
+struct is_trivially_relocatable<weak_ptr<T>> : std::true_type {};
+
 #if CIEL_STD_VER >= 17
 template<class T>
 weak_ptr(shared_ptr<T>) -> weak_ptr<T>;
@@ -822,6 +828,9 @@ public:
     }
 
 }; // class enable_shared_from_this
+
+template<class T>
+struct is_trivially_relocatable<enable_shared_from_this<T>> : std::true_type {};
 
 template<class T, class Alloc, class... Args>
 shared_ptr<T>

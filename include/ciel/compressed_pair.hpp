@@ -143,6 +143,10 @@ public:
 
 }; // class compressed_pair
 
+template<class First, class Second>
+struct is_trivially_relocatable<compressed_pair<First, Second>>
+    : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
+
 NAMESPACE_CIEL_END
 
 namespace std {

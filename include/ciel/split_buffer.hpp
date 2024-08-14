@@ -1246,6 +1246,9 @@ public:
 
 }; // class split_buffer
 
+template<class T, class Allocator>
+struct is_trivially_relocatable<split_buffer<T, Allocator>> : is_trivially_relocatable<Allocator> {};
+
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {

@@ -20,9 +20,10 @@ NAMESPACE_CIEL_BEGIN
 // 1. We don't provide specialization of vector for bool.
 // 2. We don't do trivial destructions.
 // 3. Inspired by Folly's FBVector, we have a is_trivially_relocatable trait,
-//    which is defaultly equal to std::is_trivially_copyable, you can partially specialize it with certain classes.
-//    We will memcpy trivially relocatable objects in expansions.
-// 4. Elements shall be moved from std::initializer_list<move_proxy<T>>.
+//    which is defaultly equal to std::is_trivially_copyable or std::is_empty,
+//    you can partially specialize it with certain classes.
+//    We will memcpy trivially relocatable objects in scenarios such as expansions.
+// 4. Worth-moving elements shall be moved from std::initializer_list<move_proxy<T>>.
 
 template<class T, class Allocator = std::allocator<T>>
 class vector : private Allocator {
@@ -1006,6 +1007,9 @@ public:
     }
 
 }; // class vector
+
+template<class T, class Allocator>
+struct is_trivially_relocatable<vector<T, Allocator>> : is_trivially_relocatable<Allocator> {};
 
 template<class T, class Alloc>
 CIEL_NODISCARD bool
