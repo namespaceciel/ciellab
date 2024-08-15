@@ -51,6 +51,8 @@ struct ConstructAndAssignCounter {
 
 }; // struct ConstructAndAssignCounter
 
+static_assert(not ciel::is_trivially_relocatable<ConstructAndAssignCounter>::value, "");
+
 struct MoveProxyTestClass {
     using value_type = ConstructAndAssignCounter;
 

@@ -8,7 +8,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
-template<class T, class Allocator, typename std::enable_if<!std::is_trivially_destructible<T>::value, int>::type = 0>
+// Destroy ranges in destructor for exception handling.
+
+template<class T, class Allocator, class = void>
 class range_destroyer : private Allocator {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
@@ -49,10 +51,11 @@ public:
 
 }; // class range_destroyer
 
-template<class T, class Allocator, typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type = 0>
-class range_destroyer {
+template<class T, class Allocator>
+class range_destroyer<T, Allocator,
+                      void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
 public:
-    range_destroyer(...) noexcept = default;
+    range_destroyer(...) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;
     range_destroyer&

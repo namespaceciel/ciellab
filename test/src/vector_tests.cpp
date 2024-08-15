@@ -145,7 +145,12 @@ TEST(vector_tests, insert_and_emplace) {
 
     // insert at mid
     ASSERT_EQ(*v1.insert(v1.begin() + 5, 2, 41), 41);
+
+    ASSERT_EQ(v1, std::initializer_list<int>({22, 21, 0, 1, 2, 41, 41, 3, 4, 5, 6, 31, 32}));
+
     ASSERT_EQ(*v1.insert(v1.begin() + 8, {42, 43}), 42);
+
+    ASSERT_EQ(v1, std::initializer_list<int>({22, 21, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32}));
 
     // insert empty range
     ASSERT_EQ(*v1.insert(v1.begin(), v1.begin(), v1.begin()), 22);

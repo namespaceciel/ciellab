@@ -1,5 +1,3 @@
-#ifdef CIEL_HAS_EXCEPTIONS
-
 #include <gtest/gtest.h>
 
 #include <ciel/list.hpp>
@@ -7,6 +5,8 @@
 #include <ciel/split_buffer.hpp>
 #include <ciel/vector.hpp>
 #include <random>
+
+#ifdef CIEL_HAS_EXCEPTIONS
 
 // We use random number generator to throw some exceptions, use valgrind to test if there are any memory leaks.
 
@@ -157,6 +157,8 @@ TEST(exception_safety_tests, vector_basic) {
         // Use random numbers to insert or erase at any position in v: v.begin() + g() % ciel::max<size_t>(v.size(), 1)
 
         BASIC_TEST_CASE(v.emplace_back());
+
+        BASIC_TEST_CASE(v.emplace(v.begin() + g() % std::max<size_t>(v.size(), 1), 10ULL));
 
         BASIC_TEST_CASE(v.assign(il));
 
