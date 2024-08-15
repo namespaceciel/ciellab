@@ -29,6 +29,11 @@ public:
     range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
         : allocator_type{alloc}, begin_{begin}, end_{end} {}
 
+    range_destroyer(const range_destroyer&) = delete;
+    range_destroyer&
+    operator=(const range_destroyer&)
+        = delete;
+
     ~range_destroyer() {
         CIEL_PRECONDITION(begin_ <= end_);
 
@@ -48,6 +53,11 @@ template<class T, class Allocator, typename std::enable_if<std::is_trivially_des
 class range_destroyer {
 public:
     range_destroyer(...) noexcept = default;
+
+    range_destroyer(const range_destroyer&) = delete;
+    range_destroyer&
+    operator=(const range_destroyer&)
+        = delete;
 
     void
     release() noexcept {}
