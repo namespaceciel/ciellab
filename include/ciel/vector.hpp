@@ -19,7 +19,7 @@ NAMESPACE_CIEL_BEGIN
 
 // Differences between std::vector and this class:
 // 1. We don't provide specialization of vector for bool.
-// 2. We don't do trivial destructions.
+// 2. We don't do trivial destructions, that is to say, range destructions will be a no-op.
 // 3. Inspired by Folly's FBVector, we have a is_trivially_relocatable trait,
 //    which is defaultly equal to std::is_trivially_copyable or std::is_empty,
 //    you can partially specialize it with certain classes.
@@ -144,7 +144,7 @@ private:
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap_out_buffer(split_buffer<value_type, allocator_type>&& sb, pointer pos) noexcept {
-        // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
+        // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
             const size_type front_count = pos - begin_;
             const size_type back_count  = end_ - pos;
@@ -180,18 +180,20 @@ private:
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
             for (pointer p = pos - 1; p >= begin_; --p) {
-                sb.emplace_front(std::move(*p));
+                sb.construct_one_at_begin(std::move(*p));
             }
 
             for (pointer p = pos; p < end_; ++p) {
-                sb.emplace_back(std::move(*p));
+                sb.construct_one_at_end(std::move(*p));
             }
 
             clear();
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
 
-        begin_   = sb.begin_;
+        CIEL_POSTCONDITION(sb.begin_ == sb.begin_cap_);
+
+        begin_   = sb.begin_cap_;
         end_     = sb.end_;
         end_cap_ = sb.end_cap_;
 
@@ -232,6 +234,8 @@ private:
             clear();
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
+
+        CIEL_POSTCONDITION(sb.begin_ == sb.begin_cap_);
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
@@ -319,7 +323,7 @@ private:
         // begin             first        last        end
         //                                 pos
         //                               new_end
-        construct_at_end(t1, t2);
+        construct_at_end(std::forward<T1>(t1), std::forward<T2>(t2));
         // new_end
         end_ = old_end + count;
         rd.release();
@@ -546,8 +550,7 @@ public:
 
         if (alloc_traits::propagate_on_container_copy_assignment::value) {
             if (allocator_() != other.allocator_()) {
-                vector(other.allocator_()).swap(*this);
-                assign(other.begin(), other.end());
+                vector(other.begin(), other.end(), other.allocator_()).swap(*this);
                 return *this;
             }
 
@@ -1087,7 +1090,7 @@ operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-// So that we can test more efficiently
+// So that we can test more efficiently.
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const vector<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {

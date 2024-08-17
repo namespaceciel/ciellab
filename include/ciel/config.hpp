@@ -68,16 +68,12 @@
 // nodiscard
 #if CIEL_STD_VER >= 17
 #define CIEL_NODISCARD [[nodiscard]]
-
 #elif (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__) // clang, icc, clang-cl
 #define CIEL_NODISCARD __attribute__((warn_unused_result))
-
 #elif defined(_HAS_NODISCARD)
 #define CIEL_NODISCARD _NODISCARD
-
 #elif _MSC_VER >= 1700
 #define CIEL_NODISCARD _Check_return_
-
 #else
 #define CIEL_NODISCARD
 #endif
@@ -86,11 +82,9 @@
 #if CIEL_STD_VER >= 20 || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
 #define CIEL_LIKELY(x)   (x) [[likely]]
 #define CIEL_UNLIKELY(x) (x) [[unlikely]]
-
 #elif defined(__GNUC__) || defined(__clang__)
 #define CIEL_LIKELY(x)   (__builtin_expect(!!(x), true))
 #define CIEL_UNLIKELY(x) (__builtin_expect(!!(x), false))
-
 #else
 #define CIEL_LIKELY(x)   (x)
 #define CIEL_UNLIKELY(x) (x)
@@ -106,7 +100,6 @@
 #define CIEL_TRY      try
 #define CIEL_CATCH(X) catch (X)
 #define CIEL_THROW    throw
-
 #else
 #define CIEL_TRY      if CIEL_CONSTEXPR_SINCE_CXX17 (true)
 #define CIEL_CATCH(X) else
@@ -151,7 +144,9 @@ throw_exception(Exception&& e) {
 NAMESPACE_CIEL_END
 
 // assume
-#if defined(__clang__)
+#if CIEL_STD_VER >= 23
+#define CIEL_ASSUME(cond) [[assume(cond)]]
+#elif defined(__clang__)
 #define CIEL_ASSUME(cond) __builtin_assume(cond)
 #elif defined(_MSC_VER)
 #define CIEL_ASSUME(cond) __assume(cond)
