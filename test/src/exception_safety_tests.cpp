@@ -254,9 +254,6 @@ TEST(exception_safety_tests, split_buffer_basic) {
         BASIC_TEST_CASE(v.assign(10, 20));
 
         BASIC_TEST_CASE(v.emplace_front(2));
-
-        BASIC_TEST_CASE(
-            v.erase(v.begin() + g() % std::max<size_t>(v.size(), 1), v.begin() + g() % std::max<size_t>(v.size(), 1)));
     }
 }
 

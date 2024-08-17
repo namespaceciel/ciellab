@@ -47,9 +47,9 @@ public:
 private:
     using alloc_traits = std::allocator_traits<allocator_type>;
 
-    pointer begin_;
-    pointer end_;
-    pointer end_cap_;
+    pointer begin_{nullptr};
+    pointer end_{nullptr};
+    pointer end_cap_{nullptr};
 
     allocator_type&
     allocator_() noexcept {
@@ -143,7 +143,7 @@ private:
 
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb, pointer pos) noexcept {
+    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb, pointer pos) noexcept {
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
             const size_type front_count = pos - begin_;
@@ -163,14 +163,14 @@ private:
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
 
     template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb,
+    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
                     pointer pos) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         if (begin_) {
             const size_type front_count = pos - begin_;
@@ -195,17 +195,17 @@ private:
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
 
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb) noexcept {
+    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
-        // If either dest or src is an invalid or null pointer, the behavior is undefined, even if count is zero.
+        // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
             std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * size());
             // sb.begin_ = sb.begin_cap_;
@@ -215,20 +215,24 @@ private:
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
 
     template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type>&& sb) noexcept(
+    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept(
         std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         if (begin_) {
             for (pointer p = end_ - 1; p >= begin_; --p) {
+#ifdef CIEL_HAS_EXCEPTIONS
+                sb.construct_one_at_begin(std::move_if_noexcept(*p));
+#else
                 sb.construct_one_at_begin(std::move(*p));
+#endif
             }
 
             clear();
@@ -239,7 +243,7 @@ private:
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -426,7 +430,7 @@ private:
         const size_type pos_index = pos - begin();
 
         if (end_ == end_cap_) { // expansion
-            split_buffer<value_type, allocator_type> sb(allocator_());
+            split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
             sb.construct_one_at_end(std::forward<Args>(args)...);
@@ -445,10 +449,10 @@ private:
 
 public:
     vector() noexcept(noexcept(allocator_type()))
-        : allocator_type(), begin_(nullptr), end_(nullptr), end_cap_(nullptr) {}
+        : allocator_type() {}
 
     explicit vector(const allocator_type& alloc) noexcept
-        : allocator_type(alloc), begin_(nullptr), end_(nullptr), end_cap_(nullptr) {}
+        : allocator_type(alloc) {}
 
     vector(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
@@ -845,7 +849,7 @@ public:
             return;
         }
 
-        split_buffer<value_type, allocator_type> sb(allocator_());
+        split_buffer<value_type, allocator_type&> sb(allocator_());
         sb.reserve_cap_and_offset_to(new_cap, size());
 
         swap_out_buffer(std::move(sb));
@@ -863,10 +867,14 @@ public:
         }
 
         if (size() > 0) {
-            split_buffer<value_type, allocator_type> sb(allocator_());
-            sb.reserve_cap_and_offset_to(size(), size());
+            split_buffer<value_type, allocator_type&> sb(allocator_());
 
-            swap_out_buffer(std::move(sb));
+            CIEL_TRY {
+                sb.reserve_cap_and_offset_to(size(), size());
+
+                swap_out_buffer(std::move(sb));
+            }
+            CIEL_CATCH (...) {}
 
         } else {
             alloc_traits::deallocate(allocator_(), begin_, capacity());
@@ -897,7 +905,7 @@ public:
         const size_type pos_index = pos - begin();
 
         if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type> sb(allocator_());
+            split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + count), pos_index);
 
             sb.construct_at_end(count, value);
@@ -942,7 +950,7 @@ public:
         const size_type pos_index = pos - begin();
 
         if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type> sb(allocator_());
+            split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(count + size()), pos_index);
 
             sb.construct_at_end(first, last);
@@ -1019,7 +1027,7 @@ public:
     reference
     emplace_back(Args&&... args) {
         if (end_ == end_cap_) {
-            split_buffer<value_type, allocator_type> sb(allocator_());
+            split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
 
             sb.construct_one_at_end(std::forward<Args>(args)...);

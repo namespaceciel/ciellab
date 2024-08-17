@@ -1,14 +1,14 @@
 #ifndef CIELLAB_INCLUDE_CIEL_SHARED_PTR_HPP_
 #define CIELLAB_INCLUDE_CIEL_SHARED_PTR_HPP_
 
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
-
 #include <atomic>
 #include <memory>
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
+
+#include <ciel/compressed_pair.hpp>
+#include <ciel/config.hpp>
 
 NAMESPACE_CIEL_BEGIN
 

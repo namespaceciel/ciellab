@@ -168,7 +168,7 @@ private:
         do_deallocate();
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -194,7 +194,7 @@ private:
         do_destroy();
         begin_   = sb.begin_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -210,7 +210,7 @@ private:
         do_deallocate();
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -228,7 +228,7 @@ private:
         do_destroy();
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -241,7 +241,7 @@ private:
 
         begin_   = sb.begin_cap_;
         end_     = sb.end_;
-        end_cap_ = sb.end_cap_;
+        end_cap_ = sb.end_cap_();
 
         sb.set_nullptr();
     }
