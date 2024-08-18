@@ -65,8 +65,18 @@ public:
 template<class T, class Allocator>
 class range_destroyer<T, Allocator,
                       void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
+
+private:
+    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
 public:
-    range_destroyer(...) noexcept {}
+    range_destroyer(pointer, pointer, allocator_type&) noexcept {}
+
+    range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;
     range_destroyer&

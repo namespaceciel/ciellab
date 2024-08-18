@@ -159,10 +159,14 @@ NAMESPACE_CIEL_END
 #if CIEL_STD_VER >= 23
 #define CIEL_ASSUME(cond) [[assume(cond)]]
 #elif defined(__clang__)
+#if __has_builtin(__builtin_assume)
 #define CIEL_ASSUME(cond) __builtin_assume(cond)
+#else
+#define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
+#endif // defined(__clang__)
 #elif defined(_MSC_VER)
 #define CIEL_ASSUME(cond) __assume(cond)
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && __GNUC__ >= 13
 #define CIEL_ASSUME(cond) __attribute__((assume(cond)))
 #else
 #define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
@@ -175,8 +179,8 @@ NAMESPACE_CIEL_END
 #define CIEL_ASSERT(cond) CIEL_ASSUME(cond)
 #endif
 
-#define CIEL_PRECONDITION(cond)  CIEL_ASSERT(cond)
-#define CIEL_POSTCONDITION(cond) CIEL_ASSERT(cond)
+#define CIEL_PRECONDITION(cond)  CIEL_ASSERT(static_cast<bool>(cond))
+#define CIEL_POSTCONDITION(cond) CIEL_ASSERT(static_cast<bool>(cond))
 
 // deduction guide for initializer_list
 #if CIEL_STD_VER >= 17
@@ -642,8 +646,18 @@ public:
 template<class T, class Allocator>
 class range_destroyer<T, Allocator,
                       void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
+
+private:
+    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
 public:
-    range_destroyer(...) noexcept {}
+    range_destroyer(pointer, pointer, allocator_type&) noexcept {}
+
+    range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;
     range_destroyer&

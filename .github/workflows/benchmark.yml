@@ -1,0 +1,36 @@
+name: benchmark
+
+on:
+  push: {}
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: submodule
+        run: git submodule update --init --recursive
+
+      - name: build benchmark against clang
+        run: |
+            clang --version
+            cmake -S . -B clang_benchmark_build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+            cmake --build clang_benchmark_build --target ciellab_benchmark
+
+      - name: build benchmark against gcc
+        run: |
+            gcc --version
+            cmake -S . -B gcc_benchmark_build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+            cmake --build gcc_benchmark_build --target ciellab_benchmark
+
+      - name: benchmark against clang
+        run: |
+            clang --version
+            ./clang_benchmark_build/benchmark/ciellab_benchmark
+
+      - name: benchmark against gcc
+        run: |
+            gcc --version
+            ./gcc_benchmark_build/benchmark/ciellab_benchmark
