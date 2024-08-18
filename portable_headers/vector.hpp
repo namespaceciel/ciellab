@@ -224,82 +224,6 @@ NAMESPACE_CIEL_END
 #include <memory>
 #include <type_traits>
 
-
-NAMESPACE_CIEL_BEGIN
-
-// Destroy ranges in destructor for exception handling.
-
-template<class T, class Allocator, class = void>
-class range_destroyer : private Allocator {
-    static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
-
-private:
-    using allocator_type = Allocator;
-    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
-    using alloc_traits   = std::allocator_traits<allocator_type>;
-
-    pointer begin_;
-    pointer end_;
-
-    allocator_type&
-    allocator_() noexcept {
-        return static_cast<allocator_type&>(*this);
-    }
-
-public:
-    range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
-        : allocator_type{alloc}, begin_{begin}, end_{end} {}
-
-    range_destroyer(const range_destroyer&) = delete;
-    range_destroyer&
-    operator=(const range_destroyer&)
-        = delete;
-
-    ~range_destroyer() {
-        CIEL_PRECONDITION(begin_ <= end_);
-
-        while (end_ != begin_) {
-            alloc_traits::destroy(allocator_(), --end_);
-        }
-    }
-
-    void
-    release() noexcept {
-        end_ = begin_;
-    }
-
-}; // class range_destroyer
-
-template<class T, class Allocator>
-class range_destroyer<T, Allocator,
-                      void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
-public:
-    range_destroyer(...) noexcept {}
-
-    range_destroyer(const range_destroyer&) = delete;
-    range_destroyer&
-    operator=(const range_destroyer&)
-        = delete;
-
-    void
-    release() noexcept {}
-
-}; // class range_destroyer
-
-NAMESPACE_CIEL_END
-
-#endif // CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
-#ifndef CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
-#define CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
-
-#include <algorithm>
-#include <cstddef>
-#include <cstring>
-#include <iterator>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
-
 #ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
 #define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
 
@@ -701,6 +625,92 @@ swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs) noe
 
 NAMESPACE_CIEL_BEGIN
 
+// Destroy ranges in destructor for exception handling.
+// Note that Allocator can be reference type.
+template<class T, class Allocator, class = void>
+class range_destroyer {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
+
+private:
+    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
+    using alloc_traits   = std::allocator_traits<allocator_type>;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
+    pointer begin_;
+    compressed_pair<pointer, Allocator> end_alloc_;
+
+    pointer&
+    end_() noexcept {
+        return end_alloc_.first();
+    }
+
+    allocator_type&
+    allocator_() noexcept {
+        return end_alloc_.second();
+    }
+
+public:
+    range_destroyer(pointer begin, pointer end, allocator_type& alloc) noexcept
+        : begin_{begin}, end_alloc_{end, alloc} {}
+
+    range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
+        : begin_{begin}, end_alloc_{end, alloc} {}
+
+    range_destroyer(const range_destroyer&) = delete;
+    range_destroyer&
+    operator=(const range_destroyer&)
+        = delete;
+
+    ~range_destroyer() {
+        CIEL_PRECONDITION(begin_ <= end_());
+
+        while (end_() != begin_) {
+            alloc_traits::destroy(allocator_(), --end_());
+        }
+    }
+
+    void
+    release() noexcept {
+        end_() = begin_;
+    }
+
+}; // class range_destroyer
+
+template<class T, class Allocator>
+class range_destroyer<T, Allocator,
+                      void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
+public:
+    range_destroyer(...) noexcept {}
+
+    range_destroyer(const range_destroyer&) = delete;
+    range_destroyer&
+    operator=(const range_destroyer&)
+        = delete;
+
+    void
+    release() noexcept {}
+
+}; // class range_destroyer
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
+#define CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
+
+#include <algorithm>
+#include <cstddef>
+#include <cstring>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
+
+
+NAMESPACE_CIEL_BEGIN
+
 // This class is used in std::vector implementation and it's like a double-ended vector.
 // When std::vector inserts beyond its capacity, it defines a temp split_buffer to store insertions
 // and push vector's elements into two sides, and swap out at last,
@@ -717,7 +727,7 @@ template<class, size_t, class>
 class small_vector;
 
 // Note that Allocator can be reference type as being used by vector,
-// however in this case, the assignment operator of split_buffer will be deleted.
+// however in this case, the assignment operator of split_buffer may be invalid.
 template<class T, class Allocator = std::allocator<T>>
 class split_buffer {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
@@ -735,6 +745,8 @@ public:
     using const_iterator         = const_pointer;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
 private:
     using alloc_traits = std::allocator_traits<allocator_type>;
@@ -2092,7 +2104,7 @@ private:
         //                       ----------       |
         //                       first last      range_destroyer in case of exceptions
         //                       |  count |
-        range_destroyer<value_type, allocator_type> rd{pos + count, end_ + count, allocator_()};
+        range_destroyer<value_type, allocator_type&> rd{pos + count, end_ + count, allocator_()};
         const pointer old_end = end_;
         end_                  = pos;
         // ----------------------------------------------
@@ -2164,7 +2176,7 @@ private:
             constexpr size_type count = 1;
             std::memmove(pos + count, pos, sizeof(value_type) / sizeof(unsigned char) * (this_->end_ - pos));
 
-            range_destroyer<value_type, allocator_type> rd{pos + count, this_->end_ + count, this_->allocator_()};
+            range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count, this_->allocator_()};
             const pointer old_end = this_->end_;
             this_->end_           = pos;
 

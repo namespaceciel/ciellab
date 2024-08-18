@@ -635,7 +635,7 @@ template<class, size_t, class>
 class small_vector;
 
 // Note that Allocator can be reference type as being used by vector,
-// however in this case, the assignment operator of split_buffer will be deleted.
+// however in this case, the assignment operator of split_buffer may be invalid.
 template<class T, class Allocator = std::allocator<T>>
 class split_buffer {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
@@ -653,6 +653,8 @@ public:
     using const_iterator         = const_pointer;
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
 private:
     using alloc_traits = std::allocator_traits<allocator_type>;

@@ -4,6 +4,12 @@
 #include <memory>
 #include <type_traits>
 
+#ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+#define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+
+#include <tuple>
+#include <type_traits>
+
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 #define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
@@ -185,31 +191,433 @@ initializer_list(initializer_list<T>) -> initializer_list<T>;
 #endif
 
 #endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
+#define CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
+
+#include <cstddef>
+
+
+NAMESPACE_CIEL_BEGIN
+
+template<class T, T... Ints>
+struct integer_sequence {
+    static_assert(std::is_integral<T>::value, "");
+
+    using value_type = T;
+
+    static constexpr size_t
+    size() noexcept {
+        return sizeof...(Ints);
+    }
+
+}; // struct integer_sequence
+
+template<size_t... Ints>
+using index_sequence = integer_sequence<size_t, Ints...>;
+
+namespace details {
+
+// https://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence
+
+template<class, class>
+struct merge_and_renumber;
+
+template<size_t... I1, size_t... I2>
+struct merge_and_renumber<index_sequence<I1...>, index_sequence<I2...>> {
+    using type = index_sequence<I1..., (sizeof...(I1) + I2)...>;
+};
+
+template<size_t N>
+struct make_index_sequence_helper : merge_and_renumber<typename make_index_sequence_helper<N / 2>::type,
+                                                       typename make_index_sequence_helper<N - N / 2>::type> {};
+
+template<>
+struct make_index_sequence_helper<0> {
+    using type = index_sequence<>;
+};
+
+template<>
+struct make_index_sequence_helper<1> {
+    using type = index_sequence<0>;
+};
+
+} // namespace details
+
+template<size_t N>
+using make_index_sequence = typename details::make_index_sequence_helper<N>::type;
+
+namespace details {
+
+template<class T, size_t N, class Indices = make_index_sequence<N>>
+struct make_integer_sequence_helper;
+
+template<class T, size_t N, size_t... Indices>
+struct make_integer_sequence_helper<T, N, index_sequence<Indices...>> {
+    using type = integer_sequence<T, static_cast<T>(Indices)...>;
+};
+
+} // namespace details
+
+template<class T, T N>
+using make_integer_sequence = typename details::make_integer_sequence_helper<T, N>::type;
+
+template<class... T>
+using index_sequence_for = make_index_sequence<sizeof...(T)>;
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
+#define CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
+
+#include <iterator>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+
+NAMESPACE_CIEL_BEGIN
+
+// void_t
+template<class...>
+using void_t = void;
+
+// conjunction
+// When the template pack is empty, derive from true_type.
+template<class...>
+struct conjunction : std::true_type {};
+
+// Otherwise, derive from the first false template member (if all true, choose the last one).
+template<class B1, class... Bn>
+struct conjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), conjunction<Bn...>, B1>::type {};
+
+// disjunction
+template<class...>
+struct disjunction : std::false_type {};
+
+template<class B1, class... Bn>
+struct disjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), B1, disjunction<Bn...>>::type {};
+
+// is_exactly_input_iterator
+template<class Iter, class = void>
+struct is_exactly_input_iterator : std::false_type {};
+
+template<class Iter>
+struct is_exactly_input_iterator<Iter, void_t<typename std::iterator_traits<Iter>::iterator_category>>
+    : std::is_same<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
+
+// is_forward_iterator
+template<class Iter, class = void>
+struct is_forward_iterator : std::false_type {};
+
+template<class Iter>
+struct is_forward_iterator<Iter, void_t<typename std::iterator_traits<Iter>::iterator_category>>
+    : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::forward_iterator_tag> {};
+
+// is_input_iterator
+template<class Iter, class = void>
+struct is_input_iterator : std::false_type {};
+
+template<class Iter>
+struct is_input_iterator<Iter, void_t<typename std::iterator_traits<Iter>::iterator_category>>
+    : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
+
+// is_trivially_relocatable
+template<class T>
+struct is_trivially_relocatable : disjunction<std::is_empty<T>, std::is_trivially_copyable<T>> {};
+
+template<class First, class Second>
+struct is_trivially_relocatable<std::pair<First, Second>>
+    : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
+
+template<class... Types>
+struct is_trivially_relocatable<std::tuple<Types...>> : conjunction<is_trivially_relocatable<Types>...> {};
+
+// useless_tag
+struct useless_tag {
+    useless_tag(...) noexcept {}
+}; // struct useless_tag
+
+// owner
+template<class T, class = typename std::enable_if<std::is_pointer<T>::value>::type>
+using owner = T;
+
+// is_final
+#if CIEL_STD_VER >= 14
+template<class T>
+using is_final = std::is_final<T>;
+
+#elif __has_builtin(__is_final)
+template<class T>
+struct is_final : std::integral_constant<bool, __is_final(T)> {};
+
+#else
+template<class T>
+using is_final = std::true_type;
+#endif
+
+// is_const_lvalue_reference
+template<class T>
+struct is_const_lvalue_reference : std::false_type {};
+
+template<class T>
+struct is_const_lvalue_reference<const T&> : std::true_type {};
+
+// is_const_rvalue_reference
+template<class T>
+struct is_const_rvalue_reference : std::false_type {};
+
+template<class T>
+struct is_const_rvalue_reference<const T&&> : std::true_type {};
+
+// is_const_reference
+template<class T>
+struct is_const_reference
+    : std::integral_constant<bool, is_const_lvalue_reference<T>::value || is_const_rvalue_reference<T>::value> {};
+
+// worth_move
+// FIXME: Current implementation returns true for const&& constructor and assignment.
+template<class T>
+struct worth_move {
+    static_assert(!std::is_const<T>::value, "");
+
+private:
+    using U = typename std::decay<T>::type;
+
+    struct helper {
+        operator const U&() noexcept;
+        operator U&&() noexcept;
+    }; // struct helper
+
+public:
+    static constexpr bool construct = std::is_class<T>::value && !std::is_trivial<T>::value
+                                   && std::is_move_constructible<T>::value && !std::is_constructible<T, helper>::value;
+    static constexpr bool assign = std::is_class<T>::value && !std::is_trivial<T>::value
+                                && std::is_move_assignable<T>::value && !std::is_assignable<T, helper>::value;
+    static constexpr bool value = construct || assign;
+
+}; // struct worth_move_constructing
+
+template<class T>
+struct worth_move_constructing {
+    static constexpr bool value = worth_move<T>::construct;
+
+}; // worth_move_constructing
+
+template<class T>
+struct worth_move_assigning {
+    static constexpr bool value = worth_move<T>::assign;
+
+}; // worth_move_assigning
+
+#if CIEL_STD_VER >= 20
+// is_complete_type
+template<class T, auto = [] {}>
+inline constexpr bool is_complete_type_v = requires { sizeof(T); };
+#endif // CIEL_STD_VER >= 20
+
+// aligned_storage
+template<size_t size, size_t alignment>
+struct aligned_storage {
+    static_assert(sizeof(unsigned char) == 1, "");
+
+    class type {
+        alignas(alignment) unsigned char buffer_[size];
+    };
+
+}; // aligned_storage
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
+
+NAMESPACE_CIEL_BEGIN
+
+struct default_init_tag {};
+
+struct value_init_tag {};
+
+template<class T, size_t Index, bool = std::is_empty<T>::value && !is_final<T>::value>
+struct compressed_pair_elem {
+public:
+    using reference       = T&;
+    using const_reference = const T&;
+
+private:
+    T value_;
+
+public:
+    explicit compressed_pair_elem(default_init_tag) {}
+
+    explicit compressed_pair_elem(value_init_tag)
+        : value_() {}
+
+    template<class U, typename std::enable_if<!std::is_same<compressed_pair_elem, typename std::decay<U>::type>::value,
+                                              int>::type
+                      = 0>
+    explicit compressed_pair_elem(U&& u)
+        : value_(std::forward<U>(u)) {}
+
+    template<class... Args, size_t... Ints>
+    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
+        : value_(std::forward<Args>(std::get<Ints>(args))...) {}
+
+    reference
+    get() noexcept {
+        return value_;
+    }
+
+    const_reference
+    get() const noexcept {
+        return value_;
+    }
+
+}; // struct compressed_pair_elem
+
+template<class T, size_t Index>
+struct compressed_pair_elem<T, Index, true> : private T {
+public:
+    using reference       = T&;
+    using const_reference = const T&;
+    using value_          = T;
+
+public:
+    explicit compressed_pair_elem(default_init_tag) {}
+
+    explicit compressed_pair_elem(value_init_tag)
+        : value_() {}
+
+    template<class U, typename std::enable_if<!std::is_same<compressed_pair_elem, typename std::decay<U>::type>::value,
+                                              int>::type
+                      = 0>
+    explicit compressed_pair_elem(U&& u)
+        : value_(std::forward<U>(u)) {}
+
+    template<class... Args, size_t... Ints>
+    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
+        : value_(std::forward<Args>(std::get<Ints>(args))...) {}
+
+    reference
+    get() noexcept {
+        return *this;
+    }
+
+    const_reference
+    get() const noexcept {
+        return *this;
+    }
+
+}; // struct compressed_pair_elem<T, Index, true>
+
+template<class T1, class T2>
+class compressed_pair : private compressed_pair_elem<T1, 0>,
+                        private compressed_pair_elem<T2, 1> {
+    static_assert(!std::is_same<T1, T2>::value, "");
+
+    using base1 = compressed_pair_elem<T1, 0>;
+    using base2 = compressed_pair_elem<T2, 1>;
+
+public:
+    template<class U1 = T1, class U2 = T2,
+             typename std::enable_if<
+                 std::is_default_constructible<U1>::value && std::is_default_constructible<U2>::value, int>::type
+             = 0>
+    explicit compressed_pair()
+        : base1(value_init_tag{}), base2(value_init_tag{}) {}
+
+    template<class U1, class U2>
+    explicit compressed_pair(U1&& u1, U2&& u2)
+        : base1(std::forward<U1>(u1)), base2(std::forward<U2>(u2)) {}
+
+    template<class... Args1, class... Args2>
+    explicit compressed_pair(std::piecewise_construct_t pc, std::tuple<Args1...> first_args,
+                             std::tuple<Args2...> second_args)
+        : base1(pc, std::move(first_args), index_sequence_for<Args1...>()),
+          base2(pc, std::move(second_args), index_sequence_for<Args2...>()) {}
+
+    typename base1::reference
+    first() noexcept {
+        return static_cast<base1&>(*this).get();
+    }
+
+    typename base1::const_reference
+    first() const noexcept {
+        return static_cast<const base1&>(*this).get();
+    }
+
+    typename base2::reference
+    second() noexcept {
+        return static_cast<base2&>(*this).get();
+    }
+
+    typename base2::const_reference
+    second() const noexcept {
+        return static_cast<const base2&>(*this).get();
+    }
+
+    // TODO: Since std::is_nothrow_swappable is available in C++17...
+    void
+    swap(compressed_pair& other) noexcept {
+        using std::swap;
+
+        swap(first(), other.first());
+        swap(second(), other.second());
+    }
+
+}; // class compressed_pair
+
+template<class First, class Second>
+struct is_trivially_relocatable<compressed_pair<First, Second>>
+    : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
+
+NAMESPACE_CIEL_END
+
+namespace std {
+
+template<class T1, class T2>
+void
+swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+    lhs.swap(rhs);
+}
+
+} // namespace std
+
+#endif // CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
 
 NAMESPACE_CIEL_BEGIN
 
 // Destroy ranges in destructor for exception handling.
-
+// Note that Allocator can be reference type.
 template<class T, class Allocator, class = void>
-class range_destroyer : private Allocator {
-    static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
+class range_destroyer {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
 private:
-    using allocator_type = Allocator;
+    using allocator_type = typename std::remove_reference<Allocator>::type;
     using pointer        = typename std::allocator_traits<allocator_type>::pointer;
     using alloc_traits   = std::allocator_traits<allocator_type>;
 
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
     pointer begin_;
-    pointer end_;
+    compressed_pair<pointer, Allocator> end_alloc_;
+
+    pointer&
+    end_() noexcept {
+        return end_alloc_.first();
+    }
 
     allocator_type&
     allocator_() noexcept {
-        return static_cast<allocator_type&>(*this);
+        return end_alloc_.second();
     }
 
 public:
+    range_destroyer(pointer begin, pointer end, allocator_type& alloc) noexcept
+        : begin_{begin}, end_alloc_{end, alloc} {}
+
     range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
-        : allocator_type{alloc}, begin_{begin}, end_{end} {}
+        : begin_{begin}, end_alloc_{end, alloc} {}
 
     range_destroyer(const range_destroyer&) = delete;
     range_destroyer&
@@ -217,16 +625,16 @@ public:
         = delete;
 
     ~range_destroyer() {
-        CIEL_PRECONDITION(begin_ <= end_);
+        CIEL_PRECONDITION(begin_ <= end_());
 
-        while (end_ != begin_) {
-            alloc_traits::destroy(allocator_(), --end_);
+        while (end_() != begin_) {
+            alloc_traits::destroy(allocator_(), --end_());
         }
     }
 
     void
     release() noexcept {
-        end_ = begin_;
+        end_() = begin_;
     }
 
 }; // class range_destroyer

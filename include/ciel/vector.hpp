@@ -320,7 +320,7 @@ private:
         //                       ----------       |
         //                       first last      range_destroyer in case of exceptions
         //                       |  count |
-        range_destroyer<value_type, allocator_type> rd{pos + count, end_ + count, allocator_()};
+        range_destroyer<value_type, allocator_type&> rd{pos + count, end_ + count, allocator_()};
         const pointer old_end = end_;
         end_                  = pos;
         // ----------------------------------------------
@@ -392,7 +392,7 @@ private:
             constexpr size_type count = 1;
             std::memmove(pos + count, pos, sizeof(value_type) / sizeof(unsigned char) * (this_->end_ - pos));
 
-            range_destroyer<value_type, allocator_type> rd{pos + count, this_->end_ + count, this_->allocator_()};
+            range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count, this_->allocator_()};
             const pointer old_end = this_->end_;
             this_->end_           = pos;
 

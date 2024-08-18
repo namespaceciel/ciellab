@@ -4,32 +4,43 @@
 #include <memory>
 #include <type_traits>
 
+#include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
 // Destroy ranges in destructor for exception handling.
-
+// Note that Allocator can be reference type.
 template<class T, class Allocator, class = void>
-class range_destroyer : private Allocator {
-    static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
+class range_destroyer {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
 private:
-    using allocator_type = Allocator;
+    using allocator_type = typename std::remove_reference<Allocator>::type;
     using pointer        = typename std::allocator_traits<allocator_type>::pointer;
     using alloc_traits   = std::allocator_traits<allocator_type>;
 
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
     pointer begin_;
-    pointer end_;
+    compressed_pair<pointer, Allocator> end_alloc_;
+
+    pointer&
+    end_() noexcept {
+        return end_alloc_.first();
+    }
 
     allocator_type&
     allocator_() noexcept {
-        return static_cast<allocator_type&>(*this);
+        return end_alloc_.second();
     }
 
 public:
+    range_destroyer(pointer begin, pointer end, allocator_type& alloc) noexcept
+        : begin_{begin}, end_alloc_{end, alloc} {}
+
     range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
-        : allocator_type{alloc}, begin_{begin}, end_{end} {}
+        : begin_{begin}, end_alloc_{end, alloc} {}
 
     range_destroyer(const range_destroyer&) = delete;
     range_destroyer&
@@ -37,16 +48,16 @@ public:
         = delete;
 
     ~range_destroyer() {
-        CIEL_PRECONDITION(begin_ <= end_);
+        CIEL_PRECONDITION(begin_ <= end_());
 
-        while (end_ != begin_) {
-            alloc_traits::destroy(allocator_(), --end_);
+        while (end_() != begin_) {
+            alloc_traits::destroy(allocator_(), --end_());
         }
     }
 
     void
     release() noexcept {
-        end_ = begin_;
+        end_() = begin_;
     }
 
 }; // class range_destroyer
