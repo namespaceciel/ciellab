@@ -1,119 +1,89 @@
 #include "benchmark_config.h"
 
-void
-vector_push_back_std(benchmark::State&);
-void
-vector_push_back_ciel(benchmark::State&);
-void
-small_vector_push_back_ciel(benchmark::State&);
+#include <ciel/small_vector.hpp>
+#include <ciel/vector.hpp>
+#include <vector>
 
-void
-vector_insert_std(benchmark::State&);
-void
-vector_insert_ciel(benchmark::State&);
-void
-small_vector_insert_ciel(benchmark::State&);
+#include <ciel/split_buffer.hpp>
+#include <deque>
 
-void
-vector_erase_std(benchmark::State&);
-void
-vector_erase_ciel(benchmark::State&);
-void
-small_vector_erase_ciel(benchmark::State&);
+#include <ciel/list.hpp>
+#include <list>
 
-void
-vector_few_objects_std(benchmark::State&);
-void
-vector_few_objects_ciel(benchmark::State&);
-void
-small_vector_few_objects_ciel(benchmark::State&);
+define_benchmark(push_back_std_vector_int, push_back, std::vector<int>);
+define_benchmark(push_back_ciel_vector_int, push_back, ciel::vector<int>);
+define_benchmark(push_back_ciel_small_vector_int, push_back, ciel::small_vector<int>);
 
-void
-vector_trivially_relocatable_obj_std(benchmark::State&);
-void
-vector_trivially_relocatable_obj_ciel(benchmark::State&);
+define_benchmark(push_back_std_vector_trivially_relocatable, push_back, std::vector<TriviallyRelocatable>);
+define_benchmark(push_back_ciel_vector_trivially_relocatable, push_back, ciel::vector<TriviallyRelocatable>);
+define_benchmark(push_back_ciel_small_vector_trivially_relocatable, push_back,
+                 ciel::small_vector<TriviallyRelocatable>);
 
-void
-deque_push_back_std(benchmark::State&);
-void
-split_buffer_push_back_ciel(benchmark::State&);
+define_benchmark(insert_std_vector_int, insert, std::vector<int>);
+define_benchmark(insert_ciel_vector_int, insert, ciel::vector<int>);
+define_benchmark(insert_ciel_small_vector_int, insert, ciel::small_vector<int>);
 
-void
-deque_push_front_std(benchmark::State&);
-void
-split_buffer_push_front_ciel(benchmark::State&);
+define_benchmark(insert_std_vector_trivially_relocatable, insert, std::vector<TriviallyRelocatable>);
+define_benchmark(insert_ciel_vector_trivially_relocatable, insert, ciel::vector<TriviallyRelocatable>);
+define_benchmark(insert_ciel_small_vector_trivially_relocatable, insert, ciel::small_vector<TriviallyRelocatable>);
 
-void
-deque_erase_std(benchmark::State&);
-void
-split_buffer_erase_ciel(benchmark::State&);
+define_benchmark(erase_std_vector_int, erase, std::vector<int>);
+define_benchmark(erase_ciel_vector_int, erase, ciel::vector<int>);
+define_benchmark(erase_ciel_small_vector_int, erase, ciel::small_vector<int>);
 
-void
-list_push_back_std(benchmark::State&);
-void
-list_push_back_ciel(benchmark::State&);
+define_benchmark(erase_std_vector_trivially_relocatable, erase, std::vector<TriviallyRelocatable>);
+define_benchmark(erase_ciel_vector_trivially_relocatable, erase, ciel::vector<TriviallyRelocatable>);
+define_benchmark(erase_ciel_small_vector_trivially_relocatable, erase, ciel::small_vector<TriviallyRelocatable>);
 
-void
-list_push_front_std(benchmark::State&);
-void
-list_push_front_ciel(benchmark::State&);
+define_benchmark(few_objects_push_back_std_vector_int, few_objects_push_back, std::vector<int>);
+define_benchmark(few_objects_push_back_ciel_vector_int, few_objects_push_back, ciel::vector<int>);
+using ciel_small_vector_int_100 = ciel::small_vector<int, 100>;
+define_benchmark(few_objects_push_back_ciel_small_vector_int, few_objects_push_back, ciel_small_vector_int_100);
 
-void
-list_push_and_pop_std(benchmark::State&);
-void
-list_push_and_pop_ciel(benchmark::State&);
+define_benchmark(few_objects_push_back_std_vector_trivially_relocatable, few_objects_push_back,
+                 std::vector<TriviallyRelocatable>);
+define_benchmark(few_objects_push_back_ciel_vector_trivially_relocatable, few_objects_push_back,
+                 ciel::vector<TriviallyRelocatable>);
+define_benchmark(few_objects_push_back_ciel_small_vector_trivially_relocatable, few_objects_push_back,
+                 ciel::small_vector<TriviallyRelocatable>);
 
-void
-list_insert_std(benchmark::State&);
-void
-list_insert_ciel(benchmark::State&);
+define_benchmark(pop_and_shrink_push_back_std_vector_int, pop_and_shrink, std::vector<int>);
+define_benchmark(pop_and_shrink_push_back_ciel_vector_int, pop_and_shrink, ciel::vector<int>);
 
-void
-list_erase_std(benchmark::State&);
-void
-list_erase_ciel(benchmark::State&);
+define_benchmark(pop_and_shrink_push_back_std_vector_trivially_relocatable, pop_and_shrink,
+                 std::vector<TriviallyRelocatable>);
+define_benchmark(pop_and_shrink_push_back_ciel_vector_trivially_relocatable, pop_and_shrink,
+                 ciel::vector<TriviallyRelocatable>);
 
-BENCHMARK(vector_push_back_std);
-BENCHMARK(vector_push_back_ciel);
-BENCHMARK(small_vector_push_back_ciel);
+define_benchmark(push_back_std_deque_int, push_back, std::deque<int>);
+define_benchmark(push_back_ciel_split_buffer_int, push_back, ciel::split_buffer<int>);
 
-BENCHMARK(vector_insert_std);
-BENCHMARK(vector_insert_ciel);
-BENCHMARK(small_vector_insert_ciel);
+define_benchmark(push_back_std_deque_trivially_relocatable, push_back, std::deque<TriviallyRelocatable>);
+define_benchmark(push_back_ciel_split_buffer_trivially_relocatable, push_back,
+                 ciel::split_buffer<TriviallyRelocatable>);
 
-BENCHMARK(vector_erase_std);
-BENCHMARK(vector_erase_ciel);
-BENCHMARK(small_vector_erase_ciel);
+define_benchmark(push_front_std_deque_int, push_front, std::deque<int>);
+define_benchmark(push_front_ciel_split_buffer_int, push_front, ciel::split_buffer<int>);
 
-BENCHMARK(vector_few_objects_std);
-BENCHMARK(vector_few_objects_ciel);
-BENCHMARK(small_vector_few_objects_ciel);
+define_benchmark(push_front_std_deque_trivially_relocatable, push_front, std::deque<TriviallyRelocatable>);
+define_benchmark(push_front_ciel_split_buffer_trivially_relocatable, push_front,
+                 ciel::split_buffer<TriviallyRelocatable>);
 
-BENCHMARK(vector_trivially_relocatable_obj_std);
-BENCHMARK(vector_trivially_relocatable_obj_ciel);
+// TODO: insert and erase
 
-BENCHMARK(deque_push_back_std);
-BENCHMARK(split_buffer_push_back_ciel);
+define_benchmark(push_back_std_list_int, push_back, std::list<int>);
+define_benchmark(push_back_ciel_list_int, push_back, ciel::list<int>);
 
-BENCHMARK(deque_push_front_std);
-BENCHMARK(split_buffer_push_front_ciel);
+define_benchmark(push_front_std_list_int, push_front, std::list<int>);
+define_benchmark(push_front_ciel_list_int, push_front, ciel::list<int>);
 
-BENCHMARK(deque_erase_std);
-BENCHMARK(split_buffer_erase_ciel);
+define_benchmark(push_and_pop_std_list_int, push_and_pop, std::list<int>);
+define_benchmark(push_and_pop_ciel_list_int, push_and_pop, ciel::list<int>);
 
-BENCHMARK(list_push_back_std);
-BENCHMARK(list_push_back_ciel);
+define_benchmark(insert_std_list_int, insert, std::list<int>);
+define_benchmark(insert_ciel_list_int, insert, ciel::list<int>);
 
-BENCHMARK(list_push_front_std);
-BENCHMARK(list_push_front_ciel);
-
-BENCHMARK(list_push_and_pop_std);
-BENCHMARK(list_push_and_pop_ciel);
-
-BENCHMARK(list_insert_std);
-BENCHMARK(list_insert_ciel);
-
-BENCHMARK(list_erase_std);
-BENCHMARK(list_erase_ciel);
+define_benchmark(erase_std_list_int, erase, std::list<int>);
+define_benchmark(erase_ciel_list_int, erase, ciel::list<int>);
 
 BENCHMARK_MAIN();

@@ -7,9 +7,6 @@ set(CMAKE_BUILD_TYPE "Release")
 
 add_executable(ciellab_benchmark
     src/all.cpp
-    src/list_benchmarks.cpp
-    src/split_buffer_benchmarks.cpp
-    src/vector_benchmarks.cpp
 )
 
 target_link_libraries(ciellab_benchmark ciellab benchmark::benchmark)
