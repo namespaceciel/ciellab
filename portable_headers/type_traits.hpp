@@ -262,14 +262,12 @@ using owner = T;
 #if CIEL_STD_VER >= 14
 template<class T>
 using is_final = std::is_final<T>;
-
 #elif __has_builtin(__is_final)
 template<class T>
 struct is_final : std::integral_constant<bool, __is_final(T)> {};
-
 #else
 template<class T>
-using is_final = std::true_type;
+struct is_final;
 #endif
 
 // is_const_lvalue_reference
@@ -342,6 +340,95 @@ struct aligned_storage {
     };
 
 }; // aligned_storage
+
+template<class T, class U = T>
+T
+exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::value
+                                         && std::is_nothrow_assignable<T&, U>::value) {
+    T old_value = std::move(obj);
+    obj         = std::forward<U>(new_value);
+    return old_value;
+}
+
+// Is a pointer aligned?
+inline bool
+is_aligned(void* ptr, const size_t alignment) noexcept {
+    CIEL_PRECONDITION(ptr != nullptr);
+    CIEL_PRECONDITION(alignment != 0);
+
+    return ((uintptr_t)ptr % alignment) == 0;
+}
+
+// Align upwards
+inline uintptr_t
+align_up(uintptr_t sz, const size_t alignment) noexcept {
+    CIEL_PRECONDITION(alignment != 0);
+
+    const uintptr_t mask = alignment - 1;
+
+    if CIEL_LIKELY ((alignment & mask) == 0) { // power of two?
+        return (sz + mask) & ~mask;
+
+    } else {
+        return ((sz + mask) / alignment) * alignment;
+    }
+}
+
+// Align downwards
+inline uintptr_t
+align_down(uintptr_t sz, const size_t alignment) noexcept {
+    CIEL_PRECONDITION(alignment != 0);
+
+    uintptr_t mask = alignment - 1;
+
+    if CIEL_LIKELY ((alignment & mask) == 0) { // power of two?
+        return (sz & ~mask);
+
+    } else {
+        return ((sz / alignment) * alignment);
+    }
+}
+
+// sizeof_without_back_padding
+//
+// Derived can reuse Base's back padding.
+// struct Base {
+//     alignas(8) unsigned char buf[1]{};
+// };
+// struct Derived : Base {
+//     int i{};
+// };
+// static_assert(sizeof(Base)    == 8, "");
+// static_assert(sizeof(Derived) == 8, "");
+//
+template<class T, size_t BackPadding = alignof(T)>
+struct sizeof_without_back_padding {
+    static_assert(std::is_class<T>::value && !is_final<T>::value, "");
+
+    struct S : T {
+        unsigned char buf[BackPadding]{};
+    };
+
+    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_back_padding,
+                                           typename sizeof_without_back_padding<T, BackPadding - 1>::type>::type;
+
+    static constexpr size_t Byte = BackPadding;
+
+    static constexpr size_t value = sizeof(T) - type::Byte;
+
+}; // struct sizeof_without_back_padding
+
+template<class T>
+struct sizeof_without_back_padding<T, 0> {
+    static_assert(std::is_class<T>::value && !is_final<T>::value, "");
+
+    using type = sizeof_without_back_padding;
+
+    static constexpr size_t Byte = 0;
+
+    static constexpr size_t value = sizeof(T);
+
+}; // struct sizeof_without_back_padding<T, 0>
 
 NAMESPACE_CIEL_END
 

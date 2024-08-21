@@ -299,3 +299,71 @@ TEST(vector_tests, copy_and_move_behavior3) {
     v1.insert(v1.end() - 2, v1.begin(), v1.begin() + 2);
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 2);
 }
+
+#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
+TEST(vector_tests, std_vector_hack) {
+    {
+        std::vector<int> v{0, 1, 2, 3, 4};
+        ciel::vector<int> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        ASSERT_EQ(c, std::initializer_list<int>({0, 1, 2, 3, 4}));
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 1, 1>> v{0, 1, 2, 3, 4};
+        ciel::vector<int, AlignedAllocator<int, 1, 1>> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        ASSERT_EQ(c, std::initializer_list<int>({0, 1, 2, 3, 4}));
+
+        const auto v_alloc = v.get_allocator();
+        ASSERT_EQ(v_alloc.buf[0], 'x');
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 1, 8>> v{0, 1, 2, 3, 4};
+        ciel::vector<int, AlignedAllocator<int, 1, 8>> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        ASSERT_EQ(c, std::initializer_list<int>({0, 1, 2, 3, 4}));
+
+        const auto v_alloc = v.get_allocator();
+        ASSERT_EQ(v_alloc.buf[0], 'x');
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 1, 16>> v{0, 1, 2, 3, 4};
+        ciel::vector<int, AlignedAllocator<int, 1, 16>> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        ASSERT_EQ(c, std::initializer_list<int>({0, 1, 2, 3, 4}));
+
+        const auto v_alloc = v.get_allocator();
+        ASSERT_EQ(v_alloc.buf[0], 'x');
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 8, 16>> v{0, 1, 2, 3, 4};
+        ciel::vector<int, AlignedAllocator<int, 8, 16>> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        ASSERT_EQ(c, std::initializer_list<int>({0, 1, 2, 3, 4}));
+
+        const auto v_alloc = v.get_allocator();
+        ASSERT_EQ(v_alloc.buf[0], 'x');
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 16, 16>> v{0, 1, 2, 3, 4};
+        ciel::vector<int, AlignedAllocator<int, 16, 16>> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        ASSERT_EQ(c, std::initializer_list<int>({0, 1, 2, 3, 4}));
+
+        const auto v_alloc = v.get_allocator();
+        ASSERT_EQ(v_alloc.buf[0], 'x');
+    }
+}
+#endif

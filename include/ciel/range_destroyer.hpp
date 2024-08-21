@@ -74,8 +74,6 @@ private:
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
 public:
-    range_destroyer(pointer, pointer, allocator_type&) noexcept {}
-
     range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;

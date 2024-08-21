@@ -542,6 +542,47 @@ public:
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
+#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
+    vector(std::vector<value_type, allocator_type>&& other) noexcept {
+        static_assert(!std::is_same<value_type, bool>::value, "");
+
+        constexpr bool is_ebo_optimized = std::is_empty<allocator_type>::value && !is_final<allocator_type>::value;
+
+#if defined(_LIBCPP_VECTOR)
+        pointer* begin_ptr        = (pointer*)(&other);
+        pointer* end_ptr          = begin_ptr + 1;
+        pointer* end_cap_ptr      = end_ptr + 1;
+        allocator_type* alloc_ptr = (is_ebo_optimized ? (allocator_type*)end_cap_ptr
+                                                      : (allocator_type*)ciel::align_up((uintptr_t)(end_cap_ptr + 1),
+                                                                                        alignof(allocator_type)));
+#elif defined(_GLIBCXX_VECTOR)
+        pointer* begin_ptr
+            = (is_ebo_optimized
+                   ? (pointer*)(&other)
+                   : (pointer*)ciel::align_up((uintptr_t)(&other) + sizeof_without_back_padding<allocator_type>::value,
+                                              alignof(pointer)));
+        pointer* end_ptr          = begin_ptr + 1;
+        pointer* end_cap_ptr      = end_ptr + 1;
+        allocator_type* alloc_ptr = (allocator_type*)(&other);
+#endif
+
+        CIEL_PRECONDITION(other.data() == *begin_ptr);
+        CIEL_PRECONDITION(other.size() == static_cast<size_t>(*end_ptr - *begin_ptr));
+        CIEL_PRECONDITION(other.capacity() == static_cast<size_t>(*end_cap_ptr - *begin_ptr));
+
+        allocator_() = std::move(*alloc_ptr);
+        begin_       = *begin_ptr;
+        end_         = *end_ptr;
+        end_cap_     = *end_cap_ptr;
+        *begin_ptr   = nullptr;
+        *end_ptr     = nullptr;
+        *end_cap_ptr = nullptr;
+
+        CIEL_POSTCONDITION(other.size() == 0);
+        CIEL_POSTCONDITION(other.capacity() == 0);
+    }
+#endif
+
     ~vector() {
         do_destroy();
     }

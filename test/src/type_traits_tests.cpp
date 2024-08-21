@@ -1,3 +1,4 @@
+#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <array>
@@ -155,3 +156,27 @@ TEST(type_traits_tests, is_complete_type) {
     static_assert(ciel::is_complete_type_v<is_complete_type_test>);
 }
 #endif // CIEL_STD_VER >= 20
+
+TEST(type_traits_tests, sizeof_without_back_padding) {
+    using T1 = typename ciel::aligned_storage<1, 1>::type;
+    static_assert(ciel::sizeof_without_back_padding<T1>::value == 1, "");
+
+    using T2 = typename ciel::aligned_storage<1, 8>::type;
+    static_assert(ciel::sizeof_without_back_padding<T2>::value == 1, "");
+
+    using T3 = typename ciel::aligned_storage<1, 16>::type;
+    static_assert(ciel::sizeof_without_back_padding<T3>::value == 1, "");
+
+    using T4 = typename ciel::aligned_storage<8, 8>::type;
+    static_assert(ciel::sizeof_without_back_padding<T4>::value == 8, "");
+
+    using T5 = typename ciel::aligned_storage<8, 16>::type;
+    static_assert(ciel::sizeof_without_back_padding<T5>::value == 8, "");
+
+    using T6 = typename ciel::aligned_storage<8, 32>::type;
+    static_assert(ciel::sizeof_without_back_padding<T6>::value == 8, "");
+
+    struct Empty {};
+
+    static_assert(ciel::sizeof_without_back_padding<Empty>::value == 0, "");
+}

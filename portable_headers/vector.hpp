@@ -389,14 +389,12 @@ using owner = T;
 #if CIEL_STD_VER >= 14
 template<class T>
 using is_final = std::is_final<T>;
-
 #elif __has_builtin(__is_final)
 template<class T>
 struct is_final : std::integral_constant<bool, __is_final(T)> {};
-
 #else
 template<class T>
-using is_final = std::true_type;
+struct is_final;
 #endif
 
 // is_const_lvalue_reference
@@ -469,6 +467,95 @@ struct aligned_storage {
     };
 
 }; // aligned_storage
+
+template<class T, class U = T>
+T
+exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::value
+                                         && std::is_nothrow_assignable<T&, U>::value) {
+    T old_value = std::move(obj);
+    obj         = std::forward<U>(new_value);
+    return old_value;
+}
+
+// Is a pointer aligned?
+inline bool
+is_aligned(void* ptr, const size_t alignment) noexcept {
+    CIEL_PRECONDITION(ptr != nullptr);
+    CIEL_PRECONDITION(alignment != 0);
+
+    return ((uintptr_t)ptr % alignment) == 0;
+}
+
+// Align upwards
+inline uintptr_t
+align_up(uintptr_t sz, const size_t alignment) noexcept {
+    CIEL_PRECONDITION(alignment != 0);
+
+    const uintptr_t mask = alignment - 1;
+
+    if CIEL_LIKELY ((alignment & mask) == 0) { // power of two?
+        return (sz + mask) & ~mask;
+
+    } else {
+        return ((sz + mask) / alignment) * alignment;
+    }
+}
+
+// Align downwards
+inline uintptr_t
+align_down(uintptr_t sz, const size_t alignment) noexcept {
+    CIEL_PRECONDITION(alignment != 0);
+
+    uintptr_t mask = alignment - 1;
+
+    if CIEL_LIKELY ((alignment & mask) == 0) { // power of two?
+        return (sz & ~mask);
+
+    } else {
+        return ((sz / alignment) * alignment);
+    }
+}
+
+// sizeof_without_back_padding
+//
+// Derived can reuse Base's back padding.
+// struct Base {
+//     alignas(8) unsigned char buf[1]{};
+// };
+// struct Derived : Base {
+//     int i{};
+// };
+// static_assert(sizeof(Base)    == 8, "");
+// static_assert(sizeof(Derived) == 8, "");
+//
+template<class T, size_t BackPadding = alignof(T)>
+struct sizeof_without_back_padding {
+    static_assert(std::is_class<T>::value && !is_final<T>::value, "");
+
+    struct S : T {
+        unsigned char buf[BackPadding]{};
+    };
+
+    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_back_padding,
+                                           typename sizeof_without_back_padding<T, BackPadding - 1>::type>::type;
+
+    static constexpr size_t Byte = BackPadding;
+
+    static constexpr size_t value = sizeof(T) - type::Byte;
+
+}; // struct sizeof_without_back_padding
+
+template<class T>
+struct sizeof_without_back_padding<T, 0> {
+    static_assert(std::is_class<T>::value && !is_final<T>::value, "");
+
+    using type = sizeof_without_back_padding;
+
+    static constexpr size_t Byte = 0;
+
+    static constexpr size_t value = sizeof(T);
+
+}; // struct sizeof_without_back_padding<T, 0>
 
 NAMESPACE_CIEL_END
 
@@ -694,8 +781,6 @@ private:
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
 public:
-    range_destroyer(pointer, pointer, allocator_type&) noexcept {}
-
     range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;
@@ -2339,6 +2424,47 @@ public:
     template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>::value, int>::type = 0>
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
+
+#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
+    vector(std::vector<value_type, allocator_type>&& other) noexcept {
+        static_assert(!std::is_same<value_type, bool>::value, "");
+
+        constexpr bool is_ebo_optimized = std::is_empty<allocator_type>::value && !is_final<allocator_type>::value;
+
+#if defined(_LIBCPP_VECTOR)
+        pointer* begin_ptr        = (pointer*)(&other);
+        pointer* end_ptr          = begin_ptr + 1;
+        pointer* end_cap_ptr      = end_ptr + 1;
+        allocator_type* alloc_ptr = (is_ebo_optimized ? (allocator_type*)end_cap_ptr
+                                                      : (allocator_type*)ciel::align_up((uintptr_t)(end_cap_ptr + 1),
+                                                                                        alignof(allocator_type)));
+#elif defined(_GLIBCXX_VECTOR)
+        pointer* begin_ptr
+            = (is_ebo_optimized
+                   ? (pointer*)(&other)
+                   : (pointer*)ciel::align_up((uintptr_t)(&other) + sizeof_without_back_padding<allocator_type>::value,
+                                              alignof(pointer)));
+        pointer* end_ptr          = begin_ptr + 1;
+        pointer* end_cap_ptr      = end_ptr + 1;
+        allocator_type* alloc_ptr = (allocator_type*)(&other);
+#endif
+
+        CIEL_PRECONDITION(other.data() == *begin_ptr);
+        CIEL_PRECONDITION(other.size() == static_cast<size_t>(*end_ptr - *begin_ptr));
+        CIEL_PRECONDITION(other.capacity() == static_cast<size_t>(*end_cap_ptr - *begin_ptr));
+
+        allocator_() = std::move(*alloc_ptr);
+        begin_       = *begin_ptr;
+        end_         = *end_ptr;
+        end_cap_     = *end_cap_ptr;
+        *begin_ptr   = nullptr;
+        *end_ptr     = nullptr;
+        *end_cap_ptr = nullptr;
+
+        CIEL_POSTCONDITION(other.size() == 0);
+        CIEL_POSTCONDITION(other.capacity() == 0);
+    }
+#endif
 
     ~vector() {
         do_destroy();

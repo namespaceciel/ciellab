@@ -114,4 +114,48 @@ private:
 
 }; // class SimpleLatch
 
+template<class T, size_t Size, size_t Alignment>
+struct AlignedAllocator {
+    using value_type                             = T;
+    using size_type                              = size_t;
+    using difference_type                        = ptrdiff_t;
+    using propagate_on_container_move_assignment = std::true_type;
+
+    alignas(Alignment) unsigned char buf[Size]{};
+
+    AlignedAllocator() noexcept = default;
+
+    AlignedAllocator(const AlignedAllocator&) noexcept = default;
+
+    AlignedAllocator(AlignedAllocator&& other) noexcept {
+        other.buf[0] = 'x';
+    }
+
+    AlignedAllocator&
+    operator=(const AlignedAllocator&) noexcept
+        = default;
+
+    AlignedAllocator&
+    operator=(AlignedAllocator&& other) noexcept {
+        other.buf[0] = 'x';
+        return *this;
+    }
+
+    template<class U>
+    struct rebind {
+        using other = AlignedAllocator<U, Size, Alignment>;
+    };
+
+    value_type*
+    allocate(const size_t n) {
+        return static_cast<value_type*>(::operator new(n * sizeof(value_type)));
+    }
+
+    void
+    deallocate(value_type* p, size_t) noexcept {
+        ::operator delete(p);
+    }
+
+}; // struct SimpleAllocator
+
 #endif // CIELLAB_TEST_TOOLS_H_
