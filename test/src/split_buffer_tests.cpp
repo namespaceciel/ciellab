@@ -43,7 +43,10 @@ TEST(split_buffer_tests, assignments) {
 
     v2 = std::move(v1);
     ASSERT_TRUE(v1.empty());
-    ASSERT_EQ(v2, std::initializer_list<int>({1, 2, 3, 4, 5}));
+    {
+        std::initializer_list<int> il{1, 2, 3, 4, 5};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
+    }
 
     ciel::split_buffer<int> v3{};
     v3 = v2;
@@ -54,17 +57,26 @@ TEST(split_buffer_tests, assignments) {
 
     // expansion
     v3 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    ASSERT_EQ(v3, std::initializer_list<int>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}));
+    {
+        std::initializer_list<int> il{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v3.begin()));
+    }
 
     // shrink
     v3.assign(2, 10);
-    ASSERT_EQ(v3, std::initializer_list<int>({10, 10}));
+    {
+        std::initializer_list<int> il{10, 10};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v3.begin()));
+    }
 
     // lend space from other side
     v3.shrink_to_fit();
     v3.reserve_front_spare(4);
     v3.assign(4, 10);
-    ASSERT_EQ(v3, std::initializer_list<int>({10, 10, 10, 10}));
+    {
+        std::initializer_list<int> il{10, 10, 10, 10};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v3.begin()));
+    }
 
     // collect both sides' space
     v3.shrink_to_fit();
@@ -73,7 +85,10 @@ TEST(split_buffer_tests, assignments) {
     v3.reserve_back_spare(2); // will lend 2 from front spare
 
     v3.assign(7, 10);
-    ASSERT_EQ(v3, std::initializer_list<int>({10, 10, 10, 10, 10, 10, 10}));
+    {
+        std::initializer_list<int> il{10, 10, 10, 10, 10, 10, 10};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v3.begin()));
+    }
 }
 
 TEST(split_buffer_tests, at) {
@@ -97,19 +112,31 @@ TEST(split_buffer_tests, push_and_pop) {
 
     v1.push_back(1);
     ASSERT_EQ(v1.emplace_back(2), 2);
-    ASSERT_EQ(v1, std::initializer_list<int>({0, 1, 2}));
+    {
+        std::initializer_list<int> il{0, 1, 2};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 
     ASSERT_EQ(v1.emplace_front(3), 3);
-    ASSERT_EQ(v1, std::initializer_list<int>({3, 0, 1, 2}));
+    {
+        std::initializer_list<int> il{3, 0, 1, 2};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 
     v1.push_front(4);
-    ASSERT_EQ(v1, std::initializer_list<int>({4, 3, 0, 1, 2}));
+    {
+        std::initializer_list<int> il{4, 3, 0, 1, 2};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 
     ciel::split_buffer<int> v2({0, 1, 2, 3, 4});
     ASSERT_EQ(v2.emplace_back(5), 5);
 
     ASSERT_EQ(v2.emplace_back(6), 6);
-    ASSERT_EQ(v2, std::initializer_list<int>({0, 1, 2, 3, 4, 5, 6}));
+    {
+        std::initializer_list<int> il{0, 1, 2, 3, 4, 5, 6};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
+    }
 
     ASSERT_EQ(v2.emplace_back(7), 7);
     ASSERT_EQ(v2.back(), 7);
@@ -137,18 +164,27 @@ TEST(split_buffer_tests, resize) {
     // enlarge but not beyond capacity
     v1.reserve_back_spare(9);
     v1.resize(10, 77);
-    ASSERT_EQ(v1, std::initializer_list<int>({5, 77, 77, 77, 77, 77, 77, 77, 77, 77}));
+    {
+        std::initializer_list<int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 
     // enlarge beyond capacity
     v1.shrink_to_fit();
     v1.resize(12, 44);
-    ASSERT_EQ(v1, std::initializer_list<int>({5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44}));
+    {
+        std::initializer_list<int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 
     // lend space from other side
     v1.shrink_to_fit();
     v1.reserve_front_spare(4);
     v1.resize(15, 10);
-    ASSERT_EQ(v1, std::initializer_list<int>({5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44, 10, 10, 10}));
+    {
+        std::initializer_list<int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44, 10, 10, 10};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 
     // collect both sides' space
     v1.shrink_to_fit();
@@ -157,7 +193,10 @@ TEST(split_buffer_tests, resize) {
     v1.reserve_back_spare(2); // will lend 2 from front spare
 
     v1.resize(18, 19);
-    ASSERT_EQ(v1, std::initializer_list<int>({5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44, 10, 10, 10, 19, 19, 19}));
+    {
+        std::initializer_list<int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44, 10, 10, 10, 19, 19, 19};
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
+    }
 }
 
 TEST(split_buffer_tests, copy_and_move_behavior) {

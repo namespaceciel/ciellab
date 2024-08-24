@@ -1,11 +1,21 @@
-PROJECT_SOURCE_DIR ?= $(abspath ./)
+PROJECT_SOURCE_DIR := $(abspath ./)
 BUILD_DIR ?= $(PROJECT_SOURCE_DIR)/build
-NUM_JOB ?= 32
+UNAME_S := $(uname -s)
+
+ifeq ($(UNAME_S), Linux)
+    NUM_JOB := $(nproc)
+else ifeq ($(UNAME_S), Darwin)
+    NUM_JOB := $(sysctl -n hw.ncpu)
+else
+    NUM_JOB := 1
+endif
 
 clean:
 	rm -rf $(BUILD_DIR)
 .PHONY: clean
 
+# -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+# -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 prepare:
 	mkdir -p $(BUILD_DIR) && \
 	cd $(BUILD_DIR) && \

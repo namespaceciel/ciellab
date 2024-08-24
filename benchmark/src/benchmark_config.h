@@ -56,7 +56,7 @@ NAMESPACE_CIEL_END
 
 template<class Container>
 void
-push_back() noexcept {
+emplace_back() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -66,7 +66,29 @@ push_back() noexcept {
 
 template<class Container>
 void
-push_front() noexcept {
+emplace_back_known_size() noexcept {
+    Container c;
+    c.reserve(100000);
+
+    for (int i = 0; i < 100000; ++i) {
+        c.emplace_back(i);
+    }
+}
+
+template<class Container>
+void
+construct_one_at_end() noexcept {
+    Container c;
+    c.reserve(100000);
+
+    for (int i = 0; i < 100000; ++i) {
+        c.construct_one_at_end(i);
+    }
+}
+
+template<class Container>
+void
+emplace_front() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -135,7 +157,7 @@ erase() noexcept {
 
 template<class Container>
 void
-few_objects_push_back() {
+few_objects_emplace_back() {
     for (int i = 0; i < 1000; ++i) {
         Container c{50, 123};
 

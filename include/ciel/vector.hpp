@@ -25,6 +25,14 @@ NAMESPACE_CIEL_BEGIN
 //    you can partially specialize it with certain classes.
 //    We will memcpy trivially relocatable objects in scenarios such as expansions.
 // 4. Worth-moving elements shall be moved from std::initializer_list<move_proxy<T>>.
+// 5. Provide construct_one_at_end, it's essentially an emplace_back operation that
+//    does not check for sufficient space, assuming the container has enough capacity.
+//    Ensuring the container's reserve method has been called in advance to allocate memory.
+// 6. You can move construct it from a rvalue_reference std::vector,
+//    and cast it back to std::vector, except when T is bool.
+//    e.g. std::vector<int> v{0, 1, 2, 3, 4};
+//         ciel::vector<int> c{std::move(v)};
+//         v = std::move(c);
 
 template<class T, class Allocator = std::allocator<T>>
 class vector : private Allocator {
@@ -78,15 +86,6 @@ private:
         }
 
         return std::max(cap * 2, new_size);
-    }
-
-    template<class... Args>
-    void
-    construct_one_at_end(Args&&... args) {
-        CIEL_PRECONDITION(end_ < end_cap_);
-
-        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
-        ++end_;
     }
 
     void
@@ -447,6 +446,44 @@ private:
         return begin() + pos_index;
     }
 
+#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
+    struct std_vector_rob {
+        static_assert(!std::is_same<value_type, bool>::value, "");
+
+        static constexpr bool is_ebo_optimized
+            = std::is_empty<allocator_type>::value && !is_final<allocator_type>::value;
+
+        pointer* const begin_ptr;
+        pointer* const end_ptr;
+        pointer* const end_cap_ptr;
+        allocator_type* const alloc_ptr;
+
+        std_vector_rob(std::vector<value_type, allocator_type>&& other) noexcept
+#if defined(_LIBCPP_VECTOR)
+            : begin_ptr((pointer*)(&other)),
+              end_ptr(begin_ptr + 1),
+              end_cap_ptr(end_ptr + 1),
+              alloc_ptr(is_ebo_optimized
+                            ? (allocator_type*)end_cap_ptr
+                            : (allocator_type*)ciel::align_up((uintptr_t)(end_cap_ptr + 1), alignof(allocator_type)))
+#elif defined(_GLIBCXX_VECTOR)
+            : begin_ptr(is_ebo_optimized ? (pointer*)(&other)
+                                         : (pointer*)ciel::align_up(
+                                               (uintptr_t)(&other) + sizeof_without_back_padding<allocator_type>::value,
+                                               alignof(pointer))),
+              end_ptr(begin_ptr + 1),
+              end_cap_ptr(end_ptr + 1),
+              alloc_ptr((allocator_type*)(&other))
+#endif
+        {
+            CIEL_PRECONDITION(other.data() == *begin_ptr);
+            CIEL_PRECONDITION(other.size() == static_cast<size_t>(*end_ptr - *begin_ptr));
+            CIEL_PRECONDITION(other.capacity() == static_cast<size_t>(*end_cap_ptr - *begin_ptr));
+        }
+
+    }; // struct std_vector_rob
+#endif
+
 public:
     vector() noexcept(noexcept(allocator_type()))
         : allocator_type() {}
@@ -543,40 +580,17 @@ public:
         : vector(init.begin(), init.end(), alloc) {}
 
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
+    template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>
     vector(std::vector<value_type, allocator_type>&& other) noexcept {
-        static_assert(!std::is_same<value_type, bool>::value, "");
+        std_vector_rob svr(std::move(other));
 
-        constexpr bool is_ebo_optimized = std::is_empty<allocator_type>::value && !is_final<allocator_type>::value;
-
-#if defined(_LIBCPP_VECTOR)
-        pointer* begin_ptr        = (pointer*)(&other);
-        pointer* end_ptr          = begin_ptr + 1;
-        pointer* end_cap_ptr      = end_ptr + 1;
-        allocator_type* alloc_ptr = (is_ebo_optimized ? (allocator_type*)end_cap_ptr
-                                                      : (allocator_type*)ciel::align_up((uintptr_t)(end_cap_ptr + 1),
-                                                                                        alignof(allocator_type)));
-#elif defined(_GLIBCXX_VECTOR)
-        pointer* begin_ptr
-            = (is_ebo_optimized
-                   ? (pointer*)(&other)
-                   : (pointer*)ciel::align_up((uintptr_t)(&other) + sizeof_without_back_padding<allocator_type>::value,
-                                              alignof(pointer)));
-        pointer* end_ptr          = begin_ptr + 1;
-        pointer* end_cap_ptr      = end_ptr + 1;
-        allocator_type* alloc_ptr = (allocator_type*)(&other);
-#endif
-
-        CIEL_PRECONDITION(other.data() == *begin_ptr);
-        CIEL_PRECONDITION(other.size() == static_cast<size_t>(*end_ptr - *begin_ptr));
-        CIEL_PRECONDITION(other.capacity() == static_cast<size_t>(*end_cap_ptr - *begin_ptr));
-
-        allocator_() = std::move(*alloc_ptr);
-        begin_       = *begin_ptr;
-        end_         = *end_ptr;
-        end_cap_     = *end_cap_ptr;
-        *begin_ptr   = nullptr;
-        *end_ptr     = nullptr;
-        *end_cap_ptr = nullptr;
+        allocator_()     = std::move(*svr.alloc_ptr);
+        begin_           = *svr.begin_ptr;
+        end_             = *svr.end_ptr;
+        end_cap_         = *svr.end_cap_ptr;
+        *svr.begin_ptr   = nullptr;
+        *svr.end_ptr     = nullptr;
+        *svr.end_cap_ptr = nullptr;
 
         CIEL_POSTCONDITION(other.size() == 0);
         CIEL_POSTCONDITION(other.capacity() == 0);
@@ -1124,6 +1138,33 @@ public:
         swap(allocator_(), other.allocator_());
     }
 
+    template<class... Args>
+    void
+    construct_one_at_end(Args&&... args) {
+        CIEL_PRECONDITION(end_ < end_cap_);
+
+        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
+        ++end_;
+    }
+
+#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
+    template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>
+    operator std::vector<value_type, allocator_type>() && noexcept {
+        std::vector<value_type, allocator_type> res;
+        std_vector_rob svr(std::move(res));
+
+        *svr.alloc_ptr   = std::move(allocator_());
+        *svr.begin_ptr   = begin_;
+        *svr.end_ptr     = end_;
+        *svr.end_cap_ptr = end_cap_;
+        begin_           = nullptr;
+        end_             = nullptr;
+        end_cap_         = nullptr;
+
+        return res;
+    }
+#endif
+
 }; // class vector
 
 template<class T, class Allocator>
@@ -1132,17 +1173,6 @@ struct is_trivially_relocatable<vector<T, Allocator>> : is_trivially_relocatable
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-// So that we can test more efficiently.
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator==(const vector<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {
     if (lhs.size() != rhs.size()) {
         return false;
     }

@@ -1766,17 +1766,6 @@ operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs)
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-// So that we can test more efficiently
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator==(const split_buffer<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
 #if CIEL_STD_VER >= 17
 
 template<class Iter, class Alloc = std::allocator<typename std::iterator_traits<Iter>::value_type>>
