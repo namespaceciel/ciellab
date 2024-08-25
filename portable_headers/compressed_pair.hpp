@@ -528,7 +528,7 @@ struct default_init_tag {};
 
 struct value_init_tag {};
 
-template<class T, size_t Index, bool = std::is_empty<T>::value && !is_final<T>::value>
+template<class T, size_t Index, bool = std::is_class<T>::value && !is_final<T>::value>
 struct compressed_pair_elem {
 public:
     using reference       = T&;

@@ -121,7 +121,9 @@ struct AlignedAllocator {
     using difference_type                        = ptrdiff_t;
     using propagate_on_container_move_assignment = std::true_type;
 
+#if CIEL_STD_VER >= 17
     static_assert(alignof(value_type) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "");
+#endif
 
     alignas(Alignment) unsigned char buf[Size]{};
 

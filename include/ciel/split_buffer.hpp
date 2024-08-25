@@ -59,7 +59,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init_tag{}};
+    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init_tag{}, nullptr};
 
     template<class, class>
     friend class split_buffer;
@@ -82,22 +82,22 @@ private:
 
     pointer&
     end_cap_() noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     const pointer&
     end_cap_() const noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     allocator_type&
     allocator_() noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     const allocator_type&
     allocator_() const noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     size_type
@@ -436,10 +436,10 @@ public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
 
     explicit split_buffer(allocator_type& alloc) noexcept
-        : end_cap_alloc_(nullptr, alloc) {}
+        : end_cap_alloc_(alloc, nullptr) {}
 
     explicit split_buffer(const allocator_type& alloc) noexcept
-        : end_cap_alloc_(nullptr, alloc) {}
+        : end_cap_alloc_(alloc, nullptr) {}
 
     split_buffer(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
@@ -500,7 +500,7 @@ public:
         : begin_cap_(other.begin_cap_),
           begin_(other.begin_),
           end_(other.end_),
-          end_cap_alloc_(other.end_cap_(), std::move(other.allocator_())) {
+          end_cap_alloc_(std::move(other.allocator_()), other.end_cap_()) {
         other.set_nullptr();
     }
 

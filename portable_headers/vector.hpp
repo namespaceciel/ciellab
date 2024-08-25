@@ -9,6 +9,12 @@
 #include <stdexcept>
 #include <type_traits>
 
+#ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+#define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+
+#include <tuple>
+#include <type_traits>
+
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 #define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
@@ -194,46 +200,6 @@ initializer_list(initializer_list<T>) -> initializer_list<T>;
 #endif
 
 #endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
-#ifndef CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-#define CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-
-#include <type_traits>
-#include <utility>
-
-
-NAMESPACE_CIEL_BEGIN
-
-template<class T>
-class move_proxy {
-public:
-    template<class... Args, typename std::enable_if<std::is_constructible<T, Args&&...>::value, int>::type = 0>
-    move_proxy(Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value)
-        : data_(std::forward<Args>(args)...) {}
-
-    operator T&&() const noexcept {
-        return std::move(data_);
-    }
-
-private:
-    mutable T data_;
-
-}; // class move_proxy
-
-NAMESPACE_CIEL_END
-
-#endif // CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-#ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
-#define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
-
-#include <memory>
-#include <type_traits>
-
-#ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
-#define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
-
-#include <tuple>
-#include <type_traits>
-
 #ifndef CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
 #define CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
 
@@ -573,7 +539,7 @@ struct default_init_tag {};
 
 struct value_init_tag {};
 
-template<class T, size_t Index, bool = std::is_empty<T>::value && !is_final<T>::value>
+template<class T, size_t Index, bool = std::is_class<T>::value && !is_final<T>::value>
 struct compressed_pair_elem {
 public:
     using reference       = T&;
@@ -719,6 +685,40 @@ swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs) noe
 } // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#define CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+
+#include <type_traits>
+#include <utility>
+
+
+NAMESPACE_CIEL_BEGIN
+
+template<class T>
+class move_proxy {
+public:
+    template<class... Args, typename std::enable_if<std::is_constructible<T, Args&&...>::value, int>::type = 0>
+    move_proxy(Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value)
+        : data_(std::forward<Args>(args)...) {}
+
+    operator T&&() const noexcept {
+        return std::move(data_);
+    }
+
+private:
+    mutable T data_;
+
+}; // class move_proxy
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+#define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+
+#include <memory>
+#include <type_traits>
+
 
 NAMESPACE_CIEL_BEGIN
 
@@ -859,7 +859,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init_tag{}};
+    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init_tag{}, nullptr};
 
     template<class, class>
     friend class split_buffer;
@@ -882,22 +882,22 @@ private:
 
     pointer&
     end_cap_() noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     const pointer&
     end_cap_() const noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     allocator_type&
     allocator_() noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     const allocator_type&
     allocator_() const noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     size_type
@@ -1236,10 +1236,10 @@ public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
 
     explicit split_buffer(allocator_type& alloc) noexcept
-        : end_cap_alloc_(nullptr, alloc) {}
+        : end_cap_alloc_(alloc, nullptr) {}
 
     explicit split_buffer(const allocator_type& alloc) noexcept
-        : end_cap_alloc_(nullptr, alloc) {}
+        : end_cap_alloc_(alloc, nullptr) {}
 
     split_buffer(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
@@ -1300,7 +1300,7 @@ public:
         : begin_cap_(other.begin_cap_),
           begin_(other.begin_),
           end_(other.end_),
-          end_cap_alloc_(other.end_cap_(), std::move(other.allocator_())) {
+          end_cap_alloc_(std::move(other.allocator_()), other.end_cap_()) {
         other.set_nullptr();
     }
 
@@ -1913,7 +1913,7 @@ NAMESPACE_CIEL_BEGIN
 //         v = std::move(c);
 
 template<class T, class Allocator = std::allocator<T>>
-class vector : private Allocator {
+class vector {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
 public:
@@ -1935,16 +1935,29 @@ private:
 
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    pointer end_cap_{nullptr};
+    // The allocator is intentionally placed first so that when allocator_type utilizes stack buffers,
+    // which provide alignment for types exceeding 8 bytes, allocator_type will also be properly aligned.
+    // This arrangement may allow end_cap_ to reuse the allocator's back padding space.
+    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag{}, nullptr};
+
+    pointer&
+    end_cap_() noexcept {
+        return end_cap_alloc_.second();
+    }
+
+    const pointer&
+    end_cap_() const noexcept {
+        return end_cap_alloc_.second();
+    }
 
     allocator_type&
     allocator_() noexcept {
-        return static_cast<allocator_type&>(*this);
+        return end_cap_alloc_.first();
     }
 
     const allocator_type&
     allocator_() const noexcept {
-        return static_cast<const allocator_type&>(*this);
+        return end_cap_alloc_.first();
     }
 
     size_type
@@ -1968,7 +1981,7 @@ private:
 
     void
     construct_at_end(const size_type n) {
-        CIEL_PRECONDITION(end_ + n <= end_cap_);
+        CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
             alloc_traits::construct(allocator_(), end_);
@@ -1978,7 +1991,7 @@ private:
 
     void
     construct_at_end(const size_type n, const value_type& value) {
-        CIEL_PRECONDITION(end_ + n <= end_cap_);
+        CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
             alloc_traits::construct(allocator_(), end_, value);
@@ -1989,7 +2002,7 @@ private:
     template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
     void
     construct_at_end(Iter first, Iter last) {
-        CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_);
+        CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
 
         while (first != last) {
             alloc_traits::construct(allocator_(), end_, *first);
@@ -2038,9 +2051,9 @@ private:
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
 
-        begin_   = sb.begin_cap_;
-        end_     = sb.end_;
-        end_cap_ = sb.end_cap_();
+        begin_     = sb.begin_cap_;
+        end_       = sb.end_;
+        end_cap_() = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -2070,9 +2083,9 @@ private:
 
         CIEL_POSTCONDITION(sb.begin_ == sb.begin_cap_);
 
-        begin_   = sb.begin_cap_;
-        end_     = sb.end_;
-        end_cap_ = sb.end_cap_();
+        begin_     = sb.begin_cap_;
+        end_       = sb.end_;
+        end_cap_() = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -2090,9 +2103,9 @@ private:
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
 
-        begin_   = sb.begin_cap_;
-        end_     = sb.end_;
-        end_cap_ = sb.end_cap_();
+        begin_     = sb.begin_cap_;
+        end_       = sb.end_;
+        end_cap_() = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -2118,9 +2131,9 @@ private:
 
         CIEL_POSTCONDITION(sb.begin_ == sb.begin_cap_);
 
-        begin_   = sb.begin_cap_;
-        end_     = sb.end_;
-        end_cap_ = sb.end_cap_();
+        begin_     = sb.begin_cap_;
+        end_       = sb.end_;
+        end_cap_() = sb.end_cap_();
 
         sb.set_nullptr();
     }
@@ -2147,9 +2160,9 @@ private:
 
     void
     set_nullptr() noexcept {
-        begin_   = nullptr;
-        end_     = nullptr;
-        end_cap_ = nullptr;
+        begin_     = nullptr;
+        end_       = nullptr;
+        end_cap_() = nullptr;
     }
 
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
@@ -2306,7 +2319,7 @@ private:
 
         const size_type pos_index = pos - begin();
 
-        if (end_ == end_cap_) { // expansion
+        if (end_ == end_cap_()) { // expansion
             split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
@@ -2363,18 +2376,17 @@ private:
 #endif
 
 public:
-    vector() noexcept(noexcept(allocator_type()))
-        : allocator_type() {}
+    vector() noexcept(noexcept(allocator_type())) = default;
 
     explicit vector(const allocator_type& alloc) noexcept
-        : allocator_type(alloc) {}
+        : end_cap_alloc_(alloc, nullptr) {}
 
     vector(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         if CIEL_LIKELY (count > 0) {
-            begin_   = alloc_traits::allocate(allocator_(), count);
-            end_cap_ = begin_ + count;
-            end_     = begin_;
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
 
             construct_at_end(count, value);
         }
@@ -2383,9 +2395,9 @@ public:
     explicit vector(const size_type count, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         if CIEL_LIKELY (count > 0) {
-            begin_   = alloc_traits::allocate(allocator_(), count);
-            end_cap_ = begin_ + count;
-            end_     = begin_;
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
 
             construct_at_end(count);
         }
@@ -2406,9 +2418,9 @@ public:
         const auto count = std::distance(first, last);
 
         if CIEL_LIKELY (count > 0) {
-            begin_   = alloc_traits::allocate(allocator_(), count);
-            end_cap_ = begin_ + count;
-            end_     = begin_;
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
 
             construct_at_end(first, last);
         }
@@ -2422,10 +2434,7 @@ public:
         : vector(other.begin(), other.end(), alloc) {}
 
     vector(vector&& other) noexcept
-        : allocator_type(std::move(other.allocator_())),
-          begin_(other.begin_),
-          end_(other.end_),
-          end_cap_(other.end_cap_) {
+        : begin_(other.begin_), end_(other.end_), end_cap_alloc_(std::move(other.allocator_()), other.end_cap_()) {
         other.set_nullptr();
     }
 
@@ -2434,7 +2443,7 @@ public:
             allocator_() = alloc;
             begin_       = other.begin_;
             end_         = other.end_;
-            end_cap_     = other.end_cap_;
+            end_cap_()   = other.end_cap_();
 
             other.set_nullptr();
 
@@ -2465,7 +2474,7 @@ public:
         allocator_()     = std::move(*svr.alloc_ptr);
         begin_           = *svr.begin_ptr;
         end_             = *svr.end_ptr;
-        end_cap_         = *svr.end_cap_ptr;
+        end_cap_()       = *svr.end_cap_ptr;
         *svr.begin_ptr   = nullptr;
         *svr.end_ptr     = nullptr;
         *svr.end_cap_ptr = nullptr;
@@ -2518,9 +2527,9 @@ public:
 
         do_destroy();
 
-        begin_   = other.begin_;
-        end_     = other.end_;
-        end_cap_ = other.end_cap_;
+        begin_     = other.begin_;
+        end_       = other.end_;
+        end_cap_() = other.end_cap_();
 
         other.set_nullptr();
 
@@ -2790,7 +2799,7 @@ public:
 
     CIEL_NODISCARD size_type
     capacity() const noexcept {
-        return end_cap_ - begin_;
+        return end_cap_() - begin_;
     }
 
     void
@@ -2959,7 +2968,7 @@ public:
     template<class... Args>
     reference
     emplace_back(Args&&... args) {
-        if (end_ == end_cap_) {
+        if (end_ == end_cap_()) {
             split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
 
@@ -3012,14 +3021,14 @@ public:
 
         swap(begin_, other.begin_);
         swap(end_, other.end_);
-        swap(end_cap_, other.end_cap_);
+        swap(end_cap_(), other.end_cap_());
         swap(allocator_(), other.allocator_());
     }
 
     template<class... Args>
     void
     construct_one_at_end(Args&&... args) {
-        CIEL_PRECONDITION(end_ < end_cap_);
+        CIEL_PRECONDITION(end_ < end_cap_());
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
         ++end_;
@@ -3034,10 +3043,10 @@ public:
         *svr.alloc_ptr   = std::move(allocator_());
         *svr.begin_ptr   = begin_;
         *svr.end_ptr     = end_;
-        *svr.end_cap_ptr = end_cap_;
+        *svr.end_cap_ptr = end_cap_();
         begin_           = nullptr;
         end_             = nullptr;
-        end_cap_         = nullptr;
+        end_cap_()       = nullptr;
 
         return res;
     }

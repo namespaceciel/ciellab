@@ -458,6 +458,14 @@ TEST(vector_tests, give_back_to_std_vector) {
         const auto c_alloc = c.get_allocator();
         ASSERT_EQ(c_alloc.buf[0], 'x');
     }
+    {
+        ciel::vector<int> c{0, 1, 2, 3, 4};
+        std::vector<int> v{std::move(c)};
+
+        ASSERT_TRUE(c.empty());
+        ASSERT_EQ(c.capacity(), 0);
+        ASSERT_TRUE(std::equal(il.begin(), il.end(), v.begin()));
+    }
 }
 #endif
 
@@ -466,4 +474,8 @@ TEST(vector_tests, vector_bool) {
     ciel::vector<bool> v{true, false, false, true, true};
 
     ASSERT_TRUE(std::equal(il.begin(), il.end(), v.begin()));
+}
+
+TEST(vector_tests, vector_size) {
+    static_assert(sizeof(ciel::vector<int, AlignedAllocator<int, 8, 16>>) == 32, "");
 }

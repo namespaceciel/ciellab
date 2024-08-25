@@ -20,7 +20,6 @@ target_include_directories(ciellab INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 #   TODO: change to boost::atomic to support DWCAS.
 # -Wno-class-memaccess: memcpy and memmove for trivially_relocatable objects.
 # -Wno-assume: suppress false alarms.
-# -Wnrvo: warn if Named Return Value Optimization is suppressed, available in newer versions of gcc.
 target_compile_options(ciellab INTERFACE
     -Wall
     -Wextra
@@ -29,7 +28,6 @@ target_compile_options(ciellab INTERFACE
     -Wno-int-to-pointer-cast 
     -Wno-class-memaccess
     -Wno-assume
-    -Wnrvo
 )
 
 if (CIELLAB_BUILD_TESTS)
