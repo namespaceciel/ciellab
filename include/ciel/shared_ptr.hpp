@@ -66,7 +66,7 @@ public:
 
     void
     shared_count_release() noexcept {
-        const size_t off = 1;
+        constexpr size_t off = 1;
         // A decrement-release + an acquire fence is recommended by Boost's documentation:
         // https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html
         // Alternatively, an acquire-release decrement would work, but might be less efficient
@@ -81,8 +81,14 @@ public:
 
     void
     weak_count_release() noexcept {
-        const size_t off = 1;
-        if (weak_count_.fetch_sub(off, std::memory_order_release) == off) {
+        constexpr size_t off = 1;
+        // Avoid expensive atomic stores inspired by LLVM:
+        // https://github.com/llvm/llvm-project/commit/ac9eec8602786b13a2bea685257d4f25b36030ff
+        if (weak_count_.load(std::memory_order_acquire) == off) {
+            delete_control_block();
+
+        } else if (weak_count_.fetch_sub(off, std::memory_order_release) == off) {
+            std::atomic_thread_fence(std::memory_order_acquire);
             delete_control_block();
         }
     }

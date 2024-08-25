@@ -1,11 +1,11 @@
 PROJECT_SOURCE_DIR := $(abspath ./)
 BUILD_DIR ?= $(PROJECT_SOURCE_DIR)/build
-UNAME_S := $(uname -s)
+UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S), Linux)
-    NUM_JOB := $(nproc)
+    NUM_JOB := $(shell nproc)
 else ifeq ($(UNAME_S), Darwin)
-    NUM_JOB := $(sysctl -n hw.ncpu)
+    NUM_JOB := $(shell sysctl -n hw.ncpu)
 else
     NUM_JOB := 1
 endif

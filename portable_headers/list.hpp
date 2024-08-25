@@ -331,15 +331,21 @@ struct is_input_iterator<Iter, void_t<typename std::iterator_traits<Iter>::itera
     : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
 
 // is_trivially_relocatable
-template<class T>
+template<class T, class = void>
 struct is_trivially_relocatable : disjunction<std::is_empty<T>, std::is_trivially_copyable<T>> {};
 
+#ifdef _LIBCPP___TYPE_TRAITS_IS_TRIVIALLY_RELOCATABLE_H
+template<class T>
+struct is_trivially_relocatable<T, typename std::enable_if<std::__libcpp_is_trivially_relocatable<T>::value>::type>
+    : std::true_type {};
+#else
 template<class First, class Second>
 struct is_trivially_relocatable<std::pair<First, Second>>
     : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
 
 template<class... Types>
 struct is_trivially_relocatable<std::tuple<Types...>> : conjunction<is_trivially_relocatable<Types>...> {};
+#endif
 
 // useless_tag
 struct useless_tag {
