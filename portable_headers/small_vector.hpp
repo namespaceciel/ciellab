@@ -130,6 +130,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+using std::ptrdiff_t;
+using std::size_t;
+
 [[noreturn]] inline void
 unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
@@ -155,7 +158,7 @@ throw_exception(Exception&& e) {
 NAMESPACE_CIEL_END
 
 // assume
-#if CIEL_STD_VER >= 23
+#if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
 #define CIEL_ASSUME(cond) [[assume(cond)]]
 #elif defined(__clang__)
 #if __has_builtin(__builtin_assume)
@@ -2089,13 +2092,7 @@ public:
             end_     = begin_;
         }
 
-        CIEL_TRY {
-            construct_at_end(count, value);
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
-        }
+        construct_at_end(count, value);
     }
 
     explicit small_vector(const size_type count, const allocator_type& alloc = allocator_type())
@@ -2106,27 +2103,15 @@ public:
             end_     = begin_;
         }
 
-        CIEL_TRY {
-            construct_at_end(count);
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
-        }
+        construct_at_end(count);
     }
 
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
     small_vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : small_vector(alloc) {
-        CIEL_TRY {
-            while (first != last) {
-                emplace_back(*first);
-                ++first;
-            }
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
+        while (first != last) {
+            emplace_back(*first);
+            ++first;
         }
     }
 
@@ -2141,13 +2126,7 @@ public:
             end_     = begin_;
         }
 
-        CIEL_TRY {
-            construct_at_end(first, last);
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
-        }
+        construct_at_end(first, last);
     }
 
     small_vector(const small_vector& other)
@@ -2173,14 +2152,8 @@ public:
             other.point_to_buffer();
 
         } else {
-            CIEL_TRY {
-                construct_at_end(other.begin(), other.end());
-                other.clear();
-            }
-            CIEL_CATCH (...) {
-                do_destroy();
-                CIEL_THROW;
-            }
+            construct_at_end(other.begin(), other.end());
+            other.clear();
         }
     }
 
@@ -2204,14 +2177,8 @@ public:
                 end_     = begin_;
             }
 
-            CIEL_TRY {
-                construct_at_end(other.begin(), other.end());
-                other.clear();
-            }
-            CIEL_CATCH (...) {
-                do_destroy();
-                CIEL_THROW;
-            }
+            construct_at_end(other.begin(), other.end());
+            other.clear();
         }
     }
 
@@ -2233,13 +2200,7 @@ public:
                 end_     = begin_;
             }
 
-            CIEL_TRY {
-                construct_at_end(other.begin(), other.end());
-            }
-            CIEL_CATCH (...) {
-                do_destroy();
-                CIEL_THROW;
-            }
+            construct_at_end(other.begin(), other.end());
         }
     }
 

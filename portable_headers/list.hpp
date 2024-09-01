@@ -135,6 +135,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+using std::ptrdiff_t;
+using std::size_t;
+
 [[noreturn]] inline void
 unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
@@ -160,7 +163,7 @@ throw_exception(Exception&& e) {
 NAMESPACE_CIEL_END
 
 // assume
-#if CIEL_STD_VER >= 23
+#if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
 #define CIEL_ASSUME(cond) [[assume(cond)]]
 #elif defined(__clang__)
 #if __has_builtin(__builtin_assume)
@@ -1037,36 +1040,18 @@ public:
 
     list(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : list(alloc) {
-        CIEL_TRY {
-            alloc_range_construct_n(end(), count, value);
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
-        }
+        alloc_range_construct_n(end(), count, value);
     }
 
     explicit list(const size_type count, const allocator_type& alloc = allocator_type())
         : list(alloc) {
-        CIEL_TRY {
-            alloc_range_construct_n(end(), count);
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
-        }
+        alloc_range_construct_n(end(), count);
     }
 
     template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
     list(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : list(alloc) {
-        CIEL_TRY {
-            alloc_range_construct(end(), first, last);
-        }
-        CIEL_CATCH (...) {
-            do_destroy();
-            CIEL_THROW;
-        }
+        alloc_range_construct(end(), first, last);
     }
 
     list(const list& other)
@@ -1088,7 +1073,8 @@ public:
         other.size_()    = 0;
     }
 
-    list(list&& other, const allocator_type& alloc) {
+    list(list&& other, const allocator_type& alloc)
+        : list() {
         if (alloc == other.get_allocator()) {
             end_node_    = other.end_node_;
             free_node_   = other.free_node_;

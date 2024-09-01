@@ -54,7 +54,7 @@ public:
     shared_add_ref(const size_t count = 1) noexcept {
         const size_t previous = shared_count_.fetch_add(count, std::memory_order_relaxed);
 
-        CIEL_POSTCONDITION(previous != 0);
+        CIEL_POSTCONDITION(count == 0 || previous != 0);
     }
 
     void

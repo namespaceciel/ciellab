@@ -134,6 +134,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+using std::ptrdiff_t;
+using std::size_t;
+
 [[noreturn]] inline void
 unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
@@ -159,7 +162,7 @@ throw_exception(Exception&& e) {
 NAMESPACE_CIEL_END
 
 // assume
-#if CIEL_STD_VER >= 23
+#if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
 #define CIEL_ASSUME(cond) [[assume(cond)]]
 #elif defined(__clang__)
 #if __has_builtin(__builtin_assume)
@@ -728,7 +731,7 @@ public:
     shared_add_ref(const size_t count = 1) noexcept {
         const size_t previous = shared_count_.fetch_add(count, std::memory_order_relaxed);
 
-        CIEL_POSTCONDITION(previous != 0);
+        CIEL_POSTCONDITION(count == 0 || previous != 0);
     }
 
     void
