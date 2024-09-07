@@ -460,6 +460,33 @@ private:
         return begin() + pos_index;
     }
 
+    template<class... Args>
+    reference
+    emplace_back_aux(Args&&... args) {
+        if (end_ == end_cap_()) {
+            split_buffer<value_type, allocator_type&> sb(allocator_());
+            sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
+
+            sb.construct_one_at_end(std::forward<Args>(args)...);
+
+            swap_out_buffer(std::move(sb));
+
+        } else {
+            construct_one_at_end(std::forward<Args>(args)...);
+        }
+
+        return back();
+    }
+
+    template<class... Args>
+    void
+    construct_one_at_end_aux(Args&&... args) {
+        CIEL_PRECONDITION(end_ < end_cap_());
+
+        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
+        ++end_;
+    }
+
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
     struct std_vector_rob {
         static_assert(!std::is_same<value_type, bool>::value, "");
@@ -1056,6 +1083,12 @@ public:
         return emplace_impl(insert_impl_callback{this}, pos, std::forward<Args>(args)...);
     }
 
+    template<class U, class... Args>
+    iterator
+    emplace(iterator pos, std::initializer_list<U> il, Args&&... args) {
+        return emplace_impl(insert_impl_callback{this}, pos, il, std::forward<Args>(args)...);
+    }
+
     iterator
     erase(iterator pos) {
         CIEL_PRECONDITION(begin() <= pos);
@@ -1091,19 +1124,13 @@ public:
     template<class... Args>
     reference
     emplace_back(Args&&... args) {
-        if (end_ == end_cap_()) {
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
+        return emplace_back_aux(std::forward<Args>(args)...);
+    }
 
-            sb.construct_one_at_end(std::forward<Args>(args)...);
-
-            swap_out_buffer(std::move(sb));
-
-        } else {
-            construct_one_at_end(std::forward<Args>(args)...);
-        }
-
-        return back();
+    template<class U, class... Args>
+    reference
+    emplace_back(std::initializer_list<U> il, Args&&... args) {
+        return emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
     void
@@ -1151,10 +1178,13 @@ public:
     template<class... Args>
     void
     construct_one_at_end(Args&&... args) {
-        CIEL_PRECONDITION(end_ < end_cap_());
+        construct_one_at_end_aux(std::forward<Args>(args)...);
+    }
 
-        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
-        ++end_;
+    template<class U, class... Args>
+    void
+    construct_one_at_end(std::initializer_list<U> il, Args&&... args) {
+        construct_one_at_end_aux(il, std::forward<Args>(args)...);
     }
 
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)

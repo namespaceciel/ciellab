@@ -704,6 +704,13 @@ public:
     move_proxy(Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value)
         : data_(std::forward<Args>(args)...) {}
 
+    template<class U, class... Args,
+             typename std::enable_if<std::is_constructible<T, std::initializer_list<U>, Args&&...>::value, int>::type
+             = 0>
+    move_proxy(std::initializer_list<U> il,
+               Args&&... args) noexcept(std::is_nothrow_constructible<T, std::initializer_list<U>, Args&&...>::value)
+        : data_(il, std::forward<Args>(args)...) {}
+
     operator T&&() const noexcept {
         return std::move(data_);
     }

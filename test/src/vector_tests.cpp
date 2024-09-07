@@ -479,3 +479,21 @@ TEST(vector_tests, vector_bool) {
 TEST(vector_tests, vector_size) {
     static_assert(sizeof(ciel::vector<int, AlignedAllocator<int, 8, 16>>) == 32, "");
 }
+
+TEST(vector_tests, emplace_il) {
+    ciel::vector<ciel::vector<int>> v;
+
+    v.emplace_back({1, 2});
+
+    v.emplace(v.end(), {3, 4});
+
+    v.reserve(3);
+    v.construct_one_at_end({5, 6});
+
+    // v.emplace_back({}); // error: we can't deduce type for this.
+
+    ASSERT_EQ(v.size(), 3);
+    ASSERT_EQ(v[0], ciel::vector<int>({1, 2}));
+    ASSERT_EQ(v[1], ciel::vector<int>({3, 4}));
+    ASSERT_EQ(v[2], ciel::vector<int>({5, 6}));
+}
