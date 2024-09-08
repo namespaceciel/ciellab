@@ -18,23 +18,6 @@
 
 NAMESPACE_CIEL_BEGIN
 
-// Differences between std::vector and this class:
-// 1. We don't provide specialization of vector for bool.
-// 2. We don't do trivial destructions, that is to say, range destructions will be a no-op.
-// 3. Inspired by Folly's FBVector, we have a is_trivially_relocatable trait,
-//    which is defaultly equal to std::is_trivially_copyable or std::is_empty,
-//    you can partially specialize it with certain classes.
-//    We will memcpy trivially relocatable objects in scenarios such as expansions.
-// 4. Worth-moving elements shall be moved from std::initializer_list<move_proxy<T>>.
-// 5. Provide construct_one_at_end, it's essentially an emplace_back operation that
-//    does not check for sufficient space, assuming the container has enough capacity.
-//    Ensuring the container's reserve method has been called in advance to allocate memory.
-// 6. You can move construct it from a rvalue_reference std::vector,
-//    and cast it back to std::vector, except when T is bool.
-//    e.g. std::vector<int> v{0, 1, 2, 3, 4};
-//         ciel::vector<int> c{std::move(v)};
-//         v = std::move(c);
-
 template<class T, class Allocator = std::allocator<T>>
 class vector {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
