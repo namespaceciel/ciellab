@@ -123,13 +123,6 @@
 #define CIEL_THROW
 #endif
 
-// unused
-#if defined(__GNUC__) && !defined(__clang__) // simple (void) cast won't stop gcc
-#define CIEL_UNUSED(x) [](...) {}(x)
-#else
-#define CIEL_UNUSED(x) static_cast<void>(x)
-#endif
-
 // namespace ciel
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
@@ -139,12 +132,15 @@ NAMESPACE_CIEL_BEGIN
 using std::ptrdiff_t;
 using std::size_t;
 
+template<class... Args>
+void
+void_cast(Args&&...) noexcept {}
+
 [[noreturn]] inline void
 unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
     __assume(false);
-
-#else // GCC, Clang
+#else                                        // GCC, Clang
     __builtin_unreachable();
 #endif
 }
@@ -154,7 +150,6 @@ template<class Exception, typename std::enable_if<std::is_base_of<std::exception
 throw_exception(Exception&& e) {
 #ifdef CIEL_HAS_EXCEPTIONS
     throw e;
-
 #else
     std::cerr << e.what() << "\n";
     std::terminate();
@@ -162,6 +157,10 @@ throw_exception(Exception&& e) {
 }
 
 NAMESPACE_CIEL_END
+
+// unused
+// simple (void) cast won't stop gcc
+#define CIEL_UNUSED(x) ciel::void_cast(x)
 
 // assume
 #if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
@@ -443,6 +442,14 @@ struct aligned_storage {
 
 }; // aligned_storage
 
+// buffer_cast
+template<class Pointer, typename std::enable_if<std::is_pointer<Pointer>::value, int>::type = 0>
+Pointer
+buffer_cast(const void* ptr) noexcept {
+    return static_cast<Pointer>(const_cast<void*>(ptr));
+}
+
+// exchange
 template<class T, class U = T>
 T
 exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::value
@@ -532,15 +539,53 @@ struct sizeof_without_back_padding<T, 0> {
 
 }; // struct sizeof_without_back_padding<T, 0>
 
+// is_overaligned_for_new
+inline bool
+is_overaligned_for_new(const size_t alignment) noexcept {
+#ifdef __STDCPP_DEFAULT_NEW_ALIGNMENT__
+    return alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+#else
+    return alignment > alignof(std::max_align_t);
+#endif
+}
+
+// allocate
+template<class T>
+T*
+allocate(const size_t n) {
+#if CIEL_STD_VER >= 17
+    if CIEL_UNLIKELY (ciel::is_overaligned_for_new(alignof(T))) {
+        return static_cast<T*>(::operator new(sizeof(T) * n, static_cast<std::align_val_t>(alignof(T))));
+    }
+#endif
+    return static_cast<T*>(::operator new(sizeof(T) * n));
+}
+
+// deallocate
+template<class T>
+void
+deallocate(T* ptr) noexcept {
+#if CIEL_STD_VER >= 17
+    if CIEL_UNLIKELY (ciel::is_overaligned_for_new(alignof(T))) {
+        ::operator delete(ptr, static_cast<std::align_val_t>(alignof(T)));
+    }
+#endif
+    ::operator delete(ptr);
+}
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 
 NAMESPACE_CIEL_BEGIN
 
-struct default_init_tag {};
+struct default_init_t {};
 
-struct value_init_tag {};
+constexpr default_init_t default_init_tag;
+
+struct value_init_t {};
+
+constexpr value_init_t value_init_tag;
 
 template<class T, size_t Index, bool = std::is_class<T>::value && !is_final<T>::value>
 struct compressed_pair_elem {
@@ -552,9 +597,9 @@ private:
     T value_;
 
 public:
-    explicit compressed_pair_elem(default_init_tag) {}
+    explicit compressed_pair_elem(default_init_t) {}
 
-    explicit compressed_pair_elem(value_init_tag)
+    explicit compressed_pair_elem(value_init_t)
         : value_() {}
 
     template<class U, typename std::enable_if<!std::is_same<compressed_pair_elem, typename std::decay<U>::type>::value,
@@ -587,9 +632,9 @@ public:
     using value_          = T;
 
 public:
-    explicit compressed_pair_elem(default_init_tag) {}
+    explicit compressed_pair_elem(default_init_t) {}
 
-    explicit compressed_pair_elem(value_init_tag)
+    explicit compressed_pair_elem(value_init_t)
         : value_() {}
 
     template<class U, typename std::enable_if<!std::is_same<compressed_pair_elem, typename std::decay<U>::type>::value,
@@ -628,7 +673,7 @@ public:
                  std::is_default_constructible<U1>::value && std::is_default_constructible<U2>::value, int>::type
              = 0>
     explicit compressed_pair()
-        : base1(value_init_tag{}), base2(value_init_tag{}) {}
+        : base1(value_init_tag), base2(value_init_tag) {}
 
     template<class U1, class U2>
     explicit compressed_pair(U1&& u1, U2&& u2)
@@ -869,7 +914,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init_tag{}, nullptr};
+    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init_tag, nullptr};
 
     template<class, class>
     friend class split_buffer;
@@ -1931,7 +1976,7 @@ private:
     // The allocator is intentionally placed first so that when allocator_type utilizes stack buffers,
     // which provide alignment for types exceeding 8 bytes, allocator_type will also be properly aligned.
     // This arrangement may allow end_cap_ to reuse the allocator's back padding space.
-    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag{}, nullptr};
+    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag, nullptr};
 
     pointer&
     end_cap_() noexcept {

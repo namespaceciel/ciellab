@@ -44,7 +44,7 @@ private:
     // The allocator is intentionally placed first so that when allocator_type utilizes stack buffers,
     // which provide alignment for types exceeding 8 bytes, allocator_type will also be properly aligned.
     // This arrangement may allow end_cap_ to reuse the allocator's back padding space.
-    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag{}, nullptr};
+    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag, nullptr};
 
     pointer&
     end_cap_() noexcept {

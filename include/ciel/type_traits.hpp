@@ -163,6 +163,14 @@ struct aligned_storage {
 
 }; // aligned_storage
 
+// buffer_cast
+template<class Pointer, typename std::enable_if<std::is_pointer<Pointer>::value, int>::type = 0>
+Pointer
+buffer_cast(const void* ptr) noexcept {
+    return static_cast<Pointer>(const_cast<void*>(ptr));
+}
+
+// exchange
 template<class T, class U = T>
 T
 exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::value
@@ -251,6 +259,40 @@ struct sizeof_without_back_padding<T, 0> {
     static constexpr size_t value = sizeof(T);
 
 }; // struct sizeof_without_back_padding<T, 0>
+
+// is_overaligned_for_new
+inline bool
+is_overaligned_for_new(const size_t alignment) noexcept {
+#ifdef __STDCPP_DEFAULT_NEW_ALIGNMENT__
+    return alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+#else
+    return alignment > alignof(std::max_align_t);
+#endif
+}
+
+// allocate
+template<class T>
+T*
+allocate(const size_t n) {
+#if CIEL_STD_VER >= 17
+    if CIEL_UNLIKELY (ciel::is_overaligned_for_new(alignof(T))) {
+        return static_cast<T*>(::operator new(sizeof(T) * n, static_cast<std::align_val_t>(alignof(T))));
+    }
+#endif
+    return static_cast<T*>(::operator new(sizeof(T) * n));
+}
+
+// deallocate
+template<class T>
+void
+deallocate(T* ptr) noexcept {
+#if CIEL_STD_VER >= 17
+    if CIEL_UNLIKELY (ciel::is_overaligned_for_new(alignof(T))) {
+        ::operator delete(ptr, static_cast<std::align_val_t>(alignof(T)));
+    }
+#endif
+    ::operator delete(ptr);
+}
 
 NAMESPACE_CIEL_END
 

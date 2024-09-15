@@ -112,13 +112,6 @@
 #define CIEL_THROW
 #endif
 
-// unused
-#if defined(__GNUC__) && !defined(__clang__) // simple (void) cast won't stop gcc
-#define CIEL_UNUSED(x) [](...) {}(x)
-#else
-#define CIEL_UNUSED(x) static_cast<void>(x)
-#endif
-
 // namespace ciel
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
@@ -128,12 +121,15 @@ NAMESPACE_CIEL_BEGIN
 using std::ptrdiff_t;
 using std::size_t;
 
+template<class... Args>
+void
+void_cast(Args&&...) noexcept {}
+
 [[noreturn]] inline void
 unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
     __assume(false);
-
-#else // GCC, Clang
+#else                                        // GCC, Clang
     __builtin_unreachable();
 #endif
 }
@@ -143,7 +139,6 @@ template<class Exception, typename std::enable_if<std::is_base_of<std::exception
 throw_exception(Exception&& e) {
 #ifdef CIEL_HAS_EXCEPTIONS
     throw e;
-
 #else
     std::cerr << e.what() << "\n";
     std::terminate();
@@ -151,6 +146,10 @@ throw_exception(Exception&& e) {
 }
 
 NAMESPACE_CIEL_END
+
+// unused
+// simple (void) cast won't stop gcc
+#define CIEL_UNUSED(x) ciel::void_cast(x)
 
 // assume
 #if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))

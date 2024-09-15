@@ -129,6 +129,27 @@ v.emplace(v.end(), {3, 4});
 
 Since `{...}` has no type and can't be deduced to `std::initializer_list` by the compiler, the default `emplace` and `emplace_back` in `std::vector` do not support this functionality directly without providing these overloads.
 
+### function.hpp
+
+ciel::function is an enhancement of std::function that adds optimization for trivially relocatable objects.
+
+It internally contains a stack buffer whose size is equal to sizeof(void*) * 3 and whose alignment is equal to alignof(void*), which stores the callable object in the buffer only if its size and alignment do not exceed the buffer's and it's trivially relocatable; otherwise, it will be allocated on the heap.
+
+As a result, it guarantees that it is nothrow_movable and trivially_relocatable.
+
+However, under the existing framework, determining whether a type is trivially_relocatable is still quite difficult. For example, even though std::vector\<int> is trivially_relocatable in most implementations, and we can make functions aware of it through template specialization, however, for a lambda that captures std::vector\<int>, even though it is also trivially_relocatable, we cannot discover and utilize its properties.
+
+Therefore, we provide an overloaded version of the constructor that takes the first parameter as ciel::assume_trivially_relocatable_tag. This way, when size and alignment permit, we will treat callable objects as trivially_relocatable. Similarly, for assignment, we also provide an overloaded version of assign(ciel::assume_trivially_relocatable_t, F&&).
+
+```cpp
+std::vector<int> v{1, 2, 3};
+// allocated on the heap since
+// ciel::is_trivially_relocatable<decltype([v] { (void)v; })>::value == false
+ciel::function<void()> f1{[v] { (void)v; }};
+// allocated on the stack buffer
+ciel::function<void()> f2{ciel::assume_trivially_relocatable_tag, [v] { (void)v; }};
+```
+
 ### TODO: other .hpp
 
 ## Benchmark

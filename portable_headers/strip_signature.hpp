@@ -1,7 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
-#define CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
-
-#include <utility>
+#ifndef CIELLAB_INCLUDE_CIEL_STRIP_SIGNATURE_HPP_
+#define CIELLAB_INCLUDE_CIEL_STRIP_SIGNATURE_HPP_
 
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 #define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
@@ -193,53 +191,96 @@ initializer_list(initializer_list<T>) -> initializer_list<T>;
 
 NAMESPACE_CIEL_BEGIN
 
+#if CIEL_STD_VER >= 17
+
+template<class>
+struct strip_signature;
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...)> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) volatile> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const volatile> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...)&> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const&> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) volatile&> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const volatile&> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) volatile noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const volatile noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) & noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const & noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) volatile & noexcept> {
+    using type = R(Args...);
+};
+
+template<class R, class Class, class... Args>
+struct strip_signature<R (Class::*)(Args...) const volatile & noexcept> {
+    using type = R(Args...);
+};
+
 template<class F>
-class finally {
-public:
-    explicit finally(const F& f)
-        : f_(f), valid_(true) {}
+using strip_signature_t = typename strip_signature<F>::type;
 
-    explicit finally(F&& f)
-        : f_(std::move(f)), valid_(true) {}
-
-    finally(finally&& other) noexcept
-        : f_(std::move(other.f_)), valid_(other.valid_) {
-        other.valid_ = false;
-    }
-
-    ~finally() {
-        if (valid_) {
-            f_();
-        }
-    }
-
-    finally(const finally&) = delete;
-    finally&
-    operator=(const finally&)
-        = delete;
-    finally&
-    operator=(finally&&) noexcept
-        = delete;
-
-private:
-    F f_;
-    bool valid_;
-
-}; // class finally
-
-template<class F>
-finally<F>
-make_finally(F&& f) {
-    return finally<F>(std::forward<F>(f));
-}
+#endif
 
 NAMESPACE_CIEL_END
 
-// It will be "ab" without forwarding, so all variables' names will be defer___LINE__.
-// Forwarding get the real line number like defer_12.
-#define CIEL_CONCAT_(a, b) a##b
-#define CIEL_CONCAT(a, b)  CIEL_CONCAT_(a, b)
-
-#define CIEL_DEFER(x) auto CIEL_CONCAT(defer_, __LINE__) = ciel::make_finally([&] x)
-
-#endif // CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_STRIP_SIGNATURE_HPP_

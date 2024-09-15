@@ -17,6 +17,7 @@ set(SOURCES
     src/move_proxy_tests.cpp
     src/observer_ptr_tests.cpp
     src/type_traits_tests.cpp
+    src/function_tests.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
