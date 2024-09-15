@@ -1,9 +1,11 @@
 #ifndef CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
 #define CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
 
+#include <type_traits>
 #include <utility>
 
 #include <ciel/config.hpp>
+#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -17,14 +19,17 @@ public:
         : f_(std::move(f)), valid_(true) {}
 
     finally(finally&& other) noexcept
-        : f_(std::move(other.f_)), valid_(other.valid_) {
-        other.valid_ = false;
-    }
+        : f_(std::move(other.f_)), valid_(ciel::exchange(other.valid_, false)) {}
 
     ~finally() {
         if (valid_) {
             f_();
         }
+    }
+
+    void
+    release() noexcept {
+        valid_ = false;
     }
 
     finally(const finally&) = delete;
@@ -41,10 +46,10 @@ private:
 
 }; // class finally
 
-template<class F>
-finally<F>
+template<class F, class DecayF = typename std::decay<F>::type>
+CIEL_NODISCARD finally<DecayF>
 make_finally(F&& f) {
-    return finally<F>(std::forward<F>(f));
+    return finally<DecayF>(std::forward<F>(f));
 }
 
 NAMESPACE_CIEL_END
