@@ -33,12 +33,10 @@ public:
     }
 
     finally(const finally&) = delete;
-    finally&
-    operator=(const finally&)
-        = delete;
-    finally&
-    operator=(finally&&) noexcept
-        = delete;
+    // clang-format off
+    finally& operator=(const finally&) = delete;
+    finally& operator=(finally&&)      = delete;
+    // clang-format on
 
 private:
     F f_;

@@ -434,7 +434,7 @@ private:
             swap_out_buffer(std::move(sb), pos);
 
         } else if (pos == end_) { // equal to emplace_back
-            construct_one_at_end(std::forward<Args>(args)...);
+            construct_one_at_end_aux(std::forward<Args>(args)...);
 
         } else {
             cb(pos, std::forward<Args>(args)...);
@@ -455,7 +455,7 @@ private:
             swap_out_buffer(std::move(sb));
 
         } else {
-            construct_one_at_end(std::forward<Args>(args)...);
+            construct_one_at_end_aux(std::forward<Args>(args)...);
         }
 
         return back();
@@ -1147,6 +1147,13 @@ public:
         construct_at_end(count - size(), value);
     }
 
+    template<class U = vector, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    void
+    swap(vector& other) noexcept {
+        ciel::relocatable_swap(*this, other);
+    }
+
+    template<class U = vector, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap(vector& other) noexcept(alloc_traits::propagate_on_container_swap::value
                                  || alloc_traits::is_always_equal::value) {

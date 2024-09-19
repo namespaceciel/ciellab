@@ -110,10 +110,10 @@
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
 
-NAMESPACE_CIEL_BEGIN
-
 using std::ptrdiff_t;
 using std::size_t;
+
+NAMESPACE_CIEL_BEGIN
 
 template<class... Args>
 void

@@ -3,9 +3,9 @@
 directory="include/ciel"
 headers=()
 
-for file in "$directory"/*; do
-    if [[ -f "$file" ]]; then
-        headers+=("$(basename "$file")")
+for file in "${directory}"/*; do
+    if [[ -f "${file}" ]]; then
+        headers+=("$(basename "${file}")")
     fi
 done
 

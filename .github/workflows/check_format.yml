@@ -12,10 +12,8 @@ jobs:
 
       - name: install clang-format
         run: |
-            sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-            apt search clang-format
-            sudo apt install -y clang-format-18
-            sudo cp /usr/bin/clang-format-18 /usr/bin/clang-format
+            sudo bash install_clang_format.sh 20
+            sudo cp /usr/bin/clang-format-20 /usr/bin/clang-format
             clang-format --version
 
       - name: check format

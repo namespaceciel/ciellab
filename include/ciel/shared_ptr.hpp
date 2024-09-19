@@ -41,9 +41,9 @@ protected:
 
 public:
     shared_weak_count(const shared_weak_count&) = delete;
-    shared_weak_count&
-    operator=(const shared_weak_count&)
-        = delete;
+    // clang-format off
+    shared_weak_count& operator=(const shared_weak_count&) = delete;
+    // clang-format on
 
     CIEL_NODISCARD size_t
     use_count() const noexcept {

@@ -122,10 +122,10 @@
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
 
-NAMESPACE_CIEL_BEGIN
-
 using std::ptrdiff_t;
 using std::size_t;
+
+NAMESPACE_CIEL_BEGIN
 
 template<class... Args>
 void
@@ -276,6 +276,7 @@ NAMESPACE_CIEL_END
 #ifndef CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 #define CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 
+#include <cstring>
 #include <iterator>
 #include <tuple>
 #include <type_traits>
@@ -432,7 +433,7 @@ struct aligned_storage {
     static_assert(sizeof(unsigned char) == 1, "");
 
     class type {
-        alignas(alignment) unsigned char buffer_[size];
+        alignas(alignment) unsigned char buffer_[size]{};
     };
 
 }; // aligned_storage
@@ -566,6 +567,18 @@ deallocate(T* ptr) noexcept {
     }
 #endif
     ::operator delete(ptr);
+}
+
+template<class T, bool Valid = is_trivially_relocatable<T>::value>
+void
+relocatable_swap(T& lhs, T& rhs) noexcept {
+    static_assert(Valid, "T must be trivially relocatable, you can explicitly assume it.");
+
+    typename aligned_storage<sizeof(T), alignof(T)>::type buffer;
+
+    std::memcpy(&buffer, &rhs, sizeof(T));
+    std::memcpy(&rhs, &lhs, sizeof(T));
+    std::memcpy(&lhs, &buffer, sizeof(T));
 }
 
 NAMESPACE_CIEL_END
@@ -765,9 +778,9 @@ public:
         : begin_{begin}, end_alloc_{end, alloc} {}
 
     range_destroyer(const range_destroyer&) = delete;
-    range_destroyer&
-    operator=(const range_destroyer&)
-        = delete;
+    // clang-format off
+    range_destroyer& operator=(const range_destroyer&) = delete;
+    // clang-format on
 
     ~range_destroyer() {
         CIEL_PRECONDITION(begin_ <= end_());
@@ -799,9 +812,9 @@ public:
     range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;
-    range_destroyer&
-    operator=(const range_destroyer&)
-        = delete;
+    // clang-format off
+    range_destroyer& operator=(const range_destroyer&) = delete;
+    // clang-format on
 
     void
     release() noexcept {}

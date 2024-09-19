@@ -43,9 +43,9 @@ public:
         : begin_{begin}, end_alloc_{end, alloc} {}
 
     range_destroyer(const range_destroyer&) = delete;
-    range_destroyer&
-    operator=(const range_destroyer&)
-        = delete;
+    // clang-format off
+    range_destroyer& operator=(const range_destroyer&) = delete;
+    // clang-format on
 
     ~range_destroyer() {
         CIEL_PRECONDITION(begin_ <= end_());
@@ -77,9 +77,9 @@ public:
     range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
     range_destroyer(const range_destroyer&) = delete;
-    range_destroyer&
-    operator=(const range_destroyer&)
-        = delete;
+    // clang-format off
+    range_destroyer& operator=(const range_destroyer&) = delete;
+    // clang-format on
 
     void
     release() noexcept {}

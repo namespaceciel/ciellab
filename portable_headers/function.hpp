@@ -119,10 +119,10 @@
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
 
-NAMESPACE_CIEL_BEGIN
-
 using std::ptrdiff_t;
 using std::size_t;
+
+NAMESPACE_CIEL_BEGIN
 
 template<class... Args>
 void
@@ -296,6 +296,7 @@ NAMESPACE_CIEL_END
 #ifndef CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 #define CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
 
+#include <cstring>
 #include <iterator>
 #include <tuple>
 #include <type_traits>
@@ -452,7 +453,7 @@ struct aligned_storage {
     static_assert(sizeof(unsigned char) == 1, "");
 
     class type {
-        alignas(alignment) unsigned char buffer_[size];
+        alignas(alignment) unsigned char buffer_[size]{};
     };
 
 }; // aligned_storage
@@ -588,6 +589,18 @@ deallocate(T* ptr) noexcept {
     ::operator delete(ptr);
 }
 
+template<class T, bool Valid = is_trivially_relocatable<T>::value>
+void
+relocatable_swap(T& lhs, T& rhs) noexcept {
+    static_assert(Valid, "T must be trivially relocatable, you can explicitly assume it.");
+
+    typename aligned_storage<sizeof(T), alignof(T)>::type buffer;
+
+    std::memcpy(&buffer, &rhs, sizeof(T));
+    std::memcpy(&rhs, &lhs, sizeof(T));
+    std::memcpy(&lhs, &buffer, sizeof(T));
+}
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
@@ -607,12 +620,10 @@ class func_base<R(Args...)> {
 public:
     func_base(const func_base&) = delete;
     func_base(func_base&&)      = delete;
-    func_base&
-    operator=(const func_base&)
-        = delete;
-    func_base&
-    operator=(func_base&&)
-        = delete;
+    // clang-format off
+    func_base& operator=(const func_base&) = delete;
+    func_base& operator=(func_base&&)      = delete;
+    // clang-format on
 
 protected:
     func_base() noexcept = default;
@@ -653,12 +664,10 @@ class func<F, R(Args...)> final : public func_base<R(Args...)> {
 public:
     func(const func&) = delete;
     func(func&&)      = delete;
-    func&
-    operator=(const func&)
-        = delete;
-    func&
-    operator=(func&&)
-        = delete;
+    // clang-format off
+    func& operator=(const func&) = delete;
+    func& operator=(func&&)      = delete;
+    // clang-format on
 
 private:
     F f_;
@@ -819,7 +828,7 @@ private:
 
     template<class Ret, class Class>
     CIEL_NODISCARD static bool
-    not_null(Ret Class::*ptr) noexcept {
+    not_null(Ret Class::* ptr) noexcept {
         return ptr;
     }
 
@@ -1021,11 +1030,7 @@ public:
 
     void
     swap(function& other) noexcept {
-        typename aligned_storage<sizeof(function), alignof(function)>::type buffer;
-
-        std::memcpy(&buffer, this, sizeof(function));
-        std::memcpy(this, &other, sizeof(function));
-        std::memcpy(&other, &buffer, sizeof(function));
+        ciel::relocatable_swap(*this, other);
     }
 
     CIEL_NODISCARD explicit

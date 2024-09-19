@@ -88,9 +88,9 @@ public:
     }
 
     atomic_shared_ptr(const atomic_shared_ptr&) = delete;
-    atomic_shared_ptr&
-    operator=(const atomic_shared_ptr&)
-        = delete;
+    // clang-format off
+    atomic_shared_ptr& operator=(const atomic_shared_ptr&) = delete;
+    // clang-format on
 
     ~atomic_shared_ptr() {
         store(nullptr);

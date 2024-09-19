@@ -18,6 +18,7 @@ set(SOURCES
     src/observer_ptr_tests.cpp
     src/type_traits_tests.cpp
     src/function_tests.cpp
+    src/static_vector_tests.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
