@@ -9,12 +9,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
-#define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
-
-#include <tuple>
-#include <type_traits>
-
 #ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 #define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
 
@@ -202,6 +196,53 @@ initializer_list(initializer_list<T>) -> initializer_list<T>;
 #endif
 
 #endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#define CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+
+#include <type_traits>
+#include <utility>
+
+
+NAMESPACE_CIEL_BEGIN
+
+template<class T>
+class move_proxy {
+public:
+    template<class... Args, typename std::enable_if<std::is_constructible<T, Args&&...>::value, int>::type = 0>
+    move_proxy(Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value)
+        : data_(std::forward<Args>(args)...) {}
+
+    template<class U, class... Args,
+             typename std::enable_if<std::is_constructible<T, std::initializer_list<U>, Args&&...>::value, int>::type
+             = 0>
+    move_proxy(std::initializer_list<U> il,
+               Args&&... args) noexcept(std::is_nothrow_constructible<T, std::initializer_list<U>, Args&&...>::value)
+        : data_(il, std::forward<Args>(args)...) {}
+
+    operator T&&() const noexcept {
+        return std::move(data_);
+    }
+
+private:
+    mutable T data_;
+
+}; // class move_proxy
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+#define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+
+#include <memory>
+#include <type_traits>
+
+#ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+#define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+
+#include <tuple>
+#include <type_traits>
+
 #ifndef CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
 #define CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
 
@@ -368,6 +409,11 @@ using is_final = std::is_final<T>;
 template<class T>
 struct is_final : std::integral_constant<bool, __is_final(T)> {};
 #else
+// If is_final is not available, it may be better to manually write explicit template specializations.
+// e.g.
+// template<>
+// struct is_final<NotFinalObject> : std::false_type {};
+//
 template<class T>
 struct is_final;
 #endif
@@ -502,6 +548,7 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
 // sizeof_without_back_padding
 //
 // Derived can reuse Base's back padding.
+// e.g.
 // struct Base {
 //     alignas(8) unsigned char buf[1]{};
 // };
@@ -746,47 +793,6 @@ swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs) noe
 } // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
-#ifndef CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-#define CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-
-#include <type_traits>
-#include <utility>
-
-
-NAMESPACE_CIEL_BEGIN
-
-template<class T>
-class move_proxy {
-public:
-    template<class... Args, typename std::enable_if<std::is_constructible<T, Args&&...>::value, int>::type = 0>
-    move_proxy(Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value)
-        : data_(std::forward<Args>(args)...) {}
-
-    template<class U, class... Args,
-             typename std::enable_if<std::is_constructible<T, std::initializer_list<U>, Args&&...>::value, int>::type
-             = 0>
-    move_proxy(std::initializer_list<U> il,
-               Args&&... args) noexcept(std::is_nothrow_constructible<T, std::initializer_list<U>, Args&&...>::value)
-        : data_(il, std::forward<Args>(args)...) {}
-
-    operator T&&() const noexcept {
-        return std::move(data_);
-    }
-
-private:
-    mutable T data_;
-
-}; // class move_proxy
-
-NAMESPACE_CIEL_END
-
-#endif // CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-#ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
-#define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
-
-#include <memory>
-#include <type_traits>
-
 
 NAMESPACE_CIEL_BEGIN
 
@@ -892,6 +898,7 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
+    // It's not appropriate to optimize the type of the size_ variable, as it would damage its relocatable property.
     size_type size_{0};
     typename aligned_storage<sizeof(T), alignof(T)>::type buffer_[Capacity];
 

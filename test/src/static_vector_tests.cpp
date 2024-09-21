@@ -140,7 +140,13 @@ TEST(static_vector_tests, resize) {
 }
 
 TEST(static_vector_tests, vector_size) {
-    static_assert(sizeof(ciel::static_vector<int, 1>) == 16, "");
+    static_assert(sizeof(ciel::static_vector<uint32_t, 1>) == 16, "");
+    static_assert(sizeof(ciel::static_vector<uint32_t, 2>) == 16, "");
+    static_assert(sizeof(ciel::static_vector<uint32_t, 3>) == 24, "");
+
+    static_assert(sizeof(ciel::static_vector<uint8_t, 1>) == 16, "");
+    static_assert(sizeof(ciel::static_vector<uint8_t, 8>) == 16, "");
+    static_assert(sizeof(ciel::static_vector<uint8_t, 9>) == 24, "");
 }
 
 TEST(static_vector_tests, emplace_il) {

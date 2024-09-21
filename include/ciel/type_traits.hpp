@@ -89,6 +89,11 @@ using is_final = std::is_final<T>;
 template<class T>
 struct is_final : std::integral_constant<bool, __is_final(T)> {};
 #else
+// If is_final is not available, it may be better to manually write explicit template specializations.
+// e.g.
+// template<>
+// struct is_final<NotFinalObject> : std::false_type {};
+//
 template<class T>
 struct is_final;
 #endif
@@ -223,6 +228,7 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
 // sizeof_without_back_padding
 //
 // Derived can reuse Base's back padding.
+// e.g.
 // struct Base {
 //     alignas(8) unsigned char buf[1]{};
 // };

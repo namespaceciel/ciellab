@@ -9,7 +9,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 #include <ciel/move_proxy.hpp>
 #include <ciel/range_destroyer.hpp>
@@ -36,6 +35,7 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
+    // It's not appropriate to optimize the type of the size_ variable, as it would damage its relocatable property.
     size_type size_{0};
     typename aligned_storage<sizeof(T), alignof(T)>::type buffer_[Capacity];
 
