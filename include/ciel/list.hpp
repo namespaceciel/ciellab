@@ -426,7 +426,6 @@ public:
 
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -808,15 +807,10 @@ operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-// So that we can test more efficiently
 template<class T, class Alloc>
 CIEL_NODISCARD bool
-operator==(const list<T, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+operator!=(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {
+    return !(lhs == rhs);
 }
 
 #if CIEL_STD_VER >= 17

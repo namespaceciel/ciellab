@@ -453,7 +453,6 @@ public:
 
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -559,7 +558,7 @@ public:
 
         CIEL_POSTCONDITION(size() <= count);
 
-        Iter mid = first + size();
+        Iter mid = std::next(first, size());
 
         std::copy(first, mid, begin_);
         // if mid < last
@@ -1069,15 +1068,10 @@ operator==(const small_vector<T, S1, Alloc>& lhs, const small_vector<T, S2, Allo
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-// So that we can test more efficiently
-template<class T, size_t S, class Alloc>
+template<class T, size_t S1, size_t S2, class Alloc>
 CIEL_NODISCARD bool
-operator==(const small_vector<T, S, Alloc>& lhs, std::initializer_list<T> rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+operator!=(const small_vector<T, S1, Alloc>& lhs, const small_vector<T, S2, Alloc>& rhs) noexcept {
+    return !(lhs == rhs);
 }
 
 template<class T, size_t S, class Alloc, class U>

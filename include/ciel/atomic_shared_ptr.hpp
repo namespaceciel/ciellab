@@ -21,12 +21,12 @@ private:
             CIEL_PRECONDITION((uintptr_t)other < (1ULL << 48));
         }
 
-        friend bool
+        CIEL_NODISCARD friend bool
         operator==(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
             return lhs.control_block_ == rhs.control_block_ && lhs.local_count_ == rhs.local_count_;
         }
 
-        friend bool
+        CIEL_NODISCARD friend bool
         operator!=(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
             return !(lhs == rhs);
         }
@@ -36,7 +36,7 @@ private:
     // TODO: local pointer?
     mutable std::atomic<counted_control_block> counted_control_block_;
 
-    counted_control_block
+    CIEL_NODISCARD counted_control_block
     increment_local_ref_count() const noexcept {
         counted_control_block old_control_block = counted_control_block_;
         counted_control_block new_control_block{nullptr};

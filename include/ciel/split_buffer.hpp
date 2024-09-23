@@ -554,7 +554,6 @@ public:
 
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -657,7 +656,7 @@ public:
 
         CIEL_POSTCONDITION(size() <= count);
 
-        Iter mid = first + size();
+        Iter mid = std::next(first, size());
 
         std::copy(first, mid, begin_);
         // if mid < last
@@ -1070,6 +1069,12 @@ operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs)
     }
 
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, class Alloc>
+CIEL_NODISCARD bool
+operator!=(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
+    return !(lhs == rhs);
 }
 
 #if CIEL_STD_VER >= 17

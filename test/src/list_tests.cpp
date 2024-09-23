@@ -92,14 +92,14 @@ TEST(list_tests, constructors_and_destructors) {
 TEST(list_tests, assign) {
     ciel::list<int> l1{1, 2, 3};
     l1.assign(5, 123);
-    ASSERT_EQ(l1, std::initializer_list<int>({123, 123, 123, 123, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({123, 123, 123, 123, 123}));
 
     l1.assign({432, 53, 1, 67});
-    ASSERT_EQ(l1, std::initializer_list<int>({432, 53, 1, 67}));
+    ASSERT_EQ(l1, ciel::list<int>({432, 53, 1, 67}));
 
     ciel::list<int> l2{654, 433, 21, 987, 655};
     l1.assign(l2.begin(), l2.end());
-    ASSERT_EQ(l1, std::initializer_list<int>({654, 433, 21, 987, 655}));
+    ASSERT_EQ(l1, ciel::list<int>({654, 433, 21, 987, 655}));
 }
 
 TEST(list_tests, insertions) {
@@ -110,44 +110,43 @@ TEST(list_tests, insertions) {
     l1.emplace_back(5);
     l1.push_front(1);
     l1.emplace_front(0);
-    ASSERT_EQ(l1, std::initializer_list<int>({0, 1, 2, 3, 4, 5}));
+    ASSERT_EQ(l1, ciel::list<int>({0, 1, 2, 3, 4, 5}));
 
     l1.insert(l1.begin().next(), 123);
     l1.insert(l1.end(), 123);
-    ASSERT_EQ(l1, std::initializer_list<int>({0, 123, 1, 2, 3, 4, 5, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({0, 123, 1, 2, 3, 4, 5, 123}));
 
     l1.insert(l1.end().prev(), 3, 666);
-    ASSERT_EQ(l1, std::initializer_list<int>({0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     l1.insert(l1.begin(), {11, 22, 33});
-    ASSERT_EQ(l1, std::initializer_list<int>({11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     ciel::list<int> l2{98, 87, 76};
     l1.insert(l1.begin(), l2.begin(), l2.end());
-    ASSERT_EQ(l1, std::initializer_list<int>({98, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({98, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     l1.emplace(l1.begin().next(), 87654);
-    ASSERT_EQ(l1,
-              std::initializer_list<int>({98, 87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({98, 87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     l1.erase(l1.begin());
-    ASSERT_EQ(l1, std::initializer_list<int>({87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({87654, 87, 76, 11, 22, 33, 0, 123, 1, 2, 3, 4, 5, 666, 666, 666, 123}));
 
     l1.erase(l1.begin(), l1.end().prev());
-    ASSERT_EQ(l1, std::initializer_list<int>({123}));
+    ASSERT_EQ(l1, ciel::list<int>({123}));
 
     l1.resize(5);
-    ASSERT_EQ(l1, std::initializer_list<int>({123, 0, 0, 0, 0}));
+    ASSERT_EQ(l1, ciel::list<int>({123, 0, 0, 0, 0}));
 
     l1.resize(3);
-    ASSERT_EQ(l1, std::initializer_list<int>({123, 0, 0}));
+    ASSERT_EQ(l1, ciel::list<int>({123, 0, 0}));
 
     l1.resize(6, 123);
-    ASSERT_EQ(l1, std::initializer_list<int>({123, 0, 0, 123, 123, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({123, 0, 0, 123, 123, 123}));
 
     l1.pop_back();
     l1.pop_front();
-    ASSERT_EQ(l1, std::initializer_list<int>({0, 0, 123, 123}));
+    ASSERT_EQ(l1, ciel::list<int>({0, 0, 123, 123}));
 }
 
 TEST(list_tests, swap) {
@@ -155,6 +154,6 @@ TEST(list_tests, swap) {
     ciel::list<int> l2{6, 7, 8, 9, 6, 4, 3};
 
     std::swap(l1, l2);
-    ASSERT_EQ(l1, std::initializer_list<int>({6, 7, 8, 9, 6, 4, 3}));
-    ASSERT_EQ(l2, std::initializer_list<int>({4, 3, 2, 1}));
+    ASSERT_EQ(l1, ciel::list<int>({6, 7, 8, 9, 6, 4, 3}));
+    ASSERT_EQ(l2, ciel::list<int>({4, 3, 2, 1}));
 }

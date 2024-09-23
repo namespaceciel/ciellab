@@ -616,15 +616,46 @@ public:
 #endif
     }
 
-    friend bool
-    operator==(const shared_ptr& lhs, const shared_ptr& rhs) noexcept {
-        return lhs.get() == rhs.get();
-    }
-
 }; // class shared_ptr
 
 template<class T>
 struct is_trivially_relocatable<shared_ptr<T>> : std::true_type {};
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator==(const shared_ptr<T>& lhs, const shared_ptr<U>& rhs) noexcept {
+    return lhs.get() == rhs.get();
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator!=(const shared_ptr<T>& lhs, const shared_ptr<U>& rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+template<class T>
+CIEL_NODISCARD bool
+operator==(const shared_ptr<T>& lhs, std::nullptr_t) noexcept {
+    return !lhs;
+}
+
+template<class T>
+CIEL_NODISCARD bool
+operator==(std::nullptr_t, const shared_ptr<T>& rhs) noexcept {
+    return !rhs;
+}
+
+template<class T>
+CIEL_NODISCARD bool
+operator!=(const shared_ptr<T>& lhs, std::nullptr_t) noexcept {
+    return static_cast<bool>(lhs);
+}
+
+template<class T>
+CIEL_NODISCARD bool
+operator!=(std::nullptr_t, const shared_ptr<T>& rhs) noexcept {
+    return static_cast<bool>(rhs);
+}
 
 template<class Deleter, class T>
 CIEL_NODISCARD Deleter*

@@ -638,7 +638,6 @@ public:
 
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -728,7 +727,7 @@ public:
 
         CIEL_POSTCONDITION(size() <= count);
 
-        Iter mid = first + size();
+        Iter mid = std::next(first, size());
 
         std::copy(first, mid, begin_);
         // if mid < last
@@ -1208,6 +1207,12 @@ operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
     }
 
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, class Alloc>
+CIEL_NODISCARD bool
+operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
+    return !(lhs == rhs);
 }
 
 template<class T, class Alloc, class U>

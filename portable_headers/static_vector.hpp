@@ -491,14 +491,14 @@ struct aligned_storage {
 
 // buffer_cast
 template<class Pointer, typename std::enable_if<std::is_pointer<Pointer>::value, int>::type = 0>
-Pointer
+CIEL_NODISCARD Pointer
 buffer_cast(const void* ptr) noexcept {
     return static_cast<Pointer>(const_cast<void*>(ptr));
 }
 
 // exchange
 template<class T, class U = T>
-T
+CIEL_NODISCARD T
 exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::value
                                          && std::is_nothrow_assignable<T&, U>::value) {
     T old_value = std::move(obj);
@@ -507,7 +507,7 @@ exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::
 }
 
 // Is a pointer aligned?
-inline bool
+CIEL_NODISCARD inline bool
 is_aligned(void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
     CIEL_PRECONDITION(alignment != 0);
@@ -516,7 +516,7 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
 }
 
 // Align upwards
-inline uintptr_t
+CIEL_NODISCARD inline uintptr_t
 align_up(uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(alignment != 0);
 
@@ -531,7 +531,7 @@ align_up(uintptr_t sz, const size_t alignment) noexcept {
 }
 
 // Align downwards
-inline uintptr_t
+CIEL_NODISCARD inline uintptr_t
 align_down(uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(alignment != 0);
 
@@ -588,7 +588,7 @@ struct sizeof_without_back_padding<T, 0> {
 }; // struct sizeof_without_back_padding<T, 0>
 
 // is_overaligned_for_new
-inline bool
+CIEL_NODISCARD inline bool
 is_overaligned_for_new(const size_t alignment) noexcept {
 #ifdef __STDCPP_DEFAULT_NEW_ALIGNMENT__
     return alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
@@ -599,7 +599,7 @@ is_overaligned_for_new(const size_t alignment) noexcept {
 
 // allocate
 template<class T>
-T*
+CIEL_NODISCARD T*
 allocate(const size_t n) {
 #if CIEL_STD_VER >= 17
     if CIEL_UNLIKELY (ciel::is_overaligned_for_new(alignof(T))) {
@@ -1089,7 +1089,6 @@ public:
 
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -1098,7 +1097,6 @@ public:
     operator=(const static_vector<value_type, OtherCapacity>& other) {
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -1183,7 +1181,7 @@ public:
 
         CIEL_POSTCONDITION(size() <= count);
 
-        Iter mid = first + size();
+        Iter mid = std::next(first, size());
 
         std::copy(first, mid, begin_());
         // if mid < last
@@ -1465,6 +1463,12 @@ operator==(const static_vector<T, Capacity1>& lhs, const static_vector<T, Capaci
     }
 
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, size_t Capacity1, size_t Capacity2>
+CIEL_NODISCARD bool
+operator!=(const static_vector<T, Capacity1>& lhs, const static_vector<T, Capacity2>& rhs) noexcept {
+    return !(lhs == rhs);
 }
 
 NAMESPACE_CIEL_END

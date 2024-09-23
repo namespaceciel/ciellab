@@ -226,7 +226,6 @@ public:
 
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -235,7 +234,6 @@ public:
     operator=(const static_vector<value_type, OtherCapacity>& other) {
         assign(other.begin(), other.end());
 
-        CIEL_POSTCONDITION(*this == other);
         return *this;
     }
 
@@ -320,7 +318,7 @@ public:
 
         CIEL_POSTCONDITION(size() <= count);
 
-        Iter mid = first + size();
+        Iter mid = std::next(first, size());
 
         std::copy(first, mid, begin_());
         // if mid < last
@@ -602,6 +600,12 @@ operator==(const static_vector<T, Capacity1>& lhs, const static_vector<T, Capaci
     }
 
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, size_t Capacity1, size_t Capacity2>
+CIEL_NODISCARD bool
+operator!=(const static_vector<T, Capacity1>& lhs, const static_vector<T, Capacity2>& rhs) noexcept {
+    return !(lhs == rhs);
 }
 
 NAMESPACE_CIEL_END
