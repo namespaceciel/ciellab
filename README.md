@@ -6,9 +6,7 @@ This library is header-only and requires at least C++11. It's only guaranteed to
 
 ## Installation
 
-You can either directly copy the header files from the [_portable_headers_](./portable_headers) directory for immediate use.
-
-**Alternatively**, you can download the entire repository into your project directory, such as a _third_party_ folder. Then, add the following lines to your _CMakeLists.txt_:
+Download the entire repository into your project directory, such as a _third_party_ folder. Then, add the following lines to your _CMakeLists.txt_:
 
 ```cmake
 target_link_libraries(${PROJECT_NAME} ciellab)
