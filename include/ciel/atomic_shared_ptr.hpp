@@ -26,11 +26,6 @@ private:
             return lhs.control_block_ == rhs.control_block_ && lhs.local_count_ == rhs.local_count_;
         }
 
-        CIEL_NODISCARD friend bool
-        operator!=(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
-            return !(lhs == rhs);
-        }
-
     }; // struct counted_control_block
 
     // TODO: local pointer?

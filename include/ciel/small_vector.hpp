@@ -862,7 +862,7 @@ public:
         return begin() + pos_index;
     }
 
-    // We construct all at the end at first, then rotate them to the right place
+    // We construct all at the end at first, then rotate them to the right place.
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
     iterator
     insert(iterator pos, Iter first, Iter last) {
@@ -1054,18 +1054,6 @@ public:
 
 template<class T, size_t BaseCapacity, class Allocator>
 struct is_trivially_relocatable<small_vector<T, BaseCapacity, Allocator>> : std::false_type {};
-
-template<class T, size_t S1, size_t S2, class Alloc>
-CIEL_NODISCARD bool
-operator==(const small_vector<T, S1, Alloc>& lhs, const small_vector<T, S2, Alloc>& rhs) noexcept {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template<class T, size_t S1, size_t S2, class Alloc>
-CIEL_NODISCARD bool
-operator!=(const small_vector<T, S1, Alloc>& lhs, const small_vector<T, S2, Alloc>& rhs) noexcept {
-    return !(lhs == rhs);
-}
 
 template<class T, size_t S, class Alloc, class U>
 typename small_vector<T, S, Alloc>::size_type

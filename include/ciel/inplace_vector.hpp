@@ -592,18 +592,6 @@ public:
 template<class T, size_t Capacity>
 struct is_trivially_relocatable<inplace_vector<T, Capacity, true>> : std::true_type {};
 
-template<class T, size_t Capacity1, size_t Capacity2>
-CIEL_NODISCARD bool
-operator==(const inplace_vector<T, Capacity1>& lhs, const inplace_vector<T, Capacity2>& rhs) noexcept {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template<class T, size_t Capacity1, size_t Capacity2>
-CIEL_NODISCARD bool
-operator!=(const inplace_vector<T, Capacity1>& lhs, const inplace_vector<T, Capacity2>& rhs) noexcept {
-    return !(lhs == rhs);
-}
-
 NAMESPACE_CIEL_END
 
 namespace std {

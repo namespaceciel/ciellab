@@ -43,15 +43,15 @@ private:
     pointer end_{nullptr};
     // The allocator is intentionally placed first so that when allocator_type utilizes stack buffers,
     // which provide alignment for types exceeding 8 bytes, allocator_type will also be properly aligned.
-    // This arrangement may allow end_cap_ to reuse the allocator's back padding space.
+    // This arrangement may allow end_cap_ to reuse the allocator's tail padding space.
     compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag, nullptr};
 
-    pointer&
+    CIEL_NODISCARD pointer&
     end_cap_() noexcept {
         return end_cap_alloc_.second();
     }
 
-    const pointer&
+    CIEL_NODISCARD const pointer&
     end_cap_() const noexcept {
         return end_cap_alloc_.second();
     }
@@ -66,7 +66,7 @@ private:
         return end_cap_alloc_.first();
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     recommend_cap(const size_type new_size) const {
         CIEL_PRECONDITION(new_size > 0);
 
@@ -173,11 +173,19 @@ private:
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
             for (pointer p = pos - 1; p >= begin_; --p) {
+#ifdef CIEL_HAS_EXCEPTIONS
+                sb.unchecked_emplace_front(std::move_if_noexcept(*p));
+#else
                 sb.unchecked_emplace_front(std::move(*p));
+#endif
             }
 
             for (pointer p = pos; p < end_; ++p) {
+#ifdef CIEL_HAS_EXCEPTIONS
+                sb.unchecked_emplace_back(std::move_if_noexcept(*p));
+#else
                 sb.unchecked_emplace_back(std::move(*p));
+#endif
             }
 
             clear();
@@ -490,7 +498,7 @@ private:
 #elif defined(_GLIBCXX_VECTOR)
             : begin_ptr(is_ebo_optimized ? (pointer*)(&other)
                                          : (pointer*)ciel::align_up(
-                                               (uintptr_t)(&other) + sizeof_without_back_padding<allocator_type>::value,
+                                               (uintptr_t)(&other) + sizeof_without_tail_padding<allocator_type>::value,
                                                alignof(pointer))),
               end_ptr(begin_ptr + 1),
               end_cap_ptr(end_ptr + 1),
@@ -990,7 +998,7 @@ public:
         return begin() + pos_index;
     }
 
-    // We construct all at the end at first, then rotate them to the right place
+    // We construct all at the end at first, then rotate them to the right place.
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
     iterator
     insert(iterator pos, Iter first, Iter last) {
@@ -1173,6 +1181,39 @@ public:
         unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    void
+    assign_range(R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            assign(rg.begin(), rg.end());
+
+        } else {
+            assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    void
+    append_range(R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            construct_at_end(rg.begin(), rg.end());
+
+        } else {
+            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    iterator
+    insert_range(iterator pos, R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            return insert(pos, rg.begin(), rg.end());
+
+        } else {
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
     template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>
     operator std::vector<value_type, allocator_type>() && noexcept {
@@ -1195,18 +1236,6 @@ public:
 
 template<class T, class Allocator>
 struct is_trivially_relocatable<vector<T, Allocator>> : is_trivially_relocatable<Allocator> {};
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
-    return !(lhs == rhs);
-}
 
 template<class T, class Alloc, class U>
 typename vector<T, Alloc>::size_type

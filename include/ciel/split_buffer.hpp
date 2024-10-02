@@ -12,6 +12,7 @@
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 #include <ciel/move_proxy.hpp>
+#include <ciel/range_destroyer.hpp>
 #include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
@@ -20,11 +21,13 @@ NAMESPACE_CIEL_BEGIN
 // When std::vector inserts beyond its capacity, it defines a temp split_buffer to store insertions
 // and push vector's elements into two sides, and swap out at last,
 // so that it can keep basic exception safety.
-// We complete its functionality(except for insert and erase) so that it can be used as a normal container.
+// We complete its functionality so that it can be used as a normal container.
 // When pushing elements and there is no space this side, we try to shift to other side if there is plenty of space,
 // or just expand.
 // When it comes to expansion, we try to move old elements to the middle of new space
 // and leave some free space at both sides.
+
+// TODO: insert and erase
 
 template<class, class>
 class vector;
@@ -80,12 +83,12 @@ private:
         end_       = begin_;
     }
 
-    pointer&
+    CIEL_NODISCARD pointer&
     end_cap_() noexcept {
         return end_cap_alloc_.second();
     }
 
-    const pointer&
+    CIEL_NODISCARD const pointer&
     end_cap_() const noexcept {
         return end_cap_alloc_.second();
     }
@@ -100,7 +103,7 @@ private:
         return end_cap_alloc_.first();
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     recommend_cap(const size_type new_size) const {
         CIEL_PRECONDITION(new_size > 0);
 
@@ -241,20 +244,21 @@ private:
         sb.set_nullptr();
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     front_spare() const noexcept {
         CIEL_PRECONDITION(begin_cap_ <= begin_);
 
         return begin_ - begin_cap_;
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     back_spare() const noexcept {
         CIEL_PRECONDITION(end_ <= end_cap_());
 
         return end_cap_() - end_;
     }
 
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
     left_shift_n(const size_type n) noexcept {
@@ -265,7 +269,7 @@ private:
         end_ -= n;
     }
 
-    // Note that this will invalidate iterators
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
     left_shift_n(const size_type n) noexcept {
@@ -275,21 +279,24 @@ private:
 
         pointer new_begin = begin_ - n;
         pointer new_end   = new_begin;
+        range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
-
-            // ----------
+            // clang-format off
+            //         ----------
             //
             // ----------
             // |      | |       |
             // placement new
-            // move assign
-            //   destroy
+            //    move assign
+            //           destroy
+            // clang-format on
 
             size_type i = 0;
             for (; i < n; ++i) {
                 alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
                 ++new_end;
+                rd.advance_forward();
             }
 
             for (; i < old_size; ++i) {
@@ -301,25 +308,30 @@ private:
             begin_ = new_begin;
 
         } else { // size placement new, size destroy
-
-            // ----------
+            // clang-format off
+            //               ----------
             //
             // ----------
             // |        |    |        |
             // placement new
-            //  destroy
+            //                 destroy
+            // clang-format on
 
             for (size_type i = 0; i < old_size; ++i) {
                 alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
                 ++new_end;
+                rd.advance_forward();
             }
 
             alloc_range_destroy(begin_, end_);
             begin_ = new_begin;
             end_   = new_end;
         }
+
+        rd.release();
     }
 
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
     right_shift_n(const size_type n) noexcept {
@@ -330,7 +342,7 @@ private:
         end_ += n;
     }
 
-    // Note that this will invalidate iterators
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
     right_shift_n(const size_type n) noexcept {
@@ -340,20 +352,23 @@ private:
 
         pointer new_end   = end_ + n;
         pointer new_begin = new_end;
+        range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
-
+            // clang-format off
             // ----------
             //
             //         ----------
             // |       | |      |
-            //        placement new
+            //             placement new
             //     move assign
-            // destroy
+            //  destroy
+            // clang-format on
 
             size_type i = 1;
             for (; i <= n; ++i) {
                 alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
+                rd.advance_backward();
             }
 
             for (; i <= old_size; ++i) {
@@ -365,22 +380,26 @@ private:
             end_   = new_end;
 
         } else { // size placement new, size destroy
-
+            // clang-format off
             // ----------
             //
             //               ----------
             // |        |    |        |
             //              placement new
             //  destroy
+            // clang-format on
 
             for (size_type i = 1; i <= old_size; ++i) {
                 alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
+                rd.advance_backward();
             }
 
             alloc_range_destroy(begin_, end_);
             begin_ = new_begin;
             end_   = new_end;
         }
+
+        rd.release();
     }
 
     void
@@ -1064,7 +1083,16 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    template<class A = Allocator, typename std::enable_if<!std::is_reference<A>::value, int>::type = 0>
+    template<class A = Allocator, class U = split_buffer,
+             typename std::enable_if<!std::is_reference<A>::value && is_trivially_relocatable<U>::value, int>::type = 0>
+    void
+    swap(split_buffer& other) noexcept {
+        ciel::relocatable_swap(*this, other);
+    }
+
+    template<class A = Allocator, class U = split_buffer,
+             typename std::enable_if<!std::is_reference<A>::value && !is_trivially_relocatable<U>::value, int>::type
+             = 0>
     void
     swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value
                                        || alloc_traits::is_always_equal::value) {
@@ -1101,22 +1129,43 @@ public:
         unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
     }
 
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    void
+    assign_range(R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            assign(rg.begin(), rg.end());
+
+        } else {
+            assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    void
+    append_range(R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            construct_at_end(rg.begin(), rg.end());
+
+        } else {
+            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    iterator
+    insert_range(iterator pos, R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            return insert(pos, rg.begin(), rg.end());
+
+        } else {
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
 }; // class split_buffer
 
 template<class T, class Allocator>
 struct is_trivially_relocatable<split_buffer<T, Allocator>> : is_trivially_relocatable<Allocator> {};
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator!=(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
-    return !(lhs == rhs);
-}
 
 #if CIEL_STD_VER >= 17
 

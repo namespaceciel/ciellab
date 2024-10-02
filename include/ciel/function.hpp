@@ -513,12 +513,6 @@ operator==(const function<R(ArgTypes...)>& f, std::nullptr_t) noexcept {
     return !f;
 }
 
-template<class R, class... ArgTypes>
-CIEL_NODISCARD bool
-operator!=(const function<R(ArgTypes...)>& f, std::nullptr_t) noexcept {
-    return static_cast<bool>(f);
-}
-
 #if CIEL_STD_VER >= 17
 
 template<class R, class... Args>

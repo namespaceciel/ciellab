@@ -151,13 +151,6 @@ operator==(const list_iterator<T, Pointer1, Reference1>& lhs,
     return lhs.base() == rhs.base();
 }
 
-template<class T, class Pointer1, class Pointer2, class Reference1, class Reference2>
-CIEL_NODISCARD bool
-operator!=(const list_iterator<T, Pointer1, Reference1>& lhs,
-           const list_iterator<T, Pointer2, Reference2>& rhs) noexcept {
-    return !(lhs == rhs);
-}
-
 template<class T, class Allocator = std::allocator<T>>
 class list {
 public:
@@ -796,18 +789,6 @@ public:
 
 template<class T, class Allocator>
 struct is_trivially_relocatable<list<T, Allocator>> : std::false_type {};
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator!=(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {
-    return !(lhs == rhs);
-}
 
 #if CIEL_STD_VER >= 17
 

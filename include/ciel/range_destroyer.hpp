@@ -25,7 +25,7 @@ private:
     pointer begin_;
     compressed_pair<pointer, Allocator> end_alloc_;
 
-    pointer&
+    CIEL_NODISCARD pointer&
     end_() noexcept {
         return end_alloc_.first();
     }
@@ -56,6 +56,16 @@ public:
     }
 
     void
+    advance_forward() noexcept {
+        ++end_();
+    }
+
+    void
+    advance_backward() noexcept {
+        --begin_;
+    }
+
+    void
     release() noexcept {
         end_() = begin_;
     }
@@ -80,6 +90,12 @@ public:
     // clang-format off
     range_destroyer& operator=(const range_destroyer&) = delete;
     // clang-format on
+
+    void
+    advance_forward() noexcept {}
+
+    void
+    advance_backward() noexcept {}
 
     void
     release() noexcept {}

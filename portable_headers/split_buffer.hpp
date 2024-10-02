@@ -504,9 +504,9 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
     }
 }
 
-// sizeof_without_back_padding
+// sizeof_without_tail_padding
 //
-// Derived can reuse Base's back padding.
+// Derived can reuse Base's tail padding.
 // e.g.
 // struct Base {
 //     alignas(8) unsigned char buf[1]{};
@@ -517,34 +517,34 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
 // static_assert(sizeof(Base)    == 8, "");
 // static_assert(sizeof(Derived) == 8, "");
 //
-template<class T, size_t BackPadding = alignof(T)>
-struct sizeof_without_back_padding {
+template<class T, size_t TailPadding = alignof(T)>
+struct sizeof_without_tail_padding {
     static_assert(std::is_class<T>::value && !is_final<T>::value, "");
 
     struct S : T {
-        unsigned char buf[BackPadding]{};
+        unsigned char buf[TailPadding]{};
     };
 
-    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_back_padding,
-                                           typename sizeof_without_back_padding<T, BackPadding - 1>::type>::type;
+    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_tail_padding,
+                                           typename sizeof_without_tail_padding<T, TailPadding - 1>::type>::type;
 
-    static constexpr size_t Byte = BackPadding;
+    static constexpr size_t Byte = TailPadding;
 
     static constexpr size_t value = sizeof(T) - type::Byte;
 
-}; // struct sizeof_without_back_padding
+}; // struct sizeof_without_tail_padding
 
 template<class T>
-struct sizeof_without_back_padding<T, 0> {
+struct sizeof_without_tail_padding<T, 0> {
     static_assert(std::is_class<T>::value && !is_final<T>::value, "");
 
-    using type = sizeof_without_back_padding;
+    using type = sizeof_without_tail_padding;
 
     static constexpr size_t Byte = 0;
 
     static constexpr size_t value = sizeof(T);
 
-}; // struct sizeof_without_back_padding<T, 0>
+}; // struct sizeof_without_tail_padding<T, 0>
 
 // is_overaligned_for_new
 CIEL_NODISCARD inline bool
@@ -580,6 +580,7 @@ deallocate(T* ptr) noexcept {
     ::operator delete(ptr);
 }
 
+// relocatable_swap
 template<class T, bool Valid = is_trivially_relocatable<T>::value>
 void
 relocatable_swap(T& lhs, T& rhs) noexcept {
@@ -590,6 +591,59 @@ relocatable_swap(T& lhs, T& rhs) noexcept {
     std::memcpy(&buffer, &rhs, sizeof(T));
     std::memcpy(&rhs, &lhs, sizeof(T));
     std::memcpy(&lhs, &buffer, sizeof(T));
+}
+
+// is_range
+template<class T, class = void>
+struct is_range : std::false_type {};
+
+template<class T>
+struct is_range<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end())>> : std::true_type {};
+
+template<class T, class = void>
+struct is_range_with_size : std::false_type {};
+
+template<class T>
+struct is_range_with_size<
+    T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), std::declval<T>().size())>>
+    : std::true_type {};
+
+// compare
+template<class T, class U,
+         typename std::enable_if<is_range_with_size<T>::value && is_range_with_size<U>::value, int>::type = 0>
+CIEL_NODISCARD bool
+operator==(const T& lhs, const U& rhs) noexcept {
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, class U, typename std::enable_if<is_range<T>::value && is_range<U>::value, int>::type = 0>
+CIEL_NODISCARD bool
+operator<(const T& lhs, const U& rhs) noexcept {
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator!=(const T& lhs, const U& rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator>(const T& lhs, const U& rhs) noexcept {
+    return rhs < lhs;
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator<=(const T& lhs, const U& rhs) noexcept {
+    return !(rhs < lhs);
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator>=(const T& lhs, const U& rhs) noexcept {
+    return !(lhs < rhs);
 }
 
 NAMESPACE_CIEL_END
@@ -787,6 +841,111 @@ private:
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+#define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
+
+#include <memory>
+#include <type_traits>
+
+
+NAMESPACE_CIEL_BEGIN
+
+// Destroy ranges in destructor for exception handling.
+// Note that Allocator can be reference type.
+template<class T, class Allocator, class = void>
+class range_destroyer {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
+
+private:
+    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
+    using alloc_traits   = std::allocator_traits<allocator_type>;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
+    pointer begin_;
+    compressed_pair<pointer, Allocator> end_alloc_;
+
+    CIEL_NODISCARD pointer&
+    end_() noexcept {
+        return end_alloc_.first();
+    }
+
+    allocator_type&
+    allocator_() noexcept {
+        return end_alloc_.second();
+    }
+
+public:
+    range_destroyer(pointer begin, pointer end, allocator_type& alloc) noexcept
+        : begin_{begin}, end_alloc_{end, alloc} {}
+
+    range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
+        : begin_{begin}, end_alloc_{end, alloc} {}
+
+    range_destroyer(const range_destroyer&) = delete;
+    // clang-format off
+    range_destroyer& operator=(const range_destroyer&) = delete;
+    // clang-format on
+
+    ~range_destroyer() {
+        CIEL_PRECONDITION(begin_ <= end_());
+
+        while (end_() != begin_) {
+            alloc_traits::destroy(allocator_(), --end_());
+        }
+    }
+
+    void
+    advance_forward() noexcept {
+        ++end_();
+    }
+
+    void
+    advance_backward() noexcept {
+        --begin_;
+    }
+
+    void
+    release() noexcept {
+        end_() = begin_;
+    }
+
+}; // class range_destroyer
+
+template<class T, class Allocator>
+class range_destroyer<T, Allocator,
+                      void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
+    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
+
+private:
+    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
+
+    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+
+public:
+    range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
+
+    range_destroyer(const range_destroyer&) = delete;
+    // clang-format off
+    range_destroyer& operator=(const range_destroyer&) = delete;
+    // clang-format on
+
+    void
+    advance_forward() noexcept {}
+
+    void
+    advance_backward() noexcept {}
+
+    void
+    release() noexcept {}
+
+}; // class range_destroyer
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 
 NAMESPACE_CIEL_BEGIN
 
@@ -794,11 +953,13 @@ NAMESPACE_CIEL_BEGIN
 // When std::vector inserts beyond its capacity, it defines a temp split_buffer to store insertions
 // and push vector's elements into two sides, and swap out at last,
 // so that it can keep basic exception safety.
-// We complete its functionality(except for insert and erase) so that it can be used as a normal container.
+// We complete its functionality so that it can be used as a normal container.
 // When pushing elements and there is no space this side, we try to shift to other side if there is plenty of space,
 // or just expand.
 // When it comes to expansion, we try to move old elements to the middle of new space
 // and leave some free space at both sides.
+
+// TODO: insert and erase
 
 template<class, class>
 class vector;
@@ -854,12 +1015,12 @@ private:
         end_       = begin_;
     }
 
-    pointer&
+    CIEL_NODISCARD pointer&
     end_cap_() noexcept {
         return end_cap_alloc_.second();
     }
 
-    const pointer&
+    CIEL_NODISCARD const pointer&
     end_cap_() const noexcept {
         return end_cap_alloc_.second();
     }
@@ -874,7 +1035,7 @@ private:
         return end_cap_alloc_.first();
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     recommend_cap(const size_type new_size) const {
         CIEL_PRECONDITION(new_size > 0);
 
@@ -1015,20 +1176,21 @@ private:
         sb.set_nullptr();
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     front_spare() const noexcept {
         CIEL_PRECONDITION(begin_cap_ <= begin_);
 
         return begin_ - begin_cap_;
     }
 
-    size_type
+    CIEL_NODISCARD size_type
     back_spare() const noexcept {
         CIEL_PRECONDITION(end_ <= end_cap_());
 
         return end_cap_() - end_;
     }
 
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
     left_shift_n(const size_type n) noexcept {
@@ -1039,7 +1201,7 @@ private:
         end_ -= n;
     }
 
-    // Note that this will invalidate iterators
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
     left_shift_n(const size_type n) noexcept {
@@ -1049,21 +1211,24 @@ private:
 
         pointer new_begin = begin_ - n;
         pointer new_end   = new_begin;
+        range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
-
-            // ----------
+            // clang-format off
+            //         ----------
             //
             // ----------
             // |      | |       |
             // placement new
-            // move assign
-            //   destroy
+            //    move assign
+            //           destroy
+            // clang-format on
 
             size_type i = 0;
             for (; i < n; ++i) {
                 alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
                 ++new_end;
+                rd.advance_forward();
             }
 
             for (; i < old_size; ++i) {
@@ -1075,25 +1240,30 @@ private:
             begin_ = new_begin;
 
         } else { // size placement new, size destroy
-
-            // ----------
+            // clang-format off
+            //               ----------
             //
             // ----------
             // |        |    |        |
             // placement new
-            //  destroy
+            //                 destroy
+            // clang-format on
 
             for (size_type i = 0; i < old_size; ++i) {
                 alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
                 ++new_end;
+                rd.advance_forward();
             }
 
             alloc_range_destroy(begin_, end_);
             begin_ = new_begin;
             end_   = new_end;
         }
+
+        rd.release();
     }
 
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
     void
     right_shift_n(const size_type n) noexcept {
@@ -1104,7 +1274,7 @@ private:
         end_ += n;
     }
 
-    // Note that this will invalidate iterators
+    // Note that this will invalidate iterators.
     template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
     void
     right_shift_n(const size_type n) noexcept {
@@ -1114,20 +1284,23 @@ private:
 
         pointer new_end   = end_ + n;
         pointer new_begin = new_end;
+        range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
-
+            // clang-format off
             // ----------
             //
             //         ----------
             // |       | |      |
-            //        placement new
+            //             placement new
             //     move assign
-            // destroy
+            //  destroy
+            // clang-format on
 
             size_type i = 1;
             for (; i <= n; ++i) {
                 alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
+                rd.advance_backward();
             }
 
             for (; i <= old_size; ++i) {
@@ -1139,22 +1312,26 @@ private:
             end_   = new_end;
 
         } else { // size placement new, size destroy
-
+            // clang-format off
             // ----------
             //
             //               ----------
             // |        |    |        |
             //              placement new
             //  destroy
+            // clang-format on
 
             for (size_type i = 1; i <= old_size; ++i) {
                 alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
+                rd.advance_backward();
             }
 
             alloc_range_destroy(begin_, end_);
             begin_ = new_begin;
             end_   = new_end;
         }
+
+        rd.release();
     }
 
     void
@@ -1838,7 +2015,16 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    template<class A = Allocator, typename std::enable_if<!std::is_reference<A>::value, int>::type = 0>
+    template<class A = Allocator, class U = split_buffer,
+             typename std::enable_if<!std::is_reference<A>::value && is_trivially_relocatable<U>::value, int>::type = 0>
+    void
+    swap(split_buffer& other) noexcept {
+        ciel::relocatable_swap(*this, other);
+    }
+
+    template<class A = Allocator, class U = split_buffer,
+             typename std::enable_if<!std::is_reference<A>::value && !is_trivially_relocatable<U>::value, int>::type
+             = 0>
     void
     swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value
                                        || alloc_traits::is_always_equal::value) {
@@ -1875,22 +2061,43 @@ public:
         unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
     }
 
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    void
+    assign_range(R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            assign(rg.begin(), rg.end());
+
+        } else {
+            assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    void
+    append_range(R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            construct_at_end(rg.begin(), rg.end());
+
+        } else {
+            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
+    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    iterator
+    insert_range(iterator pos, R&& rg) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            return insert(pos, rg.begin(), rg.end());
+
+        } else {
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
+
 }; // class split_buffer
 
 template<class T, class Allocator>
 struct is_trivially_relocatable<split_buffer<T, Allocator>> : is_trivially_relocatable<Allocator> {};
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
-    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template<class T, class Alloc>
-CIEL_NODISCARD bool
-operator!=(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
-    return !(lhs == rhs);
-}
 
 #if CIEL_STD_VER >= 17
 

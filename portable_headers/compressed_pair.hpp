@@ -493,9 +493,9 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
     }
 }
 
-// sizeof_without_back_padding
+// sizeof_without_tail_padding
 //
-// Derived can reuse Base's back padding.
+// Derived can reuse Base's tail padding.
 // e.g.
 // struct Base {
 //     alignas(8) unsigned char buf[1]{};
@@ -506,34 +506,34 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
 // static_assert(sizeof(Base)    == 8, "");
 // static_assert(sizeof(Derived) == 8, "");
 //
-template<class T, size_t BackPadding = alignof(T)>
-struct sizeof_without_back_padding {
+template<class T, size_t TailPadding = alignof(T)>
+struct sizeof_without_tail_padding {
     static_assert(std::is_class<T>::value && !is_final<T>::value, "");
 
     struct S : T {
-        unsigned char buf[BackPadding]{};
+        unsigned char buf[TailPadding]{};
     };
 
-    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_back_padding,
-                                           typename sizeof_without_back_padding<T, BackPadding - 1>::type>::type;
+    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_tail_padding,
+                                           typename sizeof_without_tail_padding<T, TailPadding - 1>::type>::type;
 
-    static constexpr size_t Byte = BackPadding;
+    static constexpr size_t Byte = TailPadding;
 
     static constexpr size_t value = sizeof(T) - type::Byte;
 
-}; // struct sizeof_without_back_padding
+}; // struct sizeof_without_tail_padding
 
 template<class T>
-struct sizeof_without_back_padding<T, 0> {
+struct sizeof_without_tail_padding<T, 0> {
     static_assert(std::is_class<T>::value && !is_final<T>::value, "");
 
-    using type = sizeof_without_back_padding;
+    using type = sizeof_without_tail_padding;
 
     static constexpr size_t Byte = 0;
 
     static constexpr size_t value = sizeof(T);
 
-}; // struct sizeof_without_back_padding<T, 0>
+}; // struct sizeof_without_tail_padding<T, 0>
 
 // is_overaligned_for_new
 CIEL_NODISCARD inline bool
@@ -569,6 +569,7 @@ deallocate(T* ptr) noexcept {
     ::operator delete(ptr);
 }
 
+// relocatable_swap
 template<class T, bool Valid = is_trivially_relocatable<T>::value>
 void
 relocatable_swap(T& lhs, T& rhs) noexcept {
@@ -579,6 +580,59 @@ relocatable_swap(T& lhs, T& rhs) noexcept {
     std::memcpy(&buffer, &rhs, sizeof(T));
     std::memcpy(&rhs, &lhs, sizeof(T));
     std::memcpy(&lhs, &buffer, sizeof(T));
+}
+
+// is_range
+template<class T, class = void>
+struct is_range : std::false_type {};
+
+template<class T>
+struct is_range<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end())>> : std::true_type {};
+
+template<class T, class = void>
+struct is_range_with_size : std::false_type {};
+
+template<class T>
+struct is_range_with_size<
+    T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), std::declval<T>().size())>>
+    : std::true_type {};
+
+// compare
+template<class T, class U,
+         typename std::enable_if<is_range_with_size<T>::value && is_range_with_size<U>::value, int>::type = 0>
+CIEL_NODISCARD bool
+operator==(const T& lhs, const U& rhs) noexcept {
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<class T, class U, typename std::enable_if<is_range<T>::value && is_range<U>::value, int>::type = 0>
+CIEL_NODISCARD bool
+operator<(const T& lhs, const U& rhs) noexcept {
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator!=(const T& lhs, const U& rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator>(const T& lhs, const U& rhs) noexcept {
+    return rhs < lhs;
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator<=(const T& lhs, const U& rhs) noexcept {
+    return !(rhs < lhs);
+}
+
+template<class T, class U>
+CIEL_NODISCARD bool
+operator>=(const T& lhs, const U& rhs) noexcept {
+    return !(lhs < rhs);
 }
 
 NAMESPACE_CIEL_END

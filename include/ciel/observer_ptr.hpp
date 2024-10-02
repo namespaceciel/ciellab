@@ -97,12 +97,6 @@ operator==(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
     return p1.get() == p2.get();
 }
 
-template<class W1, class W2>
-CIEL_NODISCARD bool
-operator!=(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
-    return !(p1 == p2);
-}
-
 template<class W>
 CIEL_NODISCARD bool
 operator==(const observer_ptr<W>& p, std::nullptr_t) noexcept {
@@ -115,41 +109,11 @@ operator==(std::nullptr_t, const observer_ptr<W>& p) noexcept {
     return !p;
 }
 
-template<class W>
-CIEL_NODISCARD bool
-operator!=(const observer_ptr<W>& p, std::nullptr_t) noexcept {
-    return static_cast<bool>(p);
-}
-
-template<class W>
-CIEL_NODISCARD bool
-operator!=(std::nullptr_t, const observer_ptr<W>& p) noexcept {
-    return static_cast<bool>(p);
-}
-
 template<class W1, class W2>
 CIEL_NODISCARD bool
 operator<(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
     using W3 = typename std::common_type<W1, W2>::type;
     return std::less<W3>()(p1.get(), p2.get());
-}
-
-template<class W1, class W2>
-CIEL_NODISCARD bool
-operator>(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
-    return p2 < p1;
-}
-
-template<class W1, class W2>
-CIEL_NODISCARD bool
-operator<=(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
-    return !(p2 < p1);
-}
-
-template<class W1, class W2>
-CIEL_NODISCARD bool
-operator>=(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
-    return !(p1 < p2);
 }
 
 NAMESPACE_CIEL_END
