@@ -1,46 +1,46 @@
 #include "tools.h"
 #include <gtest/gtest.h>
 
-#include <ciel/static_vector.hpp>
+#include <ciel/inplace_vector.hpp>
 
-TEST(static_vector_tests, constructors) {
-    const ciel::static_vector<int, 8> v1;
+TEST(inplace_vector_tests, constructors) {
+    const ciel::inplace_vector<int, 8> v1;
     ASSERT_TRUE(v1.empty());
     ASSERT_EQ(v1.size(), 0);
     ASSERT_EQ(v1.capacity(), 8);
 
-    const ciel::static_vector<int, 8> v2(v1);
+    const ciel::inplace_vector<int, 8> v2(v1);
     ASSERT_TRUE(v2.empty());
 
-    const ciel::static_vector<int, 10> v3(10, 20);
+    const ciel::inplace_vector<int, 10> v3(10, 20);
     ASSERT_EQ(v3.size(), 10);
 
-    const ciel::static_vector<int, 15> v4(15);
+    const ciel::inplace_vector<int, 15> v4(15);
     ASSERT_EQ(v4.size(), 15);
 
-    ciel::static_vector<int, 15> v5(v4);
+    ciel::inplace_vector<int, 15> v5(v4);
     ASSERT_EQ(v5.size(), 15);
 
-    const ciel::static_vector<int, 15> v6(std::move(v5));
+    const ciel::inplace_vector<int, 15> v6(std::move(v5));
     ASSERT_EQ(v5.size(), 0);
     ASSERT_EQ(v6.size(), 15);
 
-    const ciel::static_vector<int, 5> v7({1, 2, 3, 4, 5});
+    const ciel::inplace_vector<int, 5> v7({1, 2, 3, 4, 5});
     ASSERT_EQ(v7.size(), 5);
 
-    const ciel::static_vector<int, 8> v8(0, 10);
+    const ciel::inplace_vector<int, 8> v8(0, 10);
     ASSERT_TRUE(v8.empty());
 
-    const ciel::static_vector<int, 8> v9(0);
+    const ciel::inplace_vector<int, 8> v9(0);
     ASSERT_TRUE(v9.empty());
 
-    const ciel::static_vector<int, 8> v10(v7.begin(), v7.begin());
+    const ciel::inplace_vector<int, 8> v10(v7.begin(), v7.begin());
     ASSERT_TRUE(v10.empty());
 }
 
-TEST(static_vector_tests, assignments) {
-    ciel::static_vector<int, 5> v1({1, 2, 3, 4, 5});
-    ciel::static_vector<int, 5> v2{};
+TEST(inplace_vector_tests, assignments) {
+    ciel::inplace_vector<int, 5> v1({1, 2, 3, 4, 5});
+    ciel::inplace_vector<int, 5> v2{};
 
     v2 = std::move(v1);
     ASSERT_TRUE(v1.empty());
@@ -49,7 +49,7 @@ TEST(static_vector_tests, assignments) {
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
     }
 
-    ciel::static_vector<int, 10> v3{};
+    ciel::inplace_vector<int, 10> v3{};
     v3 = v2;
     ASSERT_EQ(v2, v3);
 
@@ -68,8 +68,8 @@ TEST(static_vector_tests, assignments) {
     }
 }
 
-TEST(static_vector_tests, at) {
-    const ciel::static_vector<size_t, 6> v1({0, 1, 2, 3, 4, 5});
+TEST(inplace_vector_tests, at) {
+    const ciel::inplace_vector<size_t, 6> v1({0, 1, 2, 3, 4, 5});
     for (size_t i = 0; i < v1.size(); ++i) {
         ASSERT_EQ(v1[i], i);
     }
@@ -82,9 +82,9 @@ TEST(static_vector_tests, at) {
 #endif
 }
 
-TEST(static_vector_tests, push_and_pop) {
+TEST(inplace_vector_tests, push_and_pop) {
     // empty
-    ciel::static_vector<int, 8> v1;
+    ciel::inplace_vector<int, 8> v1;
     ASSERT_EQ(v1.emplace_back(0), 0);
 
     v1.push_back(1);
@@ -94,7 +94,7 @@ TEST(static_vector_tests, push_and_pop) {
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
-    ciel::static_vector<int, 16> v2({0, 1, 2, 3, 4});
+    ciel::inplace_vector<int, 16> v2({0, 1, 2, 3, 4});
     ASSERT_EQ(v2.emplace_back(5), 5);
 
     ASSERT_EQ(v2.emplace_back(6), 6);
@@ -114,8 +114,8 @@ TEST(static_vector_tests, push_and_pop) {
     ASSERT_EQ(v2.back(), 2);
 }
 
-TEST(static_vector_tests, resize) {
-    ciel::static_vector<int, 16> v1(10, 5);
+TEST(inplace_vector_tests, resize) {
+    ciel::inplace_vector<int, 16> v1(10, 5);
     ASSERT_EQ(v1.size(), 10);
     for (const int i : v1) {
         ASSERT_EQ(i, 5);
@@ -139,27 +139,27 @@ TEST(static_vector_tests, resize) {
     }
 }
 
-TEST(static_vector_tests, vector_size) {
-    static_assert(sizeof(ciel::static_vector<uint32_t, 1>) == 16, "");
-    static_assert(sizeof(ciel::static_vector<uint32_t, 2>) == 16, "");
-    static_assert(sizeof(ciel::static_vector<uint32_t, 3>) == 24, "");
+TEST(inplace_vector_tests, vector_size) {
+    static_assert(sizeof(ciel::inplace_vector<uint32_t, 1>) == 16, "");
+    static_assert(sizeof(ciel::inplace_vector<uint32_t, 2>) == 16, "");
+    static_assert(sizeof(ciel::inplace_vector<uint32_t, 3>) == 24, "");
 
-    static_assert(sizeof(ciel::static_vector<uint8_t, 1>) == 16, "");
-    static_assert(sizeof(ciel::static_vector<uint8_t, 8>) == 16, "");
-    static_assert(sizeof(ciel::static_vector<uint8_t, 9>) == 24, "");
+    static_assert(sizeof(ciel::inplace_vector<uint8_t, 1>) == 16, "");
+    static_assert(sizeof(ciel::inplace_vector<uint8_t, 8>) == 16, "");
+    static_assert(sizeof(ciel::inplace_vector<uint8_t, 9>) == 24, "");
 }
 
-TEST(static_vector_tests, emplace_il) {
-    ciel::static_vector<ciel::static_vector<int, 8>, 8> v;
+TEST(inplace_vector_tests, emplace_il) {
+    ciel::inplace_vector<ciel::inplace_vector<int, 8>, 8> v;
 
     v.emplace_back({1, 2});
 
-    v.construct_one_at_end({5, 6});
+    v.unchecked_emplace_back({5, 6});
 
     // v.emplace_back({}); // error: we can't deduce type for this.
 
     ASSERT_EQ(v.size(), 2);
-    using static_vector_int_8 = ciel::static_vector<int, 8>;
-    ASSERT_EQ(v[0], static_vector_int_8({1, 2}));
-    ASSERT_EQ(v[1], static_vector_int_8({5, 6}));
+    using inplace_vector_int_8 = ciel::inplace_vector<int, 8>;
+    ASSERT_EQ(v[0], inplace_vector_int_8({1, 2}));
+    ASSERT_EQ(v[1], inplace_vector_int_8({5, 6}));
 }

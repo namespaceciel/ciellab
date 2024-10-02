@@ -77,12 +77,12 @@ emplace_back_known_size() noexcept {
 
 template<class Container>
 void
-construct_one_at_end() noexcept {
+unchecked_emplace_back() noexcept {
     Container c;
     c.reserve(100000);
 
     for (int i = 0; i < 100000; ++i) {
-        c.construct_one_at_end(i);
+        c.unchecked_emplace_back(i);
     }
 }
 

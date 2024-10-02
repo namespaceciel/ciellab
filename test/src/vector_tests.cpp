@@ -488,7 +488,7 @@ TEST(vector_tests, emplace_il) {
     v.emplace(v.end(), {3, 4});
 
     v.reserve(3);
-    v.construct_one_at_end({5, 6});
+    v.unchecked_emplace_back({5, 6});
 
     // v.emplace_back({}); // error: we can't deduce type for this.
 

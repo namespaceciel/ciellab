@@ -90,8 +90,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            alloc_traits::construct(allocator_(), end_);
-            ++end_;
+            unchecked_emplace_back();
         }
     }
 
@@ -100,8 +99,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            alloc_traits::construct(allocator_(), end_, value);
-            ++end_;
+            unchecked_emplace_back(value);
         }
     }
 
@@ -111,9 +109,8 @@ private:
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
 
         while (first != last) {
-            alloc_traits::construct(allocator_(), end_, *first);
+            unchecked_emplace_back(*first);
             ++first;
-            ++end_;
         }
     }
 
@@ -176,11 +173,11 @@ private:
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
             for (pointer p = pos - 1; p >= begin_; --p) {
-                sb.construct_one_at_begin(std::move(*p));
+                sb.unchecked_emplace_front(std::move(*p));
             }
 
             for (pointer p = pos; p < end_; ++p) {
-                sb.construct_one_at_end(std::move(*p));
+                sb.unchecked_emplace_back(std::move(*p));
             }
 
             clear();
@@ -225,9 +222,9 @@ private:
         if (begin_) {
             for (pointer p = end_ - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.construct_one_at_begin(std::move_if_noexcept(*p));
+                sb.unchecked_emplace_front(std::move_if_noexcept(*p));
 #else
-                sb.construct_one_at_begin(std::move(*p));
+                sb.unchecked_emplace_front(std::move(*p));
 #endif
             }
 
@@ -258,7 +255,7 @@ private:
         difference_type n = old_end - to;
 
         for (pointer p = from_s + n; p < from_e; ++p) {
-            construct_one_at_end(std::move(*p));
+            unchecked_emplace_back(std::move(*p));
         }
 
         std::move_backward(from_s, from_s + n, old_end);
@@ -392,7 +389,7 @@ private:
             const pointer old_end = this_->end_;
             this_->end_           = pos;
 
-            this_->construct_one_at_end(std::forward<Args>(args)...);
+            this_->unchecked_emplace_back(std::forward<Args>(args)...);
 
             this_->end_ = old_end + count;
             rd.release();
@@ -429,12 +426,12 @@ private:
             split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
-            sb.construct_one_at_end(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back(std::forward<Args>(args)...);
 
             swap_out_buffer(std::move(sb), pos);
 
         } else if (pos == end_) { // equal to emplace_back
-            construct_one_at_end_aux(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
 
         } else {
             cb(pos, std::forward<Args>(args)...);
@@ -450,12 +447,12 @@ private:
             split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
 
-            sb.construct_one_at_end(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back(std::forward<Args>(args)...);
 
             swap_out_buffer(std::move(sb));
 
         } else {
-            construct_one_at_end_aux(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
         }
 
         return back();
@@ -463,7 +460,7 @@ private:
 
     template<class... Args>
     void
-    construct_one_at_end_aux(Args&&... args) {
+    unchecked_emplace_back_aux(Args&&... args) {
         CIEL_PRECONDITION(end_ < end_cap_());
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
@@ -1166,14 +1163,14 @@ public:
 
     template<class... Args>
     void
-    construct_one_at_end(Args&&... args) {
-        construct_one_at_end_aux(std::forward<Args>(args)...);
+    unchecked_emplace_back(Args&&... args) {
+        unchecked_emplace_back_aux(std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
     void
-    construct_one_at_end(std::initializer_list<U> il, Args&&... args) {
-        construct_one_at_end_aux(il, std::forward<Args>(args)...);
+    unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
+        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
@@ -1202,11 +1199,7 @@ struct is_trivially_relocatable<vector<T, Allocator>> : is_trivially_relocatable
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, class Alloc>

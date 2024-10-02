@@ -99,7 +99,7 @@ ciel::vector<ciel::vector<Lifetime>> v3(
 
 The use of `move_proxy` complicates the brace initialization. In this scenario, `v1` behaves as expected, but `v2` does not construct any `Lifetime` objects because it effectively equates to `v3`.
 
-#### 5. Provide `construct_one_at_end`, it serves as an `emplace_back` operation that does not check for available space, under the assumption that the container has sufficient capacity. It's crucial to call `reserve` in advance to allocate the necessary memory.
+#### 5. Provide `unchecked_emplace_back`, it serves as an `emplace_back` operation that does not check for available space, under the assumption that the container has sufficient capacity. It's crucial to call `reserve` in advance to allocate the necessary memory.
 
 ```cpp
 #include <ciel/vector>
@@ -107,7 +107,7 @@ The use of `move_proxy` complicates the brace initialization. In this scenario, 
 ciel::vector<int> v;
 v.reserve(100);
 for (int i = 0; i < 100; ++i) {
-    v.construct_at_end(i);
+    v.unchecked_emplace_back(i);
 }
 ```
 

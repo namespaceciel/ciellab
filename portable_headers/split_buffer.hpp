@@ -893,22 +893,12 @@ private:
         return std::max(cap * 2, new_size);
     }
 
-    template<class... Args>
-    void
-    construct_one_at_end(Args&&... args) {
-        CIEL_PRECONDITION(end_ < end_cap_());
-
-        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
-        ++end_;
-    }
-
     void
     construct_at_end(const size_type n) {
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            alloc_traits::construct(allocator_(), end_);
-            ++end_;
+            unchecked_emplace_back();
         }
     }
 
@@ -917,8 +907,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            alloc_traits::construct(allocator_(), end_, value);
-            ++end_;
+            unchecked_emplace_back(value);
         }
     }
 
@@ -928,19 +917,9 @@ private:
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
 
         while (first != last) {
-            alloc_traits::construct(allocator_(), end_, *first);
+            unchecked_emplace_back(*first);
             ++first;
-            ++end_;
         }
-    }
-
-    template<class... Args>
-    void
-    construct_one_at_begin(Args&&... args) {
-        CIEL_PRECONDITION(begin_cap_ < begin_);
-
-        alloc_traits::construct(allocator_(), begin_ - 1, std::forward<Args>(args)...);
-        --begin_;
     }
 
     template<class U = value_type, typename std::enable_if<std::is_trivially_destructible<U>::value, int>::type = 0>
@@ -1010,17 +989,17 @@ private:
 
             for (pointer p = pos - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.construct_one_at_begin(std::move_if_noexcept(*p));
+                sb.unchecked_emplace_front(std::move_if_noexcept(*p));
 #else
-                sb.construct_one_at_begin(std::move(*p));
+                sb.unchecked_emplace_front(std::move(*p));
 #endif
             }
 
             for (pointer p = pos; p < end_; ++p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.construct_one_at_end(std::move_if_noexcept(*p));
+                sb.unchecked_emplace_back(std::move_if_noexcept(*p));
 #else
-                sb.construct_one_at_end(std::move(*p));
+                sb.unchecked_emplace_back(std::move(*p));
 #endif
             }
 
@@ -1192,7 +1171,7 @@ private:
         difference_type n = old_end - to;
 
         for (pointer p = from_s + n; p < from_e; ++p) {
-            construct_one_at_end(std::move(*p));
+            unchecked_emplace_back(std::move(*p));
         }
 
         std::move_backward(from_s, from_s + n, old_end);
@@ -1204,6 +1183,88 @@ private:
         begin_     = nullptr;
         end_       = nullptr;
         end_cap_() = nullptr;
+    }
+
+    // Comparing with vector growing factor: get n * 2 memory, move n elements and get n new space,
+    // it's terrible if we shift one (move n elements) to get 1 vacant space for emplace,
+    // so only if there is plenty of space at other side will we consider shifting.
+    // This situation may be seen when it's used as queue's base container.
+    template<class... Args>
+    reference
+    emplace_back_aux(Args&&... args) {
+        if (back_spare() == 0) {
+            if CIEL_UNLIKELY (front_spare() > size()) { // move size elements to get more than size / 2 vacant space
+                // To support self reference operations like v.emplace_back(v[0]),
+                // we must construct temp object here and move it afterwards.
+                value_type tmp(std::forward<Args>(args)...);
+
+                left_shift_n(std::max<size_type>(front_spare() / 2, 1));
+
+                unchecked_emplace_back(std::move(tmp));
+
+            } else {
+                split_buffer<value_type, allocator_type&> sb(allocator_());
+                // end_ - begin_cap_ == front_spare() + size()
+                sb.reserve_cap_and_offset_to(recommend_cap(end_ - begin_cap_ + 1), end_ - begin_cap_);
+
+                sb.unchecked_emplace_back(std::forward<Args>(args)...);
+
+                swap_out_buffer(std::move(sb), end_);
+            }
+
+        } else {
+            unchecked_emplace_back(std::forward<Args>(args)...);
+        }
+
+        return back();
+    }
+
+    // Check out emplace_back_aux for annotations.
+    template<class... Args>
+    reference
+    emplace_front_aux(Args&&... args) {
+        if (front_spare() == 0) {
+            if CIEL_UNLIKELY (back_spare() > size()) {
+                value_type tmp(std::forward<Args>(args)...);
+
+                right_shift_n(std::max<size_type>(back_spare() / 2, 1));
+
+                unchecked_emplace_front(std::move(tmp));
+
+            } else {
+                split_buffer<value_type, allocator_type&> sb(allocator_());
+                // end_cap_() - begin_ == back_spare() + size()
+                const size_type new_cap = recommend_cap(end_cap_() - begin_ + 1);
+                sb.reserve_cap_and_offset_to(new_cap, new_cap - (end_cap_() - begin_));
+
+                sb.unchecked_emplace_front(std::forward<Args>(args)...);
+
+                swap_out_buffer(std::move(sb), begin_);
+            }
+
+        } else {
+            unchecked_emplace_front(std::forward<Args>(args)...);
+        }
+
+        return front();
+    }
+
+    template<class... Args>
+    void
+    unchecked_emplace_back_aux(Args&&... args) {
+        CIEL_PRECONDITION(end_ < end_cap_());
+
+        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
+        ++end_;
+    }
+
+    template<class... Args>
+    void
+    unchecked_emplace_front_aux(Args&&... args) {
+        CIEL_PRECONDITION(begin_cap_ < begin_);
+
+        alloc_traits::construct(allocator_(), begin_ - 1, std::forward<Args>(args)...);
+        --begin_;
     }
 
 public:
@@ -1704,38 +1765,16 @@ public:
         emplace_back(std::move(value));
     }
 
-    // Comparing with vector growing factor: get n * 2 memory, move n elements and get n new space,
-    // it's terrible if we shift one (move n elements) to get 1 vacant space for emplace,
-    // so only if there is plenty of space at other side will we consider shifting.
-    // This situation may be seen when it's used as queue's base container.
     template<class... Args>
     reference
     emplace_back(Args&&... args) {
-        if (back_spare() == 0) {
-            if CIEL_UNLIKELY (front_spare() > size()) { // move size elements to get more than size / 2 vacant space
-                // To support self reference operations like v.emplace_back(v[0]),
-                // we must construct temp object here and move it afterwards.
-                value_type tmp(std::forward<Args>(args)...);
+        return emplace_back_aux(std::forward<Args>(args)...);
+    }
 
-                left_shift_n(std::max<size_type>(front_spare() / 2, 1));
-
-                construct_one_at_end(std::move(tmp));
-
-            } else {
-                split_buffer<value_type, allocator_type&> sb(allocator_());
-                // end_ - begin_cap_ == front_spare() + size()
-                sb.reserve_cap_and_offset_to(recommend_cap(end_ - begin_cap_ + 1), end_ - begin_cap_);
-
-                sb.construct_one_at_end(std::forward<Args>(args)...);
-
-                swap_out_buffer(std::move(sb), end_);
-            }
-
-        } else {
-            construct_one_at_end(std::forward<Args>(args)...);
-        }
-
-        return back();
+    template<class U, class... Args>
+    reference
+    emplace_back(std::initializer_list<U> il, Args&&... args) {
+        return emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
     void
@@ -1755,34 +1794,16 @@ public:
         emplace_front(std::move(value));
     }
 
-    // Check out emplace_back for annotations.
     template<class... Args>
     reference
     emplace_front(Args&&... args) {
-        if (front_spare() == 0) {
-            if CIEL_UNLIKELY (back_spare() > size()) {
-                value_type tmp(std::forward<Args>(args)...);
+        return emplace_front_aux(std::forward<Args>(args)...);
+    }
 
-                right_shift_n(std::max<size_type>(back_spare() / 2, 1));
-
-                construct_one_at_begin(std::move(tmp));
-
-            } else {
-                split_buffer<value_type, allocator_type&> sb(allocator_());
-                // end_cap_() - begin_ == back_spare() + size()
-                const size_type new_cap = recommend_cap(end_cap_() - begin_ + 1);
-                sb.reserve_cap_and_offset_to(new_cap, new_cap - (end_cap_() - begin_));
-
-                sb.construct_one_at_begin(std::forward<Args>(args)...);
-
-                swap_out_buffer(std::move(sb), begin_);
-            }
-
-        } else {
-            construct_one_at_begin(std::forward<Args>(args)...);
-        }
-
-        return front();
+    template<class U, class... Args>
+    reference
+    emplace_front(std::initializer_list<U> il, Args&&... args) {
+        return emplace_front_aux(il, std::forward<Args>(args)...);
     }
 
     void
@@ -1830,6 +1851,30 @@ public:
         swap(allocator_(), other.allocator_());
     }
 
+    template<class... Args>
+    void
+    unchecked_emplace_back(Args&&... args) {
+        unchecked_emplace_back_aux(std::forward<Args>(args)...);
+    }
+
+    template<class U, class... Args>
+    void
+    unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
+        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+    }
+
+    template<class... Args>
+    void
+    unchecked_emplace_front(Args&&... args) {
+        unchecked_emplace_front_aux(std::forward<Args>(args)...);
+    }
+
+    template<class U, class... Args>
+    void
+    unchecked_emplace_front(std::initializer_list<U> il, Args&&... args) {
+        unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
+    }
+
 }; // class split_buffer
 
 template<class T, class Allocator>
@@ -1838,11 +1883,7 @@ struct is_trivially_relocatable<split_buffer<T, Allocator>> : is_trivially_reloc
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const split_buffer<T, Alloc>& lhs, const split_buffer<T, Alloc>& rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, class Alloc>

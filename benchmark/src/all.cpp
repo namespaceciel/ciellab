@@ -15,7 +15,7 @@ define_benchmark(emplace_back_ciel_vector_int, emplace_back, ciel::vector<int>);
 
 define_benchmark(emplace_back_known_size_std_vector_int, emplace_back_known_size, std::vector<int>);
 define_benchmark(emplace_back_known_size_ciel_vector_int, emplace_back_known_size, ciel::vector<int>);
-define_benchmark(construct_one_at_end_ciel_vector_int, construct_one_at_end, ciel::vector<int>);
+define_benchmark(unchecked_emplace_back_ciel_vector_int, unchecked_emplace_back, ciel::vector<int>);
 
 define_benchmark(emplace_back_std_vector_trivially_relocatable, emplace_back, std::vector<TriviallyRelocatable>);
 define_benchmark(emplace_back_ciel_vector_trivially_relocatable, emplace_back, ciel::vector<TriviallyRelocatable>);

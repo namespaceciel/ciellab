@@ -91,7 +91,7 @@ private:
 
     template<class... Args>
     void
-    construct_one_at_end(Args&&... args) {
+    unchecked_emplace_back(Args&&... args) {
         CIEL_PRECONDITION(end_ < end_cap_);
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
@@ -103,8 +103,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_);
 
         for (size_type i = 0; i < n; ++i) {
-            alloc_traits::construct(allocator_(), end_);
-            ++end_;
+            unchecked_emplace_back();
         }
     }
 
@@ -113,8 +112,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_);
 
         for (size_type i = 0; i < n; ++i) {
-            alloc_traits::construct(allocator_(), end_, value);
-            ++end_;
+            unchecked_emplace_back(value);
         }
     }
 
@@ -124,9 +122,8 @@ private:
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_);
 
         while (first != last) {
-            alloc_traits::construct(allocator_(), end_, *first);
+            unchecked_emplace_back(*first);
             ++first;
-            ++end_;
         }
     }
 
@@ -184,11 +181,11 @@ private:
         CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
         for (pointer p = pos - 1; p >= begin_; --p) {
-            sb.construct_one_at_begin(std::move(*p));
+            sb.unchecked_emplace_front(std::move(*p));
         }
 
         for (pointer p = pos; p < end_; ++p) {
-            sb.construct_one_at_end(std::move(*p));
+            sb.unchecked_emplace_back(std::move(*p));
         }
 
         do_destroy();
@@ -222,7 +219,7 @@ private:
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         for (pointer p = end_ - 1; p >= begin_; --p) {
-            sb.construct_one_at_begin(std::move(*p));
+            sb.unchecked_emplace_front(std::move(*p));
         }
 
         do_destroy();
@@ -265,7 +262,7 @@ private:
         difference_type n = old_end - to;
 
         for (pointer p = from_s + n; p < from_e; ++p) {
-            construct_one_at_end(std::move(*p));
+            unchecked_emplace_back(std::move(*p));
         }
 
         std::move_backward(from_s, from_s + n, old_end);
@@ -784,12 +781,12 @@ public:
             split_buffer<value_type, allocator_type> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
-            sb.construct_one_at_end(value);
+            sb.unchecked_emplace_back(value);
 
             swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
 
         } else if (pos_pointer == end_) { // equal to emplace_back
-            construct_one_at_end(value);
+            unchecked_emplace_back(value);
 
         } else {
             move_range(pos_pointer, end_, pos_pointer + 1);
@@ -811,12 +808,12 @@ public:
             split_buffer<value_type, allocator_type> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
-            sb.construct_one_at_end(std::move(value));
+            sb.unchecked_emplace_back(std::move(value));
 
             swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
 
         } else if (pos_pointer == end_) { // equal to emplace_back
-            construct_one_at_end(std::move(value));
+            unchecked_emplace_back(std::move(value));
 
         } else {
             move_range(pos_pointer, end_, pos_pointer + 1);
@@ -956,12 +953,12 @@ public:
             split_buffer<value_type, allocator_type> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
-            sb.construct_one_at_end(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back(std::forward<Args>(args)...);
 
             swap_out_buffer(std::move(sb), pos_pointer, is_trivially_relocatable<value_type>{});
 
         } else if (pos_pointer == end_) { // equal to emplace_back
-            construct_one_at_end(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
 
         } else {
             move_range(pos_pointer, end_, pos_pointer + 1);
@@ -1011,12 +1008,12 @@ public:
             split_buffer<value_type, allocator_type> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
 
-            sb.construct_one_at_end(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back(std::forward<Args>(args)...);
 
             swap_out_buffer(std::move(sb), is_trivially_relocatable<value_type>{});
 
         } else {
-            construct_one_at_end(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
         }
 
         return back();
@@ -1061,11 +1058,7 @@ struct is_trivially_relocatable<small_vector<T, BaseCapacity, Allocator>> : std:
 template<class T, size_t S1, size_t S2, class Alloc>
 CIEL_NODISCARD bool
 operator==(const small_vector<T, S1, Alloc>& lhs, const small_vector<T, S2, Alloc>& rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, size_t S1, size_t S2, class Alloc>

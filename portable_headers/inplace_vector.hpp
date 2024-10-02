@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_STATIC_VECTOR_HPP_
-#define CIELLAB_INCLUDE_CIEL_STATIC_VECTOR_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_INPLACE_VECTOR_HPP_
+#define CIELLAB_INCLUDE_CIEL_INPLACE_VECTOR_HPP_
 
 #include <algorithm>
 #include <cstddef>
@@ -880,7 +880,7 @@ NAMESPACE_CIEL_END
 NAMESPACE_CIEL_BEGIN
 
 template<class T, size_t Capacity, bool Valid = is_trivially_relocatable<T>::value>
-class static_vector {
+class inplace_vector {
     static_assert(Valid, "T must be trivially relocatable, you can explicitly assume it.");
     static_assert(Capacity > 0, "");
 
@@ -991,7 +991,7 @@ private:
             ciel::throw_exception(std::bad_alloc{});
 
         } else {
-            construct_one_at_end_aux(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
         }
 
         return back();
@@ -999,7 +999,7 @@ private:
 
     template<class... Args>
     void
-    construct_one_at_end_aux(Args&&... args) {
+    unchecked_emplace_back_aux(Args&&... args) {
         CIEL_PRECONDITION(size() < capacity());
 
         ::new (end_()) value_type{std::forward<Args>(args)...};
@@ -1007,9 +1007,9 @@ private:
     }
 
 public:
-    static_vector() noexcept = default;
+    inplace_vector() noexcept = default;
 
-    static_vector(const size_type count, const value_type& value) {
+    inplace_vector(const size_type count, const value_type& value) {
         if CIEL_UNLIKELY (count > capacity()) {
             ciel::throw_exception(std::bad_alloc{});
         }
@@ -1017,7 +1017,7 @@ public:
         construct_at_end(count, value);
     }
 
-    explicit static_vector(const size_type count) {
+    explicit inplace_vector(const size_type count) {
         if CIEL_UNLIKELY (count > capacity()) {
             ciel::throw_exception(std::bad_alloc{});
         }
@@ -1026,7 +1026,7 @@ public:
     }
 
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
-    static_vector(Iter first, Iter last) {
+    inplace_vector(Iter first, Iter last) {
         while (first != last) {
             emplace_back(*first);
             ++first;
@@ -1034,7 +1034,7 @@ public:
     }
 
     template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
-    static_vector(Iter first, Iter last) {
+    inplace_vector(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
         if CIEL_UNLIKELY (count > capacity()) {
             ciel::throw_exception(std::bad_alloc{});
@@ -1043,21 +1043,21 @@ public:
         construct_at_end(first, last);
     }
 
-    static_vector(const static_vector& other)
-        : static_vector(other.begin(), other.end()) {}
+    inplace_vector(const inplace_vector& other)
+        : inplace_vector(other.begin(), other.end()) {}
 
     template<size_t OtherCapacity, typename std::enable_if<Capacity != OtherCapacity, int>::type = 0>
-    static_vector(const static_vector<value_type, OtherCapacity>& other)
-        : static_vector(other.begin(), other.end()) {}
+    inplace_vector(const inplace_vector<value_type, OtherCapacity>& other)
+        : inplace_vector(other.begin(), other.end()) {}
 
-    static_vector(static_vector&& other) noexcept {
+    inplace_vector(inplace_vector&& other) noexcept {
         std::memcpy(this, &other, sizeof(other));
         other.size_ = 0;
     }
 
     // clang-format off
     template<size_t OtherCapacity, typename std::enable_if<OtherCapacity < Capacity, int>::type = 0>
-    static_vector(static_vector<value_type, OtherCapacity>&& other) noexcept {
+    inplace_vector(inplace_vector<value_type, OtherCapacity>&& other) noexcept {
         std::memcpy(this, &other, sizeof(other));
         other.size_ = 0;
     }
@@ -1066,23 +1066,23 @@ public:
     template<class InitializerList,
              typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
              = 0>
-    static_vector(InitializerList init)
-        : static_vector(init.begin(), init.end()) {}
+    inplace_vector(InitializerList init)
+        : inplace_vector(init.begin(), init.end()) {}
 
     template<class U = value_type, typename std::enable_if<worth_move_constructing<U>::value, int>::type = 0>
-    static_vector(std::initializer_list<move_proxy<value_type>> init)
-        : static_vector(init.begin(), init.end()) {}
+    inplace_vector(std::initializer_list<move_proxy<value_type>> init)
+        : inplace_vector(init.begin(), init.end()) {}
 
     template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>::value, int>::type = 0>
-    static_vector(std::initializer_list<value_type> init)
-        : static_vector(init.begin(), init.end()) {}
+    inplace_vector(std::initializer_list<value_type> init)
+        : inplace_vector(init.begin(), init.end()) {}
 
-    ~static_vector() {
+    ~inplace_vector() {
         clear();
     }
 
-    static_vector&
-    operator=(const static_vector& other) {
+    inplace_vector&
+    operator=(const inplace_vector& other) {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
@@ -1093,15 +1093,15 @@ public:
     }
 
     template<size_t OtherCapacity, typename std::enable_if<Capacity != OtherCapacity, int>::type = 0>
-    static_vector&
-    operator=(const static_vector<value_type, OtherCapacity>& other) {
+    inplace_vector&
+    operator=(const inplace_vector<value_type, OtherCapacity>& other) {
         assign(other.begin(), other.end());
 
         return *this;
     }
 
-    static_vector&
-    operator=(static_vector&& other) noexcept {
+    inplace_vector&
+    operator=(inplace_vector&& other) noexcept {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
             return *this;
         }
@@ -1115,7 +1115,7 @@ public:
 
     // clang-format off
     template<size_t OtherCapacity, typename std::enable_if<OtherCapacity < Capacity, int>::type = 0>
-    static_vector& operator=(static_vector<value_type, OtherCapacity>&& other) noexcept {
+    inplace_vector& operator=(inplace_vector<value_type, OtherCapacity>&& other) noexcept {
         clear();
         std::memcpy(this, &other, sizeof(other));
         other.size_ = 0;
@@ -1127,21 +1127,21 @@ public:
     template<class InitializerList,
              typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
              = 0>
-    static_vector&
+    inplace_vector&
     operator=(InitializerList ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
     template<class U = value_type, typename std::enable_if<ciel::worth_move<U>::value, int>::type = 0>
-    static_vector&
+    inplace_vector&
     operator=(std::initializer_list<move_proxy<value_type>> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
     template<class U = value_type, typename std::enable_if<!ciel::worth_move<U>::value, int>::type = 0>
-    static_vector&
+    inplace_vector&
     operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
@@ -1224,7 +1224,7 @@ public:
     CIEL_NODISCARD reference
     at(const size_type pos) {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::static_vector"));
+            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
         }
 
         return begin_()[pos];
@@ -1233,7 +1233,7 @@ public:
     CIEL_NODISCARD const_reference
     at(const size_type pos) const {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::static_vector"));
+            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
         }
 
         return begin_()[pos];
@@ -1434,40 +1434,36 @@ public:
     }
 
     void
-    swap(static_vector& other) noexcept {
+    swap(inplace_vector& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
     template<class... Args>
     void
-    construct_one_at_end(Args&&... args) {
-        construct_one_at_end_aux(std::forward<Args>(args)...);
+    unchecked_emplace_back(Args&&... args) {
+        unchecked_emplace_back_aux(std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
     void
-    construct_one_at_end(std::initializer_list<U> il, Args&&... args) {
-        construct_one_at_end_aux(il, std::forward<Args>(args)...);
+    unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
+        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
-}; // class static_vector
+}; // class inplace_vector
 
 template<class T, size_t Capacity>
-struct is_trivially_relocatable<static_vector<T, Capacity, true>> : std::true_type {};
+struct is_trivially_relocatable<inplace_vector<T, Capacity, true>> : std::true_type {};
 
 template<class T, size_t Capacity1, size_t Capacity2>
 CIEL_NODISCARD bool
-operator==(const static_vector<T, Capacity1>& lhs, const static_vector<T, Capacity2>& rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+operator==(const inplace_vector<T, Capacity1>& lhs, const inplace_vector<T, Capacity2>& rhs) noexcept {
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, size_t Capacity1, size_t Capacity2>
 CIEL_NODISCARD bool
-operator!=(const static_vector<T, Capacity1>& lhs, const static_vector<T, Capacity2>& rhs) noexcept {
+operator!=(const inplace_vector<T, Capacity1>& lhs, const inplace_vector<T, Capacity2>& rhs) noexcept {
     return !(lhs == rhs);
 }
 
@@ -1477,10 +1473,10 @@ namespace std {
 
 template<class T, size_t Capacity>
 void
-swap(ciel::static_vector<T, Capacity>& lhs, ciel::static_vector<T, Capacity>& rhs) noexcept {
+swap(ciel::inplace_vector<T, Capacity>& lhs, ciel::inplace_vector<T, Capacity>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
 } // namespace std
 
-#endif // CIELLAB_INCLUDE_CIEL_STATIC_VECTOR_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_INPLACE_VECTOR_HPP_

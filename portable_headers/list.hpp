@@ -1574,11 +1574,7 @@ struct is_trivially_relocatable<list<T, Allocator>> : std::false_type {};
 template<class T, class Alloc>
 CIEL_NODISCARD bool
 operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) noexcept {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 template<class T, class Alloc>
