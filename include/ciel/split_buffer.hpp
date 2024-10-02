@@ -62,7 +62,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init_tag, nullptr};
+    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init, nullptr};
 
     template<class, class>
     friend class split_buffer;
@@ -612,6 +612,14 @@ public:
     template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>::value, int>::type = 0>
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
+
+    template<class R, typename std::enable_if<is_range<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : split_buffer(rg.begin(), rg.end(), alloc) {}
+
+    template<class R, typename std::enable_if<is_range<R>::value && !std::is_lvalue_reference<R>::value, int>::type = 0>
+    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
     ~split_buffer() {
         do_destroy();

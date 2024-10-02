@@ -72,10 +72,10 @@ template<class... Types>
 struct is_trivially_relocatable<std::tuple<Types...>> : conjunction<is_trivially_relocatable<Types>...> {};
 #endif
 
-// useless_tag
-struct useless_tag {
-    useless_tag(...) noexcept {}
-}; // struct useless_tag
+// useless_t
+struct useless_t {
+    useless_t(...) noexcept {}
+}; // struct useless_t
 
 // owner
 template<class T, class = typename std::enable_if<std::is_pointer<T>::value>::type>
@@ -366,6 +366,11 @@ CIEL_NODISCARD bool
 operator>=(const T& lhs, const U& rhs) noexcept {
     return !(lhs < rhs);
 }
+
+// from_range_t
+struct from_range_t {};
+
+static constexpr from_range_t from_range;
 
 NAMESPACE_CIEL_END
 

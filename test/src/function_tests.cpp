@@ -95,7 +95,7 @@ TEST(function_tests, swap) {
     };
 
     ciel::function<std::vector<int>()> large_function{large_lambda};
-    ciel::function<std::vector<int>()> small_function{ciel::assume_trivially_relocatable_tag, small_lambda};
+    ciel::function<std::vector<int>()> small_function{ciel::assume_trivially_relocatable, small_lambda};
 
     ASSERT_EQ(large_function(), std::vector<int>({1, 2, 3, 4, 5}));
     ASSERT_EQ(small_function(), std::vector<int>({6, 7, 8, 9, 10}));

@@ -157,7 +157,7 @@ struct is_small_object : std::integral_constant<bool, sizeof(T) <= sizeof(void*)
 
 struct assume_trivially_relocatable_t {};
 
-constexpr assume_trivially_relocatable_t assume_trivially_relocatable_tag;
+static constexpr assume_trivially_relocatable_t assume_trivially_relocatable;
 
 template<class R, class... Args>
 class function<R(Args...)> {

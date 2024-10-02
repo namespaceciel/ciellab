@@ -44,7 +44,7 @@ private:
     // The allocator is intentionally placed first so that when allocator_type utilizes stack buffers,
     // which provide alignment for types exceeding 8 bytes, allocator_type will also be properly aligned.
     // This arrangement may allow end_cap_ to reuse the allocator's tail padding space.
-    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init_tag, nullptr};
+    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init, nullptr};
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
@@ -603,6 +603,14 @@ public:
     template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>::value, int>::type = 0>
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
+
+    template<class R, typename std::enable_if<is_range<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : vector(rg.begin(), rg.end(), alloc) {}
+
+    template<class R, typename std::enable_if<is_range<R>::value && !std::is_lvalue_reference<R>::value, int>::type = 0>
+    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
     template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>

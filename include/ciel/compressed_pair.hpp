@@ -12,11 +12,11 @@ NAMESPACE_CIEL_BEGIN
 
 struct default_init_t {};
 
-constexpr default_init_t default_init_tag;
+static constexpr default_init_t default_init;
 
 struct value_init_t {};
 
-constexpr value_init_t value_init_tag;
+static constexpr value_init_t value_init;
 
 template<class T, size_t Index, bool = std::is_class<T>::value && !is_final<T>::value>
 struct compressed_pair_elem {
@@ -104,7 +104,7 @@ public:
                  std::is_default_constructible<U1>::value && std::is_default_constructible<U2>::value, int>::type
              = 0>
     explicit compressed_pair()
-        : base1(value_init_tag), base2(value_init_tag) {}
+        : base1(value_init), base2(value_init) {}
 
     template<class U1, class U2>
     explicit compressed_pair(U1&& u1, U2&& u2)
