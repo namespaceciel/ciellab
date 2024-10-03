@@ -11,6 +11,7 @@
 
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
+#include <ciel/copy_n.hpp>
 #include <ciel/move_proxy.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/split_buffer.hpp>
@@ -334,17 +335,20 @@ private:
         rd.release();
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0, class U = value_type,
-             typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class Iter, class U = value_type,
+             typename std::enable_if<is_forward_iterator<Iter>::value && !is_trivially_relocatable<U>::value, int>::type
+             = 0>
     void
     insert_impl(iterator pos, Iter first, Iter last, size_type count) {
+        CIEL_PRECONDITION(count != 0);
+
         const size_type old_count        = count;
         pointer old_end                  = end_;
-        auto mid                         = first + count;
+        auto mid                         = std::next(first, count);
         const size_type pos_end_distance = end_ - pos;
 
         if (count > pos_end_distance) {
-            mid = first + pos_end_distance;
+            mid = std::next(first, pos_end_distance);
             construct_at_end(mid, last);
 
             count = pos_end_distance;
@@ -473,6 +477,55 @@ private:
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
         ++end_;
+    }
+
+    template<class Iter>
+    void
+    assign(Iter first, Iter last, const size_type count) {
+        if (capacity() < count) {
+            vector{first, last, allocator_()}.swap(*this);
+            return;
+        }
+
+        if (size() > count) {
+            end_ = alloc_range_destroy(begin_ + count, end_);
+        }
+
+        CIEL_POSTCONDITION(size() <= count);
+
+        Iter mid = ciel::copy_n(first, size(), begin_);
+
+        // if mid < last
+        construct_at_end(mid, last);
+
+        CIEL_POSTCONDITION(size() == count);
+    }
+
+    template<class Iter>
+    iterator
+    insert(iterator pos, Iter first, Iter last, size_type count) {
+        CIEL_PRECONDITION(begin() <= pos);
+        CIEL_PRECONDITION(pos <= end());
+
+        if CIEL_UNLIKELY (count == 0) {
+            return pos;
+        }
+
+        const size_type pos_index = pos - begin();
+
+        if (count + size() > capacity()) { // expansion
+            split_buffer<value_type, allocator_type&> sb(allocator_());
+            sb.reserve_cap_and_offset_to(recommend_cap(count + size()), pos_index);
+
+            sb.construct_at_end(first, last);
+
+            swap_out_buffer(std::move(sb), pos);
+
+        } else { // enough back space
+            insert_impl(pos, first, last, count);
+        }
+
+        return begin() + pos_index;
     }
 
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
@@ -604,13 +657,48 @@ public:
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
-    template<class R, typename std::enable_if<is_range<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    template<class R,
+             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
+             = 0>
     vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(rg.begin(), rg.end(), alloc) {}
 
-    template<class R, typename std::enable_if<is_range<R>::value && !std::is_lvalue_reference<R>::value, int>::type = 0>
+    template<class R,
+             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+             = 0>
     vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
+
+    template<class R,
+             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : vector(alloc) {
+        const auto count = rg.size();
+
+        if CIEL_LIKELY (count > 0) {
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
+
+            construct_at_end(rg.begin(), rg.end());
+        }
+    }
+
+    template<class R,
+             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+             = 0>
+    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : vector(alloc) {
+        const auto count = rg.size();
+
+        if CIEL_LIKELY (count > 0) {
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
+
+            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
 
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
     template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>
@@ -729,24 +817,7 @@ public:
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
 
-        if (capacity() < count) {
-            vector{first, last, allocator_()}.swap(*this);
-            return;
-        }
-
-        if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_);
-        }
-
-        CIEL_POSTCONDITION(size() <= count);
-
-        Iter mid = std::next(first, size());
-
-        std::copy(first, mid, begin_);
-        // if mid < last
-        construct_at_end(mid, last);
-
-        CIEL_POSTCONDITION(size() == count);
+        assign(first, last, count);
     }
 
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
@@ -1026,29 +1097,9 @@ public:
     template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
     iterator
     insert(iterator pos, Iter first, Iter last) {
-        CIEL_PRECONDITION(begin() <= pos);
-        CIEL_PRECONDITION(pos <= end());
+        const size_type count = std::distance(first, last);
 
-        difference_type count = std::distance(first, last);
-        if CIEL_UNLIKELY (count <= 0) {
-            return pos;
-        }
-
-        const size_type pos_index = pos - begin();
-
-        if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(count + size()), pos_index);
-
-            sb.construct_at_end(first, last);
-
-            swap_out_buffer(std::move(sb), pos);
-
-        } else { // enough back space
-            insert_impl(pos, first, last, count);
-        }
-
-        return begin() + pos_index;
+        return insert(pos, first, last, count);
     }
 
     template<class InitializerList,
@@ -1192,33 +1243,49 @@ public:
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
-            assign(rg.begin(), rg.end());
+        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value) {
+            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+                assign(rg.begin(), rg.end(), rg.size());
+
+            } else {
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+            }
 
         } else {
-            assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+                assign(rg.begin(), rg.end());
+
+            } else {
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            }
         }
     }
 
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
     void
     append_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
-            construct_at_end(rg.begin(), rg.end());
-
-        } else {
-            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
-        }
+        insert_range(end(), std::forward<R>(rg));
     }
 
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
     iterator
     insert_range(iterator pos, R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
-            return insert(pos, rg.begin(), rg.end());
+        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value
+                                       && is_forward_iterator<decltype(rg.begin())>::value) {
+            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+                return insert(pos, rg.begin(), rg.end(), rg.size());
+
+            } else {
+                return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+            }
 
         } else {
-            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+                return insert(pos, rg.begin(), rg.end());
+
+            } else {
+                return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            }
         }
     }
 

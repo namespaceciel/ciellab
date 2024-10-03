@@ -11,6 +11,7 @@
 
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
+#include <ciel/copy_n.hpp>
 #include <ciel/move_proxy.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/type_traits.hpp>
@@ -512,6 +513,34 @@ private:
         --begin_;
     }
 
+    template<class Iter>
+    void
+    assign(Iter first, Iter last, const size_type count) {
+        if (back_spare() + size() < count) {
+            const size_type diff = count - back_spare() - size();
+
+            if (front_spare() >= diff) {
+                left_shift_n(diff);
+
+            } else {
+                split_buffer{first, last, allocator_()}.swap(*this);
+                return;
+            }
+
+        } else if (size() > count) {
+            end_ = alloc_range_destroy(begin_ + count, end_);
+        }
+
+        CIEL_POSTCONDITION(size() <= count);
+
+        Iter mid = ciel::copy_n(first, size(), begin_);
+
+        // if mid < last
+        construct_at_end(mid, last);
+
+        CIEL_POSTCONDITION(size() == count);
+    }
+
 public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
 
@@ -613,13 +642,48 @@ public:
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
-    template<class R, typename std::enable_if<is_range<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    template<class R,
+             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
+             = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(rg.begin(), rg.end(), alloc) {}
 
-    template<class R, typename std::enable_if<is_range<R>::value && !std::is_lvalue_reference<R>::value, int>::type = 0>
+    template<class R,
+             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+             = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
+
+    template<class R,
+             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : split_buffer(alloc) {
+        const auto count = rg.size();
+
+        if CIEL_LIKELY (count > 0) {
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
+
+            construct_at_end(rg.begin(), rg.end());
+        }
+    }
+
+    template<class R,
+             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+             = 0>
+    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+        : split_buffer(alloc) {
+        const auto count = rg.size();
+
+        if CIEL_LIKELY (count > 0) {
+            begin_     = alloc_traits::allocate(allocator_(), count);
+            end_cap_() = begin_ + count;
+            end_       = begin_;
+
+            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+        }
+    }
 
     ~split_buffer() {
         do_destroy();
@@ -727,30 +791,7 @@ public:
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
 
-        if (back_spare() + size() < count) {
-            const size_type diff = count - back_spare() - size();
-
-            if (front_spare() >= diff) {
-                left_shift_n(diff);
-
-            } else {
-                split_buffer{first, last, allocator_()}.swap(*this);
-                return;
-            }
-
-        } else if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_);
-        }
-
-        CIEL_POSTCONDITION(size() <= count);
-
-        Iter mid = std::next(first, size());
-
-        std::copy(first, mid, begin_);
-        // if mid < last
-        construct_at_end(mid, last);
-
-        CIEL_POSTCONDITION(size() == count);
+        assign(first, last, count);
     }
 
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
@@ -1140,33 +1181,21 @@ public:
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
-            assign(rg.begin(), rg.end());
+        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value) {
+            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+                assign(rg.begin(), rg.end(), rg.size());
+
+            } else {
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+            }
 
         } else {
-            assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
-        }
-    }
+            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+                assign(rg.begin(), rg.end());
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
-    void
-    append_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
-            construct_at_end(rg.begin(), rg.end());
-
-        } else {
-            construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
-        }
-    }
-
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
-    iterator
-    insert_range(iterator pos, R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
-            return insert(pos, rg.begin(), rg.end());
-
-        } else {
-            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            } else {
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            }
         }
     }
 
