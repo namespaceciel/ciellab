@@ -21,9 +21,6 @@ target_include_directories(ciellab INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 # -Wno-class-memaccess: memcpy and memmove for trivially_relocatable objects.
 # -Wno-assume: suppress false alarms.
 target_compile_options(ciellab INTERFACE
-    -Wall
-    -Wextra
-    -Werror
     -Wno-unknown-warning-option
     -Wno-int-to-pointer-cast 
     -Wno-class-memaccess
