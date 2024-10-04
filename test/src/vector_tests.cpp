@@ -476,10 +476,6 @@ TEST(vector_tests, vector_bool) {
     ASSERT_TRUE(std::equal(il.begin(), il.end(), v.begin()));
 }
 
-TEST(vector_tests, vector_size) {
-    static_assert(sizeof(ciel::vector<int, AlignedAllocator<int, 8, 16>>) == 32, "");
-}
-
 TEST(vector_tests, emplace_il) {
     ciel::vector<ciel::vector<int>> v;
 

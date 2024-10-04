@@ -63,7 +63,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<Allocator, pointer> end_cap_alloc_{default_init, nullptr};
+    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init};
 
     template<class, class>
     friend class split_buffer;
@@ -86,22 +86,22 @@ private:
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     CIEL_NODISCARD const pointer&
     end_cap_() const noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     allocator_type&
     allocator_() noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     const allocator_type&
     allocator_() const noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     CIEL_NODISCARD size_type
@@ -156,6 +156,8 @@ private:
     pointer
     alloc_range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
+        CIEL_PRECONDITION(begin_ <= begin);
+        CIEL_PRECONDITION(end <= end_);
 
         return begin;
     }
@@ -164,6 +166,8 @@ private:
     pointer
     alloc_range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
+        CIEL_PRECONDITION(begin_ <= begin);
+        CIEL_PRECONDITION(end <= end_);
 
         while (end != begin) {
             alloc_traits::destroy(allocator_(), --end);
@@ -459,7 +463,7 @@ private:
             }
 
         } else {
-            unchecked_emplace_back(std::forward<Args>(args)...);
+            return unchecked_emplace_back(std::forward<Args>(args)...);
         }
 
         return back();
@@ -489,28 +493,32 @@ private:
             }
 
         } else {
-            unchecked_emplace_front(std::forward<Args>(args)...);
+            return unchecked_emplace_front(std::forward<Args>(args)...);
         }
 
         return front();
     }
 
     template<class... Args>
-    void
+    reference
     unchecked_emplace_back_aux(Args&&... args) {
         CIEL_PRECONDITION(end_ < end_cap_());
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
         ++end_;
+
+        return back();
     }
 
     template<class... Args>
-    void
+    reference
     unchecked_emplace_front_aux(Args&&... args) {
         CIEL_PRECONDITION(begin_cap_ < begin_);
 
         alloc_traits::construct(allocator_(), begin_ - 1, std::forward<Args>(args)...);
         --begin_;
+
+        return front();
     }
 
     template<class Iter>
@@ -545,10 +553,10 @@ public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
 
     explicit split_buffer(allocator_type& alloc) noexcept
-        : end_cap_alloc_(alloc, nullptr) {}
+        : end_cap_alloc_(nullptr, alloc) {}
 
     explicit split_buffer(const allocator_type& alloc) noexcept
-        : end_cap_alloc_(alloc, nullptr) {}
+        : end_cap_alloc_(nullptr, alloc) {}
 
     split_buffer(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
@@ -609,7 +617,7 @@ public:
         : begin_cap_(other.begin_cap_),
           begin_(other.begin_),
           end_(other.end_),
-          end_cap_alloc_(std::move(other.allocator_()), other.end_cap_()) {
+          end_cap_alloc_(other.end_cap_(), std::move(other.allocator_())) {
         other.set_nullptr();
     }
 
@@ -1155,27 +1163,27 @@ public:
     }
 
     template<class... Args>
-    void
+    reference
     unchecked_emplace_back(Args&&... args) {
-        unchecked_emplace_back_aux(std::forward<Args>(args)...);
+        return unchecked_emplace_back_aux(std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
-    void
+    reference
     unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
-        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+        return unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
     template<class... Args>
-    void
+    reference
     unchecked_emplace_front(Args&&... args) {
-        unchecked_emplace_front_aux(std::forward<Args>(args)...);
+        return unchecked_emplace_front_aux(std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
-    void
+    reference
     unchecked_emplace_front(std::initializer_list<U> il, Args&&... args) {
-        unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
+        return unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
     }
 
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>

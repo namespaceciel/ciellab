@@ -163,8 +163,8 @@ template<size_t size, size_t alignment>
 struct aligned_storage {
     static_assert(sizeof(unsigned char) == 1, "");
 
-    class type {
-        alignas(alignment) unsigned char buffer_[size]{};
+    union type {
+        alignas(alignment) unsigned char buffer_[(size + alignment - 1) / alignment * alignment];
     };
 
 }; // aligned_storage

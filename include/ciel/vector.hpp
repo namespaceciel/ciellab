@@ -42,29 +42,26 @@ private:
 
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    // The allocator is intentionally placed first so that when allocator_type utilizes stack buffers,
-    // which provide alignment for types exceeding 8 bytes, allocator_type will also be properly aligned.
-    // This arrangement may allow end_cap_ to reuse the allocator's tail padding space.
-    compressed_pair<allocator_type, pointer> end_cap_alloc_{default_init, nullptr};
+    compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     CIEL_NODISCARD const pointer&
     end_cap_() const noexcept {
-        return end_cap_alloc_.second();
+        return end_cap_alloc_.first();
     }
 
     allocator_type&
     allocator_() noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     const allocator_type&
     allocator_() const noexcept {
-        return end_cap_alloc_.first();
+        return end_cap_alloc_.second();
     }
 
     CIEL_NODISCARD size_type
@@ -119,6 +116,8 @@ private:
     pointer
     alloc_range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
+        CIEL_PRECONDITION(begin_ <= begin);
+        CIEL_PRECONDITION(end <= end_);
 
         return begin;
     }
@@ -127,6 +126,8 @@ private:
     pointer
     alloc_range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
+        CIEL_PRECONDITION(begin_ <= begin);
+        CIEL_PRECONDITION(end <= end_);
 
         while (end != begin) {
             alloc_traits::destroy(allocator_(), --end);
@@ -464,19 +465,21 @@ private:
             swap_out_buffer(std::move(sb));
 
         } else {
-            unchecked_emplace_back(std::forward<Args>(args)...);
+            return unchecked_emplace_back(std::forward<Args>(args)...);
         }
 
         return back();
     }
 
     template<class... Args>
-    void
+    reference
     unchecked_emplace_back_aux(Args&&... args) {
         CIEL_PRECONDITION(end_ < end_cap_());
 
         alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
         ++end_;
+
+        return back();
     }
 
     template<class Iter>
@@ -570,7 +573,7 @@ public:
     vector() noexcept(noexcept(allocator_type())) = default;
 
     explicit vector(const allocator_type& alloc) noexcept
-        : end_cap_alloc_(alloc, nullptr) {}
+        : end_cap_alloc_(nullptr, alloc) {}
 
     vector(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
@@ -625,7 +628,7 @@ public:
         : vector(other.begin(), other.end(), alloc) {}
 
     vector(vector&& other) noexcept
-        : begin_(other.begin_), end_(other.end_), end_cap_alloc_(std::move(other.allocator_()), other.end_cap_()) {
+        : begin_(other.begin_), end_(other.end_), end_cap_alloc_(other.end_cap_(), std::move(other.allocator_())) {
         other.set_nullptr();
     }
 
@@ -1229,15 +1232,15 @@ public:
     }
 
     template<class... Args>
-    void
+    reference
     unchecked_emplace_back(Args&&... args) {
-        unchecked_emplace_back_aux(std::forward<Args>(args)...);
+        return unchecked_emplace_back_aux(std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
-    void
+    reference
     unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
-        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+        return unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
