@@ -885,7 +885,7 @@ namespace std {
 
 template<class T, size_t Capacity>
 void
-swap(ciel::inplace_vector<T, Capacity>& lhs, ciel::inplace_vector<T, Capacity>& rhs) noexcept {
+swap(ciel::inplace_vector<T, Capacity>& lhs, ciel::inplace_vector<T, Capacity>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 
