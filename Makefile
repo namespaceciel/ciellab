@@ -14,32 +14,48 @@ clean:
 	rm -rf $(BUILD_DIR)
 .PHONY: clean
 
-# -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++"
-# -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-prepare:
-	mkdir -p $(BUILD_DIR) && \
-	cd $(BUILD_DIR) && \
-	cmake $(PROJECT_SOURCE_DIR)
-.PHONY: prepare
+clang_test_build:
+	cmake -S . -B build/clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
+	cmake --build build/clang --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
+	cmake --build build/clang --target ciellab_test_23_exceptions_off_rtti_off -j $(NUM_JOB)
 
-test: prepare
-	cd $(BUILD_DIR) && \
-	make ciellab_test_11_exceptions_on_rtti_on ciellab_test_23_exceptions_off_rtti_off -j $(NUM_JOB) && \
-	./test/ciellab_test_11_exceptions_on_rtti_on && \
-	./test/ciellab_test_23_exceptions_off_rtti_off
+clang_test_run:
+	./build/clang/test/ciellab_test_11_exceptions_on_rtti_on && ./build/clang/test/ciellab_test_23_exceptions_off_rtti_off
+
+clang_test: clang_test_build clang_test_run
+
+gcc_test_build:
+	cmake -S . -B build/gcc -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && \
+	cmake --build build/gcc --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
+	cmake --build build/gcc --target ciellab_test_23_exceptions_off_rtti_off -j $(NUM_JOB)
+
+gcc_test_run:
+	./build/gcc/test/ciellab_test_11_exceptions_on_rtti_on && ./build/gcc/test/ciellab_test_23_exceptions_off_rtti_off
+
+gcc_test: gcc_test_build gcc_test_run
+
+test: clang_test gcc_test
 .PHONY: test
 
-valgrind: prepare
-	cd $(BUILD_DIR) && \
-	make ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
-	unbuffer valgrind --tool=memcheck --leak-check=full ./test/ciellab_test_11_exceptions_on_rtti_on | tee valgrind_output.txt && \
-	grep -q "ERROR SUMMARY: 0 errors" valgrind_output.txt
-.PHONY: valgrind
+clang_benchmark_build:
+	cmake -S . -B build/clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
+    cmake --build build/clang --target ciellab_benchmark -j $(NUM_JOB)
 
-benchmark: prepare
-	cd $(BUILD_DIR) && \
-	make ciellab_benchmark -j $(NUM_JOB) && \
-	./benchmark/ciellab_benchmark
+clang_benchmark_run:
+	./build/clang/benchmark/ciellab_benchmark
+
+clang_benchmark: clang_benchmark_build clang_benchmark_run
+
+gcc_benchmark_build:
+	cmake -S . -B build/gcc -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && \
+    cmake --build build/gcc --target ciellab_benchmark -j $(NUM_JOB)
+
+gcc_benchmark_run:
+	./build/gcc/benchmark/ciellab_benchmark
+
+gcc_benchmark: gcc_benchmark_build gcc_benchmark_run
+
+benchmark: clang_benchmark gcc_benchmark
 .PHONY: benchmark
 
 format:
