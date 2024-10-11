@@ -735,14 +735,14 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    static constexpr void
+    static CIEL_CONSTEXPR_SINCE_CXX14 void
     reserve(const size_type new_cap) {
         if (new_cap > capacity()) {
             ciel::throw_exception(std::bad_alloc{});
         }
     }
 
-    static constexpr void
+    static CIEL_CONSTEXPR_SINCE_CXX14 void
     shrink_to_fit() noexcept {}
 
     // TODO: insert, insert_range, emplace
@@ -851,7 +851,7 @@ public:
             smaller->unchecked_emplace_back(std::move(bigger->operator[](i)));
         }
 
-        bigger->range_destroy(bigger.begin_() + smaller_size, bigger.end_());
+        bigger->range_destroy(bigger->begin_() + smaller_size, bigger->end_());
     }
 
 }; // class inplace_vector

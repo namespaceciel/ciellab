@@ -93,8 +93,6 @@ public:
 template<class T1, class T2>
 class compressed_pair : private compressed_pair_elem<T1, 0>,
                         private compressed_pair_elem<T2, 1> {
-    static_assert(!std::is_same<T1, T2>::value, "");
-
     using base1 = compressed_pair_elem<T1, 0>;
     using base2 = compressed_pair_elem<T2, 1>;
 

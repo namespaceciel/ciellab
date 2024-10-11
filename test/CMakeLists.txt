@@ -19,6 +19,7 @@ set(SOURCES
     src/type_traits_tests.cpp
     src/function_tests.cpp
     src/inplace_vector_tests.cpp
+    src/compressed_pair_tests.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS

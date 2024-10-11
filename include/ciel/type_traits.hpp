@@ -57,20 +57,20 @@ struct is_input_iterator<Iter, void_t<typename std::iterator_traits<Iter>::itera
 
 // is_trivially_relocatable
 template<class T, class = void>
-struct is_trivially_relocatable : disjunction<std::is_empty<T>, std::is_trivially_copyable<T>> {};
-
+struct is_trivially_relocatable : disjunction<std::is_empty<T>, std::is_trivially_move_constructible<T>
 #ifdef _LIBCPP___TYPE_TRAITS_IS_TRIVIALLY_RELOCATABLE_H
-template<class T>
-struct is_trivially_relocatable<T, typename std::enable_if<std::__libcpp_is_trivially_relocatable<T>::value>::type>
-    : std::true_type {};
-#else
+                                              ,
+                                              std::__libcpp_is_trivially_relocatable<T>
+#endif
+                                              > {
+};
+
 template<class First, class Second>
 struct is_trivially_relocatable<std::pair<First, Second>>
     : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
 
 template<class... Types>
 struct is_trivially_relocatable<std::tuple<Types...>> : conjunction<is_trivially_relocatable<Types>...> {};
-#endif
 
 // useless_t
 struct useless_t {
@@ -267,14 +267,19 @@ struct sizeof_without_tail_padding<T, 0> {
 
 }; // struct sizeof_without_tail_padding<T, 0>
 
+// max_align
+static constexpr size_t max_align =
+#ifdef __STDCPP_DEFAULT_NEW_ALIGNMENT__
+    __STDCPP_DEFAULT_NEW_ALIGNMENT__
+#else
+    alignof(std::max_align_t)
+#endif
+    ;
+
 // is_overaligned_for_new
 CIEL_NODISCARD inline bool
 is_overaligned_for_new(const size_t alignment) noexcept {
-#ifdef __STDCPP_DEFAULT_NEW_ALIGNMENT__
-    return alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__;
-#else
-    return alignment > alignof(std::max_align_t);
-#endif
+    return alignment > max_align;
 }
 
 // allocate

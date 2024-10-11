@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <cstddef>
 #include <initializer_list>
+#include <iostream>
 #include <mutex>
 #include <string>
 #include <type_traits>
@@ -121,9 +122,7 @@ struct AlignedAllocator {
     using difference_type                        = ptrdiff_t;
     using propagate_on_container_move_assignment = std::true_type;
 
-#if CIEL_STD_VER >= 17
-    static_assert(alignof(value_type) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "");
-#endif
+    static_assert(alignof(value_type) <= ciel::max_align, "");
 
     alignas(Alignment) unsigned char buf[Size]{};
 
@@ -135,9 +134,9 @@ struct AlignedAllocator {
         other.buf[0] = 'x';
     }
 
-    AlignedAllocator&
-    operator=(const AlignedAllocator&) noexcept
-        = default;
+    // clang-format off
+    AlignedAllocator& operator=(const AlignedAllocator&) noexcept = default;
+    // clang-format on
 
     AlignedAllocator&
     operator=(AlignedAllocator&& other) noexcept {
@@ -161,5 +160,74 @@ struct AlignedAllocator {
     }
 
 }; // struct SimpleAllocator
+
+class HeapMemoryListNode {
+private:
+    HeapMemoryListNode* next{this};
+    HeapMemoryListNode* prev{this};
+
+public:
+    size_t size{0};
+
+    static HeapMemoryListNode dummy_head;
+    static std::mutex mutex;
+
+    void
+    push() noexcept {
+        CIEL_PRECONDITION(this != &dummy_head);
+        CIEL_PRECONDITION(size != 0);
+
+        std::lock_guard<std::mutex> lg(mutex);
+
+        prev                  = &dummy_head;
+        next                  = dummy_head.next;
+        dummy_head.next->prev = this;
+        dummy_head.next       = this;
+    }
+
+    void
+    pop() noexcept {
+        CIEL_PRECONDITION(this != &dummy_head);
+        CIEL_PRECONDITION(size != 0);
+
+        std::lock_guard<std::mutex> lg(mutex);
+
+        next->prev = prev;
+        prev->next = next;
+    }
+
+    ~HeapMemoryListNode() {
+        CIEL_PRECONDITION(this == &dummy_head);
+        CIEL_PRECONDITION(size == 0);
+
+        HeapMemoryListNode* node = next;
+        while (node != this) {
+            std::cerr << "Error: " << node->size << " bytes leaked.\n";
+
+            node = node->next;
+        }
+    }
+
+}; // class HeapMemoryListNode
+
+CIEL_NODISCARD void*
+operator new(const size_t count);
+
+CIEL_NODISCARD void*
+operator new[](const size_t count);
+
+void
+operator delete(void* ptr) noexcept;
+
+void
+operator delete[](void* ptr) noexcept;
+
+#if CIEL_STD_VER >= 14
+void
+operator delete(void* ptr, size_t sz) noexcept;
+
+void
+operator delete[](void* ptr, size_t sz) noexcept;
+#endif
 
 #endif // CIELLAB_TEST_TOOLS_H_

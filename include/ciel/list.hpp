@@ -79,12 +79,10 @@ public:
 
     ~list_iterator() = default;
 
-    list_iterator&
-    operator=(const list_iterator&) noexcept
-        = default;
-    list_iterator&
-    operator=(list_iterator&&) noexcept
-        = default;
+    // clang-format off
+    list_iterator& operator=(const list_iterator&) noexcept = default;
+    list_iterator& operator=(list_iterator&&) noexcept      = default;
+    // clang-format on
 
     CIEL_NODISCARD list_iterator
     next() const noexcept {

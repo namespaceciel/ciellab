@@ -1,12 +1,12 @@
 #!/bin/bash
 
-required_version=16
+required_version=19
 
 echo "Checking if clang-format is installed and not older than ${required_version}."
 
 clang-format --version || (echo "clang-format is not installed." && exit 1)
 
-current_version=$(clang-format --version | grep -oP '(\d+)' | head -n1 | cut -d'.' -f1)
+current_version=$(clang-format --version | sed -E 's/[^0-9]*([0-9]+).*/\1/' | head -n1)
 
 if [ "${current_version}" -lt "${required_version}" ]; then
     echo "clang-format version ${current_version} is less than ${required_version}."

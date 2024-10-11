@@ -100,8 +100,9 @@ TEST(shared_ptr_tests, custom_deleter) {
     int count = 0;
 
     {
-        const ciel::shared_ptr<int> s{new int{123}, [&count](int*) {
+        const ciel::shared_ptr<int> s{new int{123}, [&count](int* ptr) {
                                           ++count;
+                                          delete ptr;
                                       }};
 
         ASSERT_EQ(*s, 123);

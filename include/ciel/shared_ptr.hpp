@@ -818,9 +818,9 @@ protected:
     constexpr enable_shared_from_this() noexcept                     = default;
     enable_shared_from_this(const enable_shared_from_this&) noexcept = default;
     ~enable_shared_from_this()                                       = default;
-    enable_shared_from_this&
-    operator=(const enable_shared_from_this&) noexcept
-        = default;
+    // clang-format off
+    enable_shared_from_this& operator=(const enable_shared_from_this&) noexcept = default;
+    // clang-format on
 
 public:
     template<class>

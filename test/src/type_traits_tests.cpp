@@ -72,9 +72,9 @@ struct T10 {
 
     T10(T10&&) noexcept {}
 
-    T10&
-    operator=(const T10&)
-        = delete;
+    // clang-format off
+    T10& operator=(const T10&) = delete;
+    // clang-format on
 
     T10&
     operator=(T10&&) noexcept {
@@ -85,12 +85,10 @@ struct T10 {
 struct T11 {
     T11(const T11&) = delete;
     T11(T11&&)      = delete;
-    T11&
-    operator=(const T11&)
-        = delete;
-    T11&
-    operator=(T11&&)
-        = delete;
+    // clang-format off
+    T11& operator=(const T11&) = delete;
+    T11& operator=(T11&&)      = delete;
+    // clang-format on
 };
 
 } // namespace
