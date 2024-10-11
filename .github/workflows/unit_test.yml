@@ -13,11 +13,28 @@ jobs:
       - name: submodule
         run: git submodule update --init --recursive
 
-      - name: apt update
-        run: sudo apt update
+      - name: build test against clang
+        run: |
+            sudo bash llvm.sh 20 all
+            clang-20 --version
 
-      - name: install valgrind and unbuffer
-        run: sudo apt install -y valgrind expect
+            cmake -S . -B clang_test_build -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+            cmake --build clang_test_build --target ciellab_test_11_exceptions_on_rtti_on
+            cmake --build clang_test_build --target ciellab_test_23_exceptions_off_rtti_off
 
-      - name: test
-        run: make test
+      - name: build test against gcc
+        run: |
+            gcc --version
+            cmake -S . -B gcc_test_build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+            cmake --build gcc_test_build --target ciellab_test_11_exceptions_on_rtti_on
+            cmake --build gcc_test_build --target ciellab_test_23_exceptions_off_rtti_off
+
+      - name: test against clang
+        run: |
+            clang --version
+            ./clang_test_build/test/ciellab_test_11_exceptions_on_rtti_on && ./clang_test_build/test/ciellab_test_23_exceptions_off_rtti_off
+
+      - name: test against gcc
+        run: |
+            gcc --version
+            ./gcc_test_build/test/ciellab_test_11_exceptions_on_rtti_on && ./gcc_test_build/test/ciellab_test_23_exceptions_off_rtti_off

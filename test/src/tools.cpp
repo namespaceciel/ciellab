@@ -62,7 +62,7 @@ operator delete(void* ptr) noexcept {
     HeapMemoryListNode* node = static_cast<HeapMemoryListNode*>(ptr);
     node->pop();
 
-    std::free(node);
+    std::free(ptr);
 }
 
 CIEL_NODISCARD void*
