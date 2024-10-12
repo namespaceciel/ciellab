@@ -48,7 +48,7 @@ struct list_node : list_node_base {
 }; // struct list_node
 
 template<class T, class Pointer, class Reference>
-class list_iterator {
+class list_iterator : public bidirectional_iterator_base<list_iterator<T, Pointer, Reference>> {
 public:
     using difference_type   = ptrdiff_t;
     using value_type        = T;
@@ -62,6 +62,17 @@ private:
     using node_type      = list_node<value_type>;
 
     base_node_type* it_;
+
+public:
+    void
+    go_next() noexcept {
+        it_ = it_->next_;
+    }
+
+    void
+    go_prev() noexcept {
+        it_ = it_->prev_;
+    }
 
 public:
     list_iterator() noexcept
@@ -102,32 +113,6 @@ public:
     CIEL_NODISCARD pointer
     operator->() const noexcept {
         return &static_cast<node_type*>(it_)->value_;
-    }
-
-    list_iterator&
-    operator++() noexcept {
-        it_ = it_->next_;
-        return *this;
-    }
-
-    CIEL_NODISCARD list_iterator
-    operator++(int) noexcept {
-        list_iterator res(it_);
-        ++(*this);
-        return res;
-    }
-
-    list_iterator&
-    operator--() noexcept {
-        it_ = it_->prev_;
-        return *this;
-    }
-
-    CIEL_NODISCARD list_iterator
-    operator--(int) noexcept {
-        list_iterator res(it_);
-        --(*this);
-        return res;
     }
 
     CIEL_NODISCARD base_node_type*

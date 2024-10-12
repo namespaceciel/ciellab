@@ -380,6 +380,80 @@ struct from_range_t {};
 
 static constexpr from_range_t from_range;
 
+// iterator_base
+template<class Derived>
+struct input_iterator_base {
+    Derived&
+    operator++() noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        self.go_next();
+        return self;
+    }
+
+    Derived
+    operator++(int) noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        Derived res(self);
+        ++self;
+        return res;
+    }
+
+}; // struct input_iterator_base
+
+template<class Derived>
+struct bidirectional_iterator_base : input_iterator_base<Derived> {
+    Derived&
+    operator--() noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        self.go_prev();
+        return self;
+    }
+
+    Derived
+    operator--(int) noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        Derived res(self);
+        --self;
+        return res;
+    }
+
+}; // struct bidirectional_iterator_base
+
+template<class Derived>
+struct random_access_iterator_base : bidirectional_iterator_base<Derived> {
+    using difference_type = ptrdiff_t;
+
+    Derived&
+    operator+=(difference_type n) noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        self.advance(n);
+        return self;
+    }
+
+    Derived&
+    operator-=(difference_type n) noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        return self += -n;
+    }
+
+    Derived
+    operator+(difference_type n) noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        Derived res(self);
+        res += n;
+        return res;
+    }
+
+    Derived
+    operator-(difference_type n) noexcept {
+        Derived& self = static_cast<Derived&>(*this);
+        Derived res(self);
+        res -= n;
+        return res;
+    }
+
+}; // struct random_access_iterator_base
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
