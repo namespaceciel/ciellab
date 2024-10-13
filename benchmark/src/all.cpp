@@ -1,6 +1,5 @@
 #include "benchmark_config.h"
 
-#include <ciel/small_vector.hpp>
 #include <ciel/vector.hpp>
 #include <vector>
 
@@ -34,8 +33,6 @@ define_benchmark(erase_ciel_vector_trivially_relocatable, erase, ciel::vector<Tr
 
 define_benchmark(few_objects_emplace_back_std_vector_int, few_objects_emplace_back, std::vector<int>);
 define_benchmark(few_objects_emplace_back_ciel_vector_int, few_objects_emplace_back, ciel::vector<int>);
-using ciel_small_vector_int_100 = ciel::small_vector<int, 100>;
-define_benchmark(few_objects_emplace_back_ciel_small_vector_int, few_objects_emplace_back, ciel_small_vector_int_100);
 
 define_benchmark(few_objects_emplace_back_std_vector_trivially_relocatable, few_objects_emplace_back,
                  std::vector<TriviallyRelocatable>);

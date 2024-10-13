@@ -8,7 +8,6 @@ set(SOURCES
     src/tools.cpp
     src/finally_tests.cpp
     src/list_tests.cpp
-    src/small_vector_tests.cpp
     src/split_buffer_tests.cpp
     src/vector_tests.cpp
     src/exception_safety_tests.cpp
