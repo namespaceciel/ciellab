@@ -21,7 +21,7 @@ jobs:
             sudo cp /usr/bin/clang++-20 /usr/bin/clang++
             clang --version
 
-            # make clang_test_build
+            make clang_test_build
 
       - name: build test against gcc
         run: |
@@ -31,7 +31,7 @@ jobs:
       - name: test against clang
         run: |
             clang --version
-            # make clang_test_run
+            make clang_test_run
 
       - name: test against gcc
         run: |

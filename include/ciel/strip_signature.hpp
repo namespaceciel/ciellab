@@ -31,7 +31,7 @@ struct strip_signature<R (Class::*)(Args...) const volatile> {
 };
 
 template<class R, class Class, class... Args>
-struct strip_signature<R (Class::*)(Args...)&> {
+struct strip_signature<R (Class::*)(Args...) &> {
     using type = R(Args...);
 };
 

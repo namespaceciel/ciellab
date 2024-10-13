@@ -26,6 +26,7 @@ ConstructAndAssignCounter::move() noexcept {
 HeapMemoryListNode HeapMemoryListNode::dummy_head;
 std::mutex HeapMemoryListNode::mutex;
 
+#ifndef __clang__ // clang is unhappy about this.
 CIEL_NODISCARD void*
 operator new(const size_t count) {
     const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), ciel::max_align);
@@ -62,6 +63,7 @@ operator delete(void* ptr) noexcept {
     HeapMemoryListNode* node = static_cast<HeapMemoryListNode*>(ptr);
     node->pop();
 
+    CIEL_POSTCONDITION(ciel::is_aligned(ptr, ciel::max_align));
     std::free(ptr);
 }
 
@@ -85,4 +87,6 @@ void
 operator delete[](void* ptr, size_t) noexcept {
     return operator delete(ptr);
 }
-#endif
+#endif // if CIEL_STD_VER >= 14
+
+#endif // ifndef __clang__

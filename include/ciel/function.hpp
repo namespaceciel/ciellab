@@ -519,7 +519,8 @@ template<class R, class... Args>
 function(R (*)(Args...)) -> function<R(Args...)>;
 
 template<class F>
-function(F) -> function<strip_signature_t<decltype(&F::operator())>>;
+function(F) -> function<strip_signature_t<decltype(&F::
+                                                   operator())>>;
 
 #endif
 
