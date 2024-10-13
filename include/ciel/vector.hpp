@@ -506,7 +506,8 @@ private:
 
     template<class Iter>
     iterator
-    insert(iterator pos, Iter first, Iter last, size_type count) {
+    insert(const_iterator p, Iter first, Iter last, size_type count) {
+        iterator pos = begin() + (p - begin());
         CIEL_PRECONDITION(begin() <= pos);
         CIEL_PRECONDITION(pos <= end());
 
@@ -1049,17 +1050,20 @@ public:
     }
 
     iterator
-    insert(iterator pos, const value_type& value) {
+    insert(const_iterator p, const value_type& value) {
+        iterator pos = begin() + (p - begin());
         return emplace_impl(insert_impl_callback{this}, pos, value);
     }
 
     iterator
-    insert(iterator pos, value_type&& value) {
+    insert(const_iterator p, value_type&& value) {
+        iterator pos = begin() + (p - begin());
         return emplace_impl(insert_impl_callback{this}, pos, std::move(value));
     }
 
     iterator
-    insert(iterator pos, size_type count, const value_type& value) {
+    insert(const_iterator p, size_type count, const value_type& value) {
+        iterator pos = begin() + (p - begin());
         CIEL_PRECONDITION(begin() <= pos);
         CIEL_PRECONDITION(pos <= end());
 
@@ -1083,7 +1087,8 @@ public:
     // We construct all at the end at first, then rotate them to the right place.
     template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
     iterator
-    insert(iterator pos, Iter first, Iter last) {
+    insert(const_iterator p, Iter first, Iter last) {
+        iterator pos = begin() + (p - begin());
         // record these index because it may reallocate
         const auto pos_index     = pos - begin();
         const size_type old_size = size();
@@ -1099,7 +1104,7 @@ public:
 
     template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
     iterator
-    insert(iterator pos, Iter first, Iter last) {
+    insert(const_iterator pos, Iter first, Iter last) {
         const size_type count = std::distance(first, last);
 
         return insert(pos, first, last, count);
@@ -1109,37 +1114,40 @@ public:
              typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
              = 0>
     iterator
-    insert(iterator pos, InitializerList ilist) {
+    insert(const_iterator pos, InitializerList ilist) {
         return insert(pos, ilist.begin(), ilist.end());
     }
 
     template<class U = value_type, typename std::enable_if<ciel::worth_move<U>::value, int>::type = 0>
     iterator
-    insert(iterator pos, std::initializer_list<move_proxy<value_type>> ilist) {
+    insert(const_iterator pos, std::initializer_list<move_proxy<value_type>> ilist) {
         return insert(pos, ilist.begin(), ilist.end());
     }
 
     template<class U = value_type, typename std::enable_if<!ciel::worth_move<U>::value, int>::type = 0>
     iterator
-    insert(iterator pos, std::initializer_list<value_type> ilist) {
+    insert(const_iterator pos, std::initializer_list<value_type> ilist) {
         return insert(pos, ilist.begin(), ilist.end());
     }
 
     // Note that emplace is not a superset of insert when pos is not at the end.
     template<class... Args>
     iterator
-    emplace(iterator pos, Args&&... args) {
+    emplace(const_iterator p, Args&&... args) {
+        iterator pos = begin() + (p - begin());
         return emplace_impl(insert_impl_callback{this}, pos, std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
     iterator
-    emplace(iterator pos, std::initializer_list<U> il, Args&&... args) {
+    emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
+        iterator pos = begin() + (p - begin());
         return emplace_impl(insert_impl_callback{this}, pos, il, std::forward<Args>(args)...);
     }
 
     iterator
-    erase(iterator pos) {
+    erase(const_iterator p) {
+        iterator pos = begin() + (p - begin());
         CIEL_PRECONDITION(begin() <= pos);
         CIEL_PRECONDITION(pos < end());
 
@@ -1147,7 +1155,9 @@ public:
     }
 
     iterator
-    erase(iterator first, iterator last) {
+    erase(const_iterator f, const_iterator l) {
+        iterator first = begin() + (f - begin());
+        iterator last  = begin() + (l - begin());
         CIEL_PRECONDITION(begin() <= first);
         CIEL_PRECONDITION(last <= end());
 
@@ -1272,7 +1282,7 @@ public:
 
     template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
     iterator
-    insert_range(iterator pos, R&& rg) {
+    insert_range(const_iterator pos, R&& rg) {
         if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value
                                        && is_forward_iterator<decltype(rg.begin())>::value) {
             if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {

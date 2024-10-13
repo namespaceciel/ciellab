@@ -34,7 +34,7 @@ gcc_test_run:
 
 gcc_test: gcc_test_build gcc_test_run
 
-test: clang_test gcc_test
+test: clang_test_build gcc_test_build clang_test_run gcc_test_run
 .PHONY: test
 
 clang_benchmark_build:
@@ -55,7 +55,7 @@ gcc_benchmark_run:
 
 gcc_benchmark: gcc_benchmark_build gcc_benchmark_run
 
-benchmark: clang_benchmark gcc_benchmark
+benchmark: clang_benchmark_build gcc_benchmark_build clang_benchmark_run gcc_benchmark_run
 .PHONY: benchmark
 
 format:
