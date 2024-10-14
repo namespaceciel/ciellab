@@ -20,11 +20,13 @@ target_include_directories(ciellab INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 #   TODO: change to boost::atomic to support DWCAS.
 # -Wno-class-memaccess: memcpy and memmove for trivially_relocatable objects.
 # -Wno-assume: suppress false alarms.
+# -Wno-invalid-offsetof: implementation of datasizeof
 target_compile_options(ciellab INTERFACE
     -Wno-unknown-warning-option
     -Wno-int-to-pointer-cast 
     -Wno-class-memaccess
     -Wno-assume
+    -Wno-invalid-offsetof
 )
 
 if (CIELLAB_BUILD_TESTS)

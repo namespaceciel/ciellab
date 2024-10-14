@@ -553,10 +553,10 @@ private:
                             ? (allocator_type*)end_cap_ptr
                             : (allocator_type*)ciel::align_up((uintptr_t)(end_cap_ptr + 1), alignof(allocator_type)))
 #elif defined(_GLIBCXX_VECTOR)
-            : begin_ptr(is_ebo_optimized ? (pointer*)(&other)
-                                         : (pointer*)ciel::align_up(
-                                               (uintptr_t)(&other) + sizeof_without_tail_padding<allocator_type>::value,
-                                               alignof(pointer))),
+            : begin_ptr(is_ebo_optimized
+                            ? (pointer*)(&other)
+                            : (pointer*)ciel::align_up((uintptr_t)(&other) + datasizeof<allocator_type>::value,
+                                                       alignof(pointer))),
               end_ptr(begin_ptr + 1),
               end_cap_ptr(end_ptr + 1),
               alloc_ptr((allocator_type*)(&other))

@@ -225,7 +225,7 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
     }
 }
 
-// sizeof_without_tail_padding
+// datasizeof
 //
 // Derived can reuse Base's tail padding.
 // e.g.
@@ -238,34 +238,38 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
 // static_assert(sizeof(Base)    == 8, "");
 // static_assert(sizeof(Derived) == 8, "");
 //
-template<class T, size_t TailPadding = alignof(T)>
-struct sizeof_without_tail_padding {
-    static_assert(std::is_class<T>::value && !is_final<T>::value, "");
-
-    struct S : T {
-        unsigned char buf[TailPadding]{};
+// Swapping for trivially relocatable types can be performed using std::memcpy,
+// in which case there is no need to modify the tail padding.
+//
+#if CIEL_STD_VER >= 20
+template<class T>
+struct datasizeof {
+    struct FirstPaddingByte {
+        [[no_unique_address]] T v;
+        char first_padding_byte;
     };
 
-    using type = typename std::conditional<sizeof(S) == sizeof(T), sizeof_without_tail_padding,
-                                           typename sizeof_without_tail_padding<T, TailPadding - 1>::type>::type;
+    static constexpr size_t value = offsetof(FirstPaddingByte, first_padding_byte);
 
-    static constexpr size_t Byte = TailPadding;
-
-    static constexpr size_t value = sizeof(T) - type::Byte;
-
-}; // struct sizeof_without_tail_padding
-
+}; // struct datasizeof
+#else
 template<class T>
-struct sizeof_without_tail_padding<T, 0> {
-    static_assert(std::is_class<T>::value && !is_final<T>::value, "");
+struct datasizeof {
+    template<class U, bool = std::is_class<U>::value && !is_final<U>::value>
+    struct FirstPaddingByte {
+        U v;
+        char first_padding_byte;
+    };
 
-    using type = sizeof_without_tail_padding;
+    template<class U>
+    struct FirstPaddingByte<U, true> : U {
+        char first_padding_byte;
+    };
 
-    static constexpr size_t Byte = 0;
+    static constexpr size_t value = offsetof(FirstPaddingByte<T>, first_padding_byte);
 
-    static constexpr size_t value = sizeof(T);
-
-}; // struct sizeof_without_tail_padding<T, 0>
+}; // struct datasizeof
+#endif // CIEL_STD_VER >= 20
 
 // max_align
 static constexpr size_t max_align =
@@ -307,16 +311,39 @@ deallocate(T* ptr) noexcept {
 }
 
 // relocatable_swap
-template<class T, bool Valid = is_trivially_relocatable<T>::value>
+template<class T>
 void
 relocatable_swap(T& lhs, T& rhs) noexcept {
-    static_assert(Valid, "T must be trivially relocatable, you can explicitly assume it.");
+    unsigned char buffer[datasizeof<T>::value];
 
-    typename aligned_storage<sizeof(T), alignof(T)>::type buffer;
+    std::memcpy(std::addressof(buffer), std::addressof(rhs), datasizeof<T>::value);
+    std::memmove(std::addressof(rhs), std::addressof(lhs), datasizeof<T>::value);
+    std::memcpy(std::addressof(lhs), std::addressof(buffer), datasizeof<T>::value);
+}
 
-    std::memcpy(&buffer, &rhs, sizeof(T));
-    std::memcpy(&rhs, &lhs, sizeof(T));
-    std::memcpy(&lhs, &buffer, sizeof(T));
+inline void
+relocatable_arr_swap(void* f1, void* f2, size_t bytes) noexcept {
+    constexpr size_t buffer_bytes = 128;
+    unsigned char buffer[buffer_bytes];
+
+    unsigned char* first1 = static_cast<unsigned char*>(f1);
+    unsigned char* first2 = static_cast<unsigned char*>(f2);
+
+    while (bytes >= buffer_bytes) {
+        std::memcpy(std::addressof(buffer), first1, buffer_bytes);
+        std::memmove(first1, first2, buffer_bytes);
+        std::memcpy(first2, std::addressof(buffer), buffer_bytes);
+
+        first1 += buffer_bytes;
+        first2 += buffer_bytes;
+        bytes -= buffer_bytes;
+    }
+
+    if (bytes != 0) {
+        std::memcpy(std::addressof(buffer), first1, bytes);
+        std::memmove(first1, first2, bytes);
+        std::memcpy(first2, std::addressof(buffer), bytes);
+    }
 }
 
 // is_range
@@ -455,5 +482,35 @@ struct random_access_iterator_base : bidirectional_iterator_base<Derived> {
 }; // struct random_access_iterator_base
 
 NAMESPACE_CIEL_END
+
+namespace std {
+
+template<class T, typename std::enable_if<ciel::is_trivially_relocatable<T>::value
+#if CIEL_STD_VER >= 20
+                                              && !std::is_constant_evaluated()
+#endif // CIEL_STD_VER >= 20
+                                              ,
+                                          int>::type
+                  = 0>
+T*
+swap_ranges(T* first1, T* last1, T* first2) noexcept {
+    const size_t size       = last1 - first1;
+    const size_t swap_bytes = (size - 1) * sizeof(T) + ciel::datasizeof<T>::value;
+
+    ciel::relocatable_arr_swap(first1, first2, swap_bytes);
+
+    return first2 + size;
+}
+
+#if CIEL_STD_VER >= 20
+template<class T>
+    requires ciel::is_trivially_relocatable<T>::value
+constexpr void
+swap(T& a, T& b) noexcept {
+    ciel::relocatable_swap(a, b);
+}
+#endif // CIEL_STD_VER >= 20
+
+} // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_TYPE_TRAITS_HPP_
