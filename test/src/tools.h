@@ -365,6 +365,8 @@ template<size_t ThrowOn, size_t ValidOn, bool NoexceptMove>
 struct ciel::is_trivially_relocatable<ExceptionGeneratorTriviallyRelocatable<ThrowOn, ValidOn, NoexceptMove>>
     : std::true_type {};
 
+#endif // CIEL_HAS_EXCEPTIONS
+
 // InputIterator
 // simulate input_iterator using int array base
 class InputIterator : public ciel::input_iterator_base<InputIterator> {
@@ -416,6 +418,48 @@ public:
 
 }; // class InputIterator
 
-#endif // CIEL_HAS_EXCEPTIONS
+struct Int : ciel::random_access_iterator_base<Int> {
+private:
+    int i_;
+
+public:
+    Int(const int i = 0) noexcept
+        : i_(i) {}
+
+    Int(const Int&) noexcept = default;
+    // clang-format off
+    Int& operator=(const Int&) noexcept = default;
+    // clang-format on
+
+    Int(Int&& other) noexcept
+        : i_(ciel::exchange(other.i_, -1)) {}
+
+    Int&
+    operator=(Int&& other) noexcept {
+        i_ = ciel::exchange(other.i_, -1);
+        return *this;
+    }
+
+    void
+    go_next() noexcept {
+        ++i_;
+    }
+
+    void
+    go_prev() noexcept {
+        --i_;
+    }
+
+    void
+    advance(ptrdiff_t n) noexcept {
+        i_ += n;
+    }
+
+    CIEL_NODISCARD
+    operator int() const noexcept {
+        return i_;
+    }
+
+}; // struct Int
 
 #endif // CIELLAB_TEST_TOOLS_H_

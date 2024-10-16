@@ -2,6 +2,12 @@
 
 #include <ciel/compressed_pair.hpp>
 
+namespace {
+
+struct Empty {};
+
+} // namespace
+
 TEST(compressed_pair_tests, constructor) {
     using IntPair = ciel::compressed_pair<int, int>;
 
@@ -34,4 +40,9 @@ TEST(compressed_pair_tests, default_init) {
     ::new (&p1) IntPair(ciel::default_init, ciel::default_init);
     ASSERT_EQ(p1.first(), 4);
     ASSERT_EQ(p1.second(), 3);
+}
+
+TEST(compressed_pair_tests, both_same_empty_bases) {
+    ciel::compressed_pair<Empty, Empty> p;
+    static_assert(sizeof(p) == 2, "");
 }

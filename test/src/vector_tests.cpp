@@ -4,52 +4,52 @@
 #include <ciel/vector.hpp>
 
 TEST(vector_tests, constructors) {
-    const ciel::vector<int> v1;
+    const ciel::vector<Int> v1;
     ASSERT_TRUE(v1.empty());
     ASSERT_EQ(v1.size(), 0);
     ASSERT_EQ(v1.capacity(), 0);
 
-    const ciel::vector<int> v2(v1);
+    const ciel::vector<Int> v2(v1);
     ASSERT_TRUE(v2.empty());
 
-    const ciel::vector<int> v3(10, 20);
+    const ciel::vector<Int> v3(10, 20);
     ASSERT_EQ(v3.size(), 10);
 
-    const ciel::vector<int> v4(15);
+    const ciel::vector<Int> v4(15);
     ASSERT_EQ(v4.size(), 15);
 
-    ciel::vector<int> v5(v4);
+    ciel::vector<Int> v5(v4);
     ASSERT_EQ(v5.size(), 15);
 
-    const ciel::vector<int> v6(std::move(v5));
+    const ciel::vector<Int> v6(std::move(v5));
     ASSERT_EQ(v5.size(), 0);
     ASSERT_EQ(v6.size(), 15);
 
-    const ciel::vector<int> v7({1, 2, 3, 4, 5});
+    const ciel::vector<Int> v7({1, 2, 3, 4, 5});
     ASSERT_EQ(v7.size(), 5);
 
-    const ciel::vector<int> v8(0, 10);
+    const ciel::vector<Int> v8(0, 10);
     ASSERT_TRUE(v8.empty());
 
-    const ciel::vector<int> v9(0);
+    const ciel::vector<Int> v9(0);
     ASSERT_TRUE(v9.empty());
 
-    const ciel::vector<int> v10(v7.begin(), v7.begin());
+    const ciel::vector<Int> v10(v7.begin(), v7.begin());
     ASSERT_TRUE(v10.empty());
 }
 
 TEST(vector_tests, assignments) {
-    ciel::vector<int> v1({1, 2, 3, 4, 5});
-    ciel::vector<int> v2{};
+    ciel::vector<Int> v1({1, 2, 3, 4, 5});
+    ciel::vector<Int> v2{};
 
     v2 = std::move(v1);
     ASSERT_TRUE(v1.empty());
     {
-        std::initializer_list<int> il{1, 2, 3, 4, 5};
+        std::initializer_list<Int> il{1, 2, 3, 4, 5};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
     }
 
-    ciel::vector<int> v3{};
+    ciel::vector<Int> v3{};
     v3 = v2;
     ASSERT_EQ(v2, v3);
 
@@ -59,14 +59,14 @@ TEST(vector_tests, assignments) {
     // expansion
     v3 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     {
-        std::initializer_list<int> il{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        std::initializer_list<Int> il{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v3.begin()));
     }
 
     // shrink
     v3.assign(2, 10);
     {
-        std::initializer_list<int> il{10, 10};
+        std::initializer_list<Int> il{10, 10};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v3.begin()));
     }
 }
@@ -87,23 +87,23 @@ TEST(vector_tests, at) {
 
 TEST(vector_tests, push_and_pop) {
     // empty
-    ciel::vector<int> v1;
+    ciel::vector<Int> v1;
     ASSERT_EQ(v1.emplace_back(0), 0);
 
     v1.push_back(1);
     ASSERT_EQ(v1.emplace_back(2), 2);
     {
-        std::initializer_list<int> il{0, 1, 2};
+        std::initializer_list<Int> il{0, 1, 2};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
-    ciel::vector<int> v2({0, 1, 2, 3, 4});
+    ciel::vector<Int> v2({0, 1, 2, 3, 4});
     ASSERT_EQ(v2.emplace_back(5), 5);
 
     v2.shrink_to_fit();
     ASSERT_EQ(v2.emplace_back(6), 6);
     {
-        std::initializer_list<int> il{0, 1, 2, 3, 4, 5, 6};
+        std::initializer_list<Int> il{0, 1, 2, 3, 4, 5, 6};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
     }
 
@@ -123,9 +123,9 @@ TEST(vector_tests, push_and_pop) {
 }
 
 TEST(vector_tests, resize) {
-    ciel::vector<int> v1(10, 5);
+    ciel::vector<Int> v1(10, 5);
     ASSERT_EQ(v1.size(), 10);
-    for (const int i : v1) {
+    for (const Int& i : v1) {
         ASSERT_EQ(i, 5);
     }
 
@@ -138,7 +138,7 @@ TEST(vector_tests, resize) {
     v1.reserve(100);
     v1.resize(10, 77);
     {
-        std::initializer_list<int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77};
+        std::initializer_list<Int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
@@ -146,20 +146,20 @@ TEST(vector_tests, resize) {
     v1.shrink_to_fit();
     v1.resize(12, 44);
     {
-        std::initializer_list<int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44};
+        std::initializer_list<Int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 }
 
 TEST(vector_tests, insert_and_emplace) {
-    ciel::vector<int> v1{0, 1, 2, 3, 4, 5, 6};
+    ciel::vector<Int> v1{0, 1, 2, 3, 4, 5, 6};
 
     // insert at front
     ASSERT_EQ(*v1.insert(v1.begin(), 21), 21);
     ASSERT_EQ(*v1.emplace(v1.begin(), 22), 22);
 
     {
-        std::initializer_list<int> il{22, 21, 0, 1, 2, 3, 4, 5, 6};
+        std::initializer_list<Int> il{22, 21, 0, 1, 2, 3, 4, 5, 6};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
@@ -171,14 +171,14 @@ TEST(vector_tests, insert_and_emplace) {
     ASSERT_EQ(*v1.insert(v1.begin() + 5, 2, 41), 41);
 
     {
-        std::initializer_list<int> il{22, 21, 0, 1, 2, 41, 41, 3, 4, 5, 6, 31, 32};
+        std::initializer_list<Int> il{22, 21, 0, 1, 2, 41, 41, 3, 4, 5, 6, 31, 32};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
     ASSERT_EQ(*v1.insert(v1.begin() + 8, {42, 43}), 42);
 
     {
-        std::initializer_list<int> il{22, 21, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
+        std::initializer_list<Int> il{22, 21, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
@@ -186,7 +186,7 @@ TEST(vector_tests, insert_and_emplace) {
     ASSERT_EQ(*v1.insert(v1.begin(), v1.begin(), v1.begin()), 22);
 
     {
-        std::initializer_list<int> il{22, 21, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
+        std::initializer_list<Int> il{22, 21, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
@@ -194,7 +194,7 @@ TEST(vector_tests, insert_and_emplace) {
     v1.shrink_to_fit();
     ASSERT_EQ(*v1.insert(v1.begin() + 2, 99), 99);
     {
-        std::initializer_list<int> il{22, 21, 99, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
+        std::initializer_list<Int> il{22, 21, 99, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
@@ -202,23 +202,23 @@ TEST(vector_tests, insert_and_emplace) {
     v1.shrink_to_fit();
     ASSERT_EQ(*v1.insert(v1.begin() + 2, v1.begin() + 1, v1.begin() + 5), 21);
     {
-        std::initializer_list<int> il{22, 21, 21, 99, 0, 1, 99, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
+        std::initializer_list<Int> il{22, 21, 21, 99, 0, 1, 99, 0, 1, 2, 41, 41, 3, 42, 43, 4, 5, 6, 31, 32};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 }
 
 TEST(vector_tests, erase) {
-    ciel::vector<int> v1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    ciel::vector<Int> v1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     ASSERT_EQ(*v1.erase(v1.begin()), 1);
     {
-        std::initializer_list<int> il{1, 2, 3, 4, 5, 6, 7, 8, 9};
+        std::initializer_list<Int> il{1, 2, 3, 4, 5, 6, 7, 8, 9};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
     ASSERT_EQ(*v1.erase(v1.begin() + 2, v1.begin() + 4), 5);
     {
-        std::initializer_list<int> il{1, 2, 5, 6, 7, 8, 9};
+        std::initializer_list<Int> il{1, 2, 5, 6, 7, 8, 9};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
@@ -228,14 +228,14 @@ TEST(vector_tests, erase) {
     auto res = v1.erase(v1.end() - 1);
     ASSERT_EQ(res, v1.end());
     {
-        std::initializer_list<int> il{1, 2, 5, 6, 7, 8};
+        std::initializer_list<Int> il{1, 2, 5, 6, 7, 8};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
     res = v1.erase(v1.end() - 2, v1.end());
     ASSERT_EQ(res, v1.end());
     {
-        std::initializer_list<int> il{1, 2, 5, 6};
+        std::initializer_list<Int> il{1, 2, 5, 6};
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 }
@@ -354,38 +354,24 @@ TEST(vector_tests, copy_and_move_behavior3) {
 #if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
 TEST(vector_tests, std_vector_rob) {
     {
-        std::vector<int> v{0, 1, 2, 3, 4};
-        ciel::vector<int> c{std::move(v)};
+        std::vector<Int> v{0, 1, 2, 3, 4};
+        ciel::vector<Int> c{std::move(v)};
 
         ASSERT_TRUE(v.empty());
         ASSERT_EQ(v.capacity(), 0);
         {
-            std::initializer_list<int> il{0, 1, 2, 3, 4};
+            std::initializer_list<Int> il{0, 1, 2, 3, 4};
             ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
         }
     }
     {
-        std::vector<int, AlignedAllocator<int, 1, 1>> v{0, 1, 2, 3, 4};
-        ciel::vector<int, AlignedAllocator<int, 1, 1>> c{std::move(v)};
+        std::vector<Int, AlignedAllocator<Int, 1, 1>> v{0, 1, 2, 3, 4};
+        ciel::vector<Int, AlignedAllocator<Int, 1, 1>> c{std::move(v)};
 
         ASSERT_TRUE(v.empty());
         ASSERT_EQ(v.capacity(), 0);
         {
-            std::initializer_list<int> il{0, 1, 2, 3, 4};
-            ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
-        }
-
-        const auto v_alloc = v.get_allocator();
-        ASSERT_EQ(v_alloc.buf[0], 'x');
-    }
-    {
-        std::vector<int, AlignedAllocator<int, 1, 8>> v{0, 1, 2, 3, 4};
-        ciel::vector<int, AlignedAllocator<int, 1, 8>> c{std::move(v)};
-
-        ASSERT_TRUE(v.empty());
-        ASSERT_EQ(v.capacity(), 0);
-        {
-            std::initializer_list<int> il{0, 1, 2, 3, 4};
+            std::initializer_list<Int> il{0, 1, 2, 3, 4};
             ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
         }
 
@@ -393,13 +379,13 @@ TEST(vector_tests, std_vector_rob) {
         ASSERT_EQ(v_alloc.buf[0], 'x');
     }
     {
-        std::vector<int, AlignedAllocator<int, 1, 16>> v{0, 1, 2, 3, 4};
-        ciel::vector<int, AlignedAllocator<int, 1, 16>> c{std::move(v)};
+        std::vector<Int, AlignedAllocator<Int, 1, 8>> v{0, 1, 2, 3, 4};
+        ciel::vector<Int, AlignedAllocator<Int, 1, 8>> c{std::move(v)};
 
         ASSERT_TRUE(v.empty());
         ASSERT_EQ(v.capacity(), 0);
         {
-            std::initializer_list<int> il{0, 1, 2, 3, 4};
+            std::initializer_list<Int> il{0, 1, 2, 3, 4};
             ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
         }
 
@@ -407,13 +393,13 @@ TEST(vector_tests, std_vector_rob) {
         ASSERT_EQ(v_alloc.buf[0], 'x');
     }
     {
-        std::vector<int, AlignedAllocator<int, 8, 16>> v{0, 1, 2, 3, 4};
-        ciel::vector<int, AlignedAllocator<int, 8, 16>> c{std::move(v)};
+        std::vector<Int, AlignedAllocator<Int, 1, 16>> v{0, 1, 2, 3, 4};
+        ciel::vector<Int, AlignedAllocator<Int, 1, 16>> c{std::move(v)};
 
         ASSERT_TRUE(v.empty());
         ASSERT_EQ(v.capacity(), 0);
         {
-            std::initializer_list<int> il{0, 1, 2, 3, 4};
+            std::initializer_list<Int> il{0, 1, 2, 3, 4};
             ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
         }
 
@@ -421,13 +407,27 @@ TEST(vector_tests, std_vector_rob) {
         ASSERT_EQ(v_alloc.buf[0], 'x');
     }
     {
-        std::vector<int, AlignedAllocator<int, 16, 16>> v{0, 1, 2, 3, 4};
-        ciel::vector<int, AlignedAllocator<int, 16, 16>> c{std::move(v)};
+        std::vector<Int, AlignedAllocator<Int, 8, 16>> v{0, 1, 2, 3, 4};
+        ciel::vector<Int, AlignedAllocator<Int, 8, 16>> c{std::move(v)};
 
         ASSERT_TRUE(v.empty());
         ASSERT_EQ(v.capacity(), 0);
         {
-            std::initializer_list<int> il{0, 1, 2, 3, 4};
+            std::initializer_list<Int> il{0, 1, 2, 3, 4};
+            ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
+        }
+
+        const auto v_alloc = v.get_allocator();
+        ASSERT_EQ(v_alloc.buf[0], 'x');
+    }
+    {
+        std::vector<Int, AlignedAllocator<Int, 16, 16>> v{0, 1, 2, 3, 4};
+        ciel::vector<Int, AlignedAllocator<Int, 16, 16>> c{std::move(v)};
+
+        ASSERT_TRUE(v.empty());
+        ASSERT_EQ(v.capacity(), 0);
+        {
+            std::initializer_list<Int> il{0, 1, 2, 3, 4};
             ASSERT_TRUE(std::equal(il.begin(), il.end(), c.begin()));
         }
 
@@ -437,19 +437,19 @@ TEST(vector_tests, std_vector_rob) {
 }
 
 TEST(vector_tests, give_back_to_std_vector) {
-    std::initializer_list<int> il{0, 1, 2, 3, 4};
+    std::initializer_list<Int> il{0, 1, 2, 3, 4};
 
     {
-        ciel::vector<int> c{0, 1, 2, 3, 4};
-        std::vector<int> v = std::move(c);
+        ciel::vector<Int> c{0, 1, 2, 3, 4};
+        std::vector<Int> v = std::move(c);
 
         ASSERT_TRUE(c.empty());
         ASSERT_EQ(c.capacity(), 0);
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v.begin()));
     }
     {
-        ciel::vector<int, AlignedAllocator<int, 1, 1>> c{0, 1, 2, 3, 4};
-        std::vector<int, AlignedAllocator<int, 1, 1>> v = std::move(c);
+        ciel::vector<Int, AlignedAllocator<Int, 1, 1>> c{0, 1, 2, 3, 4};
+        std::vector<Int, AlignedAllocator<Int, 1, 1>> v = std::move(c);
 
         ASSERT_TRUE(c.empty());
         ASSERT_EQ(c.capacity(), 0);
@@ -459,8 +459,8 @@ TEST(vector_tests, give_back_to_std_vector) {
         ASSERT_EQ(c_alloc.buf[0], 'x');
     }
     {
-        ciel::vector<int> c{0, 1, 2, 3, 4};
-        std::vector<int> v{std::move(c)};
+        ciel::vector<Int> c{0, 1, 2, 3, 4};
+        std::vector<Int> v{std::move(c)};
 
         ASSERT_TRUE(c.empty());
         ASSERT_EQ(c.capacity(), 0);
@@ -493,3 +493,29 @@ TEST(vector_tests, emplace_il) {
     ASSERT_EQ(v[1], ciel::vector<int>({3, 4}));
     ASSERT_EQ(v[2], ciel::vector<int>({5, 6}));
 }
+
+/* FIXME
+TEST(vector_tests, insert_self_reference) {
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        ASSERT_EQ(v.size(), v.capacity());
+
+        v.insert(v.begin() + 1, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 2, 1, 2, 3, 4}));
+    }
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        v.reserve(10);
+
+        v.insert(v.begin() + 1, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 2, 1, 2, 3, 4}));
+    }
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        v.reserve(10);
+
+        v.insert(v.begin() + 1, 5, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 2, 2, 2, 2, 2, 1, 2, 3, 4}));
+    }
+}
+*/
