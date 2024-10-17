@@ -493,6 +493,11 @@ struct random_access_iterator_base : bidirectional_iterator_base<Derived> {
 
 }; // struct random_access_iterator_base
 
+// can_be_destroyed_from_base
+template<class Base, class Derived>
+struct can_be_destroyed_from_base
+    : conjunction<std::is_destructible<Base>, std::has_virtual_destructor<Base>, std::is_base_of<Base, Derived>> {};
+
 NAMESPACE_CIEL_END
 
 namespace std {
