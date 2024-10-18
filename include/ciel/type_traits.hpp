@@ -56,13 +56,14 @@ struct is_input_iterator<Iter, void_t<typename std::iterator_traits<Iter>::itera
     : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
 
 // is_trivially_relocatable
-template<class T, class = void>
-struct is_trivially_relocatable : disjunction<std::is_empty<T>, std::is_trivially_move_constructible<T>
+template<class T>
+struct is_trivially_relocatable : disjunction<std::is_trivially_move_constructible<T>,
 #ifdef _LIBCPP___TYPE_TRAITS_IS_TRIVIALLY_RELOCATABLE_H
-                                              ,
-                                              std::__libcpp_is_trivially_relocatable<T>
+                                              std::__libcpp_is_trivially_relocatable<T>,
+#elif __has_builtin(__is_trivially_relocatable)
+                                              std::integral_constant<bool, __is_trivially_relocatable(T)>,
 #endif
-                                              > {
+                                              std::false_type> {
 };
 
 template<class First, class Second>
@@ -186,7 +187,7 @@ exchange(T& obj, U&& new_value) noexcept(std::is_nothrow_move_constructible<T>::
     return old_value;
 }
 
-// Is a pointer aligned?
+// is_aligned
 CIEL_NODISCARD inline bool
 is_aligned(void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
@@ -195,7 +196,7 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
     return ((uintptr_t)ptr % alignment) == 0;
 }
 
-// Align upwards
+// align_up
 CIEL_NODISCARD inline uintptr_t
 align_up(uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(alignment != 0);
@@ -210,7 +211,7 @@ align_up(uintptr_t sz, const size_t alignment) noexcept {
     }
 }
 
-// Align downwards
+// align_down
 CIEL_NODISCARD inline uintptr_t
 align_down(uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(alignment != 0);
