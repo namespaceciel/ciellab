@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <ciel/compare.hpp>
 #include <ciel/list.hpp>
 #include <ciel/split_buffer.hpp>
 #include <ciel/vector.hpp>
+
 #include <random>
 
 #ifdef CIEL_HAS_EXCEPTIONS

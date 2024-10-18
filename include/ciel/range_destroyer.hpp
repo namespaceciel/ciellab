@@ -1,11 +1,12 @@
 #ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 #define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 
-#include <memory>
-#include <type_traits>
-
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
+#include <ciel/void_t.hpp>
+
+#include <memory>
+#include <type_traits>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -23,7 +24,7 @@ private:
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
     pointer begin_;
-    compressed_pair<pointer, Allocator> end_alloc_;
+    ciel::compressed_pair<pointer, Allocator> end_alloc_;
 
     CIEL_NODISCARD pointer&
     end_() noexcept {
@@ -74,7 +75,7 @@ public:
 
 template<class T, class Allocator>
 class range_destroyer<T, Allocator,
-                      void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
+                      ciel::void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
 private:

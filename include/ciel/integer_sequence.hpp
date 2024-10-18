@@ -1,9 +1,9 @@
 #ifndef CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
 #define CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
 
-#include <cstddef>
-
 #include <ciel/config.hpp>
+
+#include <cstddef>
 
 NAMESPACE_CIEL_BEGIN
 

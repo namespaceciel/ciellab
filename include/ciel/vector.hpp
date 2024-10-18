@@ -1,6 +1,18 @@
 #ifndef CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 
+#include <ciel/alignment.hpp>
+#include <ciel/compare.hpp>
+#include <ciel/compressed_pair.hpp>
+#include <ciel/config.hpp>
+#include <ciel/copy_n.hpp>
+#include <ciel/is_range.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/iterator_category.hpp>
+#include <ciel/range_destroyer.hpp>
+#include <ciel/split_buffer.hpp>
+#include <ciel/swap.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
@@ -8,13 +20,6 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
-
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
-#include <ciel/copy_n.hpp>
-#include <ciel/range_destroyer.hpp>
-#include <ciel/split_buffer.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -41,7 +46,7 @@ private:
 
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
+    ciel::compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
@@ -100,7 +105,7 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
@@ -135,9 +140,9 @@ private:
         return begin;
     }
 
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb, pointer pos) noexcept {
+    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb, pointer pos) noexcept {
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
             const size_type front_count = pos - begin_;
@@ -162,9 +167,9 @@ private:
         sb.set_nullptr();
     }
 
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
+    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb,
                     pointer pos) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
         if (begin_) {
             const size_type front_count = pos - begin_;
@@ -202,9 +207,9 @@ private:
         sb.set_nullptr();
     }
 
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept {
+    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb) noexcept {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
@@ -222,9 +227,9 @@ private:
         sb.set_nullptr();
     }
 
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept(
+    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb) noexcept(
         std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
@@ -277,7 +282,7 @@ private:
         end_cap_() = nullptr;
     }
 
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     iterator
     erase_impl(iterator first, iterator last, const size_type distance) noexcept {
         CIEL_PRECONDITION(first < last);
@@ -293,7 +298,7 @@ private:
         return begin() + index;
     }
 
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     iterator
     erase_impl(iterator first, iterator last, const size_type) {
         CIEL_PRECONDITION(first < last);
@@ -307,7 +312,7 @@ private:
     }
 
     template<class T1, class T2, class U = value_type,
-             typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+             typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     insert_impl(iterator pos, T1&& t1, T2&& t2, const size_type count) {
         // ------------------------------------
@@ -322,7 +327,7 @@ private:
         //                       ----------       |
         //                       first last      range_destroyer in case of exceptions
         //                       |  count |
-        range_destroyer<value_type, allocator_type&> rd{pos + count, end_ + count, allocator_()};
+        ciel::range_destroyer<value_type, allocator_type&> rd{pos + count, end_ + count, allocator_()};
         const pointer old_end = end_;
         end_                  = pos;
         // ----------------------------------------------
@@ -336,7 +341,8 @@ private:
     }
 
     template<class Iter, class U = value_type,
-             typename std::enable_if<is_forward_iterator<Iter>::value && !is_trivially_relocatable<U>::value, int>::type
+             typename std::enable_if<
+                 ciel::is_forward_iterator<Iter>::value && !ciel::is_trivially_relocatable<U>::value, int>::type
              = 0>
     void
     insert_impl(iterator pos, Iter first, Iter last, size_type count) {
@@ -361,7 +367,7 @@ private:
         }
     }
 
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     insert_impl(iterator pos, size_type count, const value_type& value, const size_type old_count) {
         pointer old_end = end_;
@@ -391,13 +397,14 @@ private:
             : this_{t} {}
 
         template<class... Args, class U = value_type,
-                 typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+                 typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
         void
         operator()(iterator pos, Args&&... args) const {
             constexpr size_type count = 1;
             std::memmove(pos + count, pos, sizeof(value_type) * (this_->end_ - pos));
 
-            range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count, this_->allocator_()};
+            ciel::range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count,
+                                                                  this_->allocator_()};
             const pointer old_end = this_->end_;
             this_->end_           = pos;
 
@@ -408,7 +415,7 @@ private:
         }
 
         template<class... Args, class U = value_type,
-                 typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+                 typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
         void
         operator()(iterator pos, Args&&... args) const {
             this_->move_range(pos, this_->end_, pos + 1);
@@ -417,7 +424,7 @@ private:
 
         template<class U, class URaw = typename std::decay<U>::type,
                  typename std::enable_if<
-                     std::is_same<value_type, URaw>::value && !is_trivially_relocatable<URaw>::value, int>::type
+                     std::is_same<value_type, URaw>::value && !ciel::is_trivially_relocatable<URaw>::value, int>::type
                  = 0>
         void
         operator()(iterator pos, U&& value) const {
@@ -435,7 +442,7 @@ private:
         const size_type pos_index = pos - begin();
 
         if (end_ == end_cap_()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
+            ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
             sb.unchecked_emplace_back(std::forward<Args>(args)...);
@@ -456,7 +463,7 @@ private:
     reference
     emplace_back_aux(Args&&... args) {
         if (end_ == end_cap_()) {
-            split_buffer<value_type, allocator_type&> sb(allocator_());
+            ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
 
             sb.unchecked_emplace_back(std::forward<Args>(args)...);
@@ -517,7 +524,7 @@ private:
         const size_type pos_index = pos - begin();
 
         if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
+            ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(count + size()), pos_index);
 
             sb.construct_at_end(first, last);
@@ -536,7 +543,7 @@ private:
         static_assert(!std::is_same<value_type, bool>::value, "");
 
         static constexpr bool is_ebo_optimized
-            = std::is_empty<allocator_type>::value && !is_final<allocator_type>::value;
+            = std::is_empty<allocator_type>::value && !ciel::is_final<allocator_type>::value;
 
         pointer* const begin_ptr;
         pointer* const end_ptr;
@@ -554,7 +561,7 @@ private:
 #elif defined(_GLIBCXX_VECTOR)
             : begin_ptr(is_ebo_optimized
                             ? (pointer*)(&other)
-                            : (pointer*)ciel::align_up((uintptr_t)(&other) + datasizeof<allocator_type>::value,
+                            : (pointer*)ciel::align_up((uintptr_t)(&other) + ciel::datasizeof<allocator_type>::value,
                                                        alignof(pointer))),
               end_ptr(begin_ptr + 1),
               end_cap_ptr(end_ptr + 1),
@@ -597,7 +604,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         while (first != last) {
@@ -606,7 +613,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         const auto count = std::distance(first, last);
@@ -649,21 +656,22 @@ public:
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<
+                          ciel::is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
+                      = 0>
+    vector(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(rg.begin(), rg.end(), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<
+                          ciel::is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+                      = 0>
+    vector(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
-    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && std::is_lvalue_reference<R>::value,
+                                              int>::type
+                      = 0>
+    vector(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         const auto count = rg.size();
 
@@ -676,10 +684,10 @@ public:
         }
     }
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value,
+                                              int>::type
+                      = 0>
+    vector(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         const auto count = rg.size();
 
@@ -787,7 +795,7 @@ public:
         CIEL_POSTCONDITION(size() == count);
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -795,7 +803,7 @@ public:
         assign(first, last, count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         clear();
@@ -967,7 +975,7 @@ public:
             return;
         }
 
-        split_buffer<value_type, allocator_type&> sb(allocator_());
+        ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
         sb.reserve_cap_and_offset_to(new_cap, size());
 
         swap_out_buffer(std::move(sb));
@@ -985,7 +993,7 @@ public:
         }
 
         if (size() > 0) {
-            split_buffer<value_type, allocator_type&> sb(allocator_());
+            ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
 
             CIEL_TRY {
                 sb.reserve_cap_and_offset_to(size(), size());
@@ -1026,7 +1034,7 @@ public:
         const size_type pos_index = pos - begin();
 
         if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
+            ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + count), pos_index);
 
             sb.construct_at_end(count, value);
@@ -1041,7 +1049,7 @@ public:
     }
 
     // We construct all at the end at first, then rotate them to the right place.
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     iterator
     insert(const_iterator p, Iter first, Iter last) {
         iterator pos = begin() + (p - begin());
@@ -1058,7 +1066,7 @@ public:
         return begin() + pos_index;
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     iterator
     insert(const_iterator pos, Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -1164,13 +1172,13 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    template<class U = vector, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = vector, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap(vector& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
-    template<class U = vector, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = vector, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap(vector& other) noexcept(alloc_traits::propagate_on_container_swap::value
                                  || alloc_traits::is_always_equal::value) {
@@ -1194,10 +1202,10 @@ public:
         return unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value) {
             if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end(), rg.size());
 
@@ -1215,17 +1223,17 @@ public:
         }
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     void
     append_range(R&& rg) {
         insert_range(end(), std::forward<R>(rg));
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     iterator
     insert_range(const_iterator pos, R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value
-                                       && is_forward_iterator<decltype(rg.begin())>::value) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value
+                                       && ciel::is_forward_iterator<decltype(rg.begin())>::value) {
             if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
                 return insert(pos, rg.begin(), rg.end(), rg.size());
 

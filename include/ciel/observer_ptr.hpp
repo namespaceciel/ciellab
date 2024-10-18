@@ -1,12 +1,13 @@
 #ifndef CIELLAB_INCLUDE_CIEL_OBSERVER_PTR_HPP_
 #define CIELLAB_INCLUDE_CIEL_OBSERVER_PTR_HPP_
 
+#include <ciel/compare.hpp>
+#include <ciel/config.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+
 #include <functional>
 #include <type_traits>
 #include <utility>
-
-#include <ciel/config.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 

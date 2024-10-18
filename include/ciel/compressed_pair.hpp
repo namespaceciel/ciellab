@@ -1,12 +1,13 @@
 #ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
 #define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
 
-#include <tuple>
-#include <type_traits>
-
 #include <ciel/config.hpp>
 #include <ciel/integer_sequence.hpp>
-#include <ciel/type_traits.hpp>
+#include <ciel/is_final.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+
+#include <tuple>
+#include <type_traits>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -18,7 +19,7 @@ struct value_init_t {};
 
 static constexpr value_init_t value_init;
 
-template<class T, size_t Index, bool = std::is_class<T>::value && !is_final<T>::value>
+template<class T, size_t Index, bool = std::is_class<T>::value && !ciel::is_final<T>::value>
 struct compressed_pair_elem {
 public:
     using reference       = T&;
@@ -40,7 +41,7 @@ public:
         : value_(std::forward<U>(u)) {}
 
     template<class... Args, size_t... Ints>
-    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
+    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, ciel::index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 
     reference
@@ -75,7 +76,7 @@ public:
         : value_(std::forward<U>(u)) {}
 
     template<class... Args, size_t... Ints>
-    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
+    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, ciel::index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 
     reference
@@ -111,8 +112,8 @@ public:
     template<class... Args1, class... Args2>
     explicit compressed_pair(std::piecewise_construct_t pc, std::tuple<Args1...> first_args,
                              std::tuple<Args2...> second_args)
-        : base1(pc, std::move(first_args), index_sequence_for<Args1...>()),
-          base2(pc, std::move(second_args), index_sequence_for<Args2...>()) {}
+        : base1(pc, std::move(first_args), ciel::index_sequence_for<Args1...>()),
+          base2(pc, std::move(second_args), ciel::index_sequence_for<Args2...>()) {}
 
     typename base1::reference
     first() noexcept {
@@ -147,7 +148,7 @@ public:
 
 template<class First, class Second>
 struct is_trivially_relocatable<compressed_pair<First, Second>>
-    : conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
+    : ciel::conjunction<is_trivially_relocatable<First>, is_trivially_relocatable<Second>> {};
 
 NAMESPACE_CIEL_END
 

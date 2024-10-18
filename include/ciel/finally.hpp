@@ -1,11 +1,11 @@
 #ifndef CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
 #define CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
 
+#include <ciel/config.hpp>
+#include <ciel/exchange.hpp>
+
 #include <type_traits>
 #include <utility>
-
-#include <ciel/config.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 

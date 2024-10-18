@@ -1,6 +1,15 @@
 #ifndef CIELLAB_INCLUDE_CIEL_INPLACE_VECTOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_INPLACE_VECTOR_HPP_
 
+#include <ciel/compare.hpp>
+#include <ciel/config.hpp>
+#include <ciel/copy_n.hpp>
+#include <ciel/is_range.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/iterator_category.hpp>
+#include <ciel/range_destroyer.hpp>
+#include <ciel/swap.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -10,11 +19,6 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
-
-#include <ciel/config.hpp>
-#include <ciel/copy_n.hpp>
-#include <ciel/range_destroyer.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -77,7 +81,7 @@ template<class T, class D>
 using maybe_has_trivial_move_constructor =
     typename std::conditional<std::is_trivially_move_constructible<T>::value,
                               has_trivial_move_constructor,
-                              typename std::conditional<is_trivially_relocatable<T>::value,
+                              typename std::conditional<ciel::is_trivially_relocatable<T>::value,
                                                         has_trivially_relocatable_move_constructor<D>,
                                                         has_non_trivial_move_constructor<T, D>
                               >::type
@@ -155,7 +159,7 @@ using maybe_has_trivial_move_assignment =
                                   && std::is_trivially_move_assignable<T>::value
                                   && std::is_trivially_destructible<T>::value,
                               has_trivial_move_assignment,
-                              typename std::conditional<is_trivially_relocatable<T>::value,
+                              typename std::conditional<ciel::is_trivially_relocatable<T>::value,
                                                         has_trivially_relocatable_move_assignment<D>,
                                                         has_non_trivial_move_assignment<T, D>
                               >::type
@@ -269,7 +273,7 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(size() + std::distance(first, last) <= capacity());
@@ -372,7 +376,7 @@ public:
         construct_at_end(count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     inplace_vector(Iter first, Iter last)
         : inplace_vector() {
         while (first != last) {
@@ -381,7 +385,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     inplace_vector(Iter first, Iter last)
         : inplace_vector() {
         const size_type count = std::distance(first, last);
@@ -395,21 +399,22 @@ public:
     inplace_vector(const inplace_vector& other) noexcept(std::is_nothrow_copy_constructible<T>::value) = default;
     inplace_vector(inplace_vector&& other) noexcept(std::is_nothrow_move_constructible<T>::value)      = default;
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    inplace_vector(from_range_t, R&& rg)
+    template<class R, typename std::enable_if<
+                          ciel::is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
+                      = 0>
+    inplace_vector(ciel::from_range_t, R&& rg)
         : inplace_vector(rg.begin(), rg.end()) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    inplace_vector(from_range_t, R&& rg)
+    template<class R, typename std::enable_if<
+                          ciel::is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+                      = 0>
+    inplace_vector(ciel::from_range_t, R&& rg)
         : inplace_vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end())) {}
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
-    inplace_vector(from_range_t, R&& rg)
+    template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && std::is_lvalue_reference<R>::value,
+                                              int>::type
+                      = 0>
+    inplace_vector(ciel::from_range_t, R&& rg)
         : inplace_vector() {
         const size_type count = rg.size();
         if CIEL_UNLIKELY (count > capacity()) {
@@ -419,10 +424,10 @@ public:
         construct_at_end(rg.begin(), rg.end());
     }
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    inplace_vector(from_range_t, R&& rg)
+    template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value,
+                                              int>::type
+                      = 0>
+    inplace_vector(ciel::from_range_t, R&& rg)
         : inplace_vector() {
         const size_type count = rg.size();
         if CIEL_UNLIKELY (count > capacity()) {
@@ -440,7 +445,7 @@ public:
     // clang-format off
     inplace_vector& operator=(const inplace_vector& other) noexcept(std::is_nothrow_copy_assignable<value_type>::value) = default;
     inplace_vector& operator=(inplace_vector&& other)
-        noexcept(std::is_nothrow_move_assignable<value_type>::value || is_trivially_relocatable<value_type>::value) = default;
+        noexcept(std::is_nothrow_move_assignable<value_type>::value || ciel::is_trivially_relocatable<value_type>::value) = default;
     // clang-format on
 
     inplace_vector&
@@ -468,7 +473,7 @@ public:
         CIEL_POSTCONDITION(size() == count);
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -476,7 +481,7 @@ public:
         assign(first, last, count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         clear();
@@ -492,10 +497,10 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value) {
             if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end(), rg.size());
 
@@ -781,13 +786,14 @@ public:
 
     // TODO: erase
 
-    template<class U = inplace_vector, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = inplace_vector, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap(inplace_vector& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
-    template<class U = inplace_vector, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U                                                                       = inplace_vector,
+             typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap(inplace_vector& other) noexcept(std::is_nothrow_move_constructible<T>::value
                                          && std::is_nothrow_move_assignable<T>::value) {

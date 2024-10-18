@@ -1,16 +1,19 @@
 #ifndef CIELLAB_INCLUDE_CIEL_LIST_HPP_
 #define CIELLAB_INCLUDE_CIEL_LIST_HPP_
 
+#include <ciel/compare.hpp>
+#include <ciel/compressed_pair.hpp>
+#include <ciel/config.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/iterator_base.hpp>
+#include <ciel/iterator_category.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
-
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -47,7 +50,7 @@ struct list_node : list_node_base {
 }; // struct list_node
 
 template<class T, class Pointer, class Reference>
-class list_iterator : public bidirectional_iterator_base<list_iterator<T, Pointer, Reference>> {
+class list_iterator : public ciel::bidirectional_iterator_base<list_iterator<T, Pointer, Reference>> {
 public:
     using difference_type   = ptrdiff_t;
     using value_type        = T;
@@ -158,7 +161,7 @@ private:
 
     base_node_type end_node_;
     node_type* free_node_;
-    compressed_pair<size_type, node_allocator> size_node_allocator_;
+    ciel::compressed_pair<size_type, node_allocator> size_node_allocator_;
 
     void
     do_destroy() noexcept {
@@ -270,7 +273,7 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_input_iterator<Iter>::value, int>::type = 0>
     iterator
     alloc_range_construct(iterator begin, Iter first, Iter last) {
         iterator before_begin          = begin.prev();
@@ -320,7 +323,7 @@ public:
         alloc_range_construct_n(end(), count);
     }
 
-    template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_input_iterator<Iter>::value, int>::type = 0>
     list(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : list(alloc) {
         alloc_range_construct(end(), first, last);
@@ -447,7 +450,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_input_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         iterator it = begin();
@@ -598,7 +601,7 @@ public:
         return alloc_range_construct_n(pos, count, value);
     }
 
-    template<class Iter, typename std::enable_if<is_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_input_iterator<Iter>::value, int>::type = 0>
     iterator
     insert(iterator pos, Iter first, Iter last) {
         return alloc_range_construct(pos, first, last);

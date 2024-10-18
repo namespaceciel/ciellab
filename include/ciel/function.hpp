@@ -1,15 +1,21 @@
 #ifndef CIELLAB_INCLUDE_CIEL_FUNCTION_HPP_
 #define CIELLAB_INCLUDE_CIEL_FUNCTION_HPP_
 
+#include <ciel/aligned_storage.hpp>
+#include <ciel/buffer_cast.hpp>
+#include <ciel/compare.hpp>
+#include <ciel/config.hpp>
+#include <ciel/exchange.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/memory.hpp>
+#include <ciel/strip_signature.hpp>
+#include <ciel/swap.hpp>
+
 #include <cstddef>
 #include <cstring>
 #include <functional>
 #include <memory>
 #include <typeinfo>
-
-#include <ciel/config.hpp>
-#include <ciel/strip_signature.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -36,28 +42,18 @@ protected:
     ~func_base()         = default;
 
 public:
-    CIEL_NODISCARD virtual func_base*
-    clone() const
-        = 0;
-    virtual void
-    clone_to(void*) const
-        = 0;
-    virtual void
-    destroy() noexcept
-        = 0;
-    virtual void
-    destroy_and_deallocate() noexcept
-        = 0;
-    virtual R
-    operator()(Args&&...) const
-        = 0;
-    CIEL_NODISCARD virtual const void*
-    target(const std::type_info&) const noexcept
-        = 0;
+    // clang-format off
+    CIEL_NODISCARD virtual func_base* clone() const = 0;
+    virtual void clone_to(void*) const = 0;
+    virtual void destroy() noexcept = 0;
+    virtual void destroy_and_deallocate() noexcept = 0;
+    virtual R operator()(Args&&...) const = 0;
+    CIEL_NODISCARD virtual const void* target(const std::type_info&) const noexcept = 0;
+    // clang-format on
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD virtual const std::type_info&
-    target_type() const noexcept
-        = 0;
+    // clang-format off
+    CIEL_NODISCARD virtual const std::type_info& target_type() const noexcept = 0;
+        // clang-format on
 #endif
 
 }; // class func_base<R(Args...)>
@@ -153,7 +149,7 @@ public:
 
 template<class T>
 struct is_small_object : std::integral_constant<bool, sizeof(T) <= sizeof(void*) * 3 && alignof(void*) % alignof(T) == 0
-                                                          && is_trivially_relocatable<T>::value> {};
+                                                          && ciel::is_trivially_relocatable<T>::value> {};
 
 struct assume_trivially_relocatable_t {};
 
@@ -165,7 +161,7 @@ public:
     using result_type = R;
 
 private:
-    using buffer_type = aligned_storage<sizeof(void*) * 3, alignof(void*)>::type;
+    using buffer_type = ciel::aligned_storage<sizeof(void*) * 3, alignof(void*)>::type;
     using base_type   = details::func_base<R(Args...)>;
 
     buffer_type buffer_;
@@ -188,7 +184,7 @@ private:
 
     CIEL_NODISCARD base_type*
     stack_ptr() const noexcept {
-        return buffer_cast<base_type*>(&buffer_);
+        return ciel::buffer_cast<base_type*>(&buffer_);
     }
 
     CIEL_NODISCARD base_type*
@@ -519,7 +515,7 @@ template<class R, class... Args>
 function(R (*)(Args...)) -> function<R(Args...)>;
 
 template<class F>
-function(F) -> function<strip_signature_t<decltype(&F::operator())>>;
+function(F) -> function<ciel::strip_signature_t<decltype(&F::operator())>>;
 
 #endif
 

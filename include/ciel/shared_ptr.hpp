@@ -1,14 +1,17 @@
 #ifndef CIELLAB_INCLUDE_CIEL_SHARED_PTR_HPP_
 #define CIELLAB_INCLUDE_CIEL_SHARED_PTR_HPP_
 
+#include <ciel/aligned_storage.hpp>
+#include <ciel/compare.hpp>
+#include <ciel/compressed_pair.hpp>
+#include <ciel/config.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+
 #include <atomic>
 #include <memory>
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
-
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -221,8 +224,9 @@ private:
     using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_with_instance>;
     using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_with_instance>;
 
-    compressed_pair<typename aligned_storage<sizeof(element_type), alignof(element_type)>::type,
-                    control_block_allocator>
+    // TODO: union
+    ciel::compressed_pair<typename ciel::aligned_storage<sizeof(element_type), alignof(element_type)>::type,
+                          control_block_allocator>
         compressed_;
 
     CIEL_NODISCARD pointer

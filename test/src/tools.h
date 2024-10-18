@@ -1,6 +1,15 @@
 #ifndef CIELLAB_TEST_TOOLS_H_
 #define CIELLAB_TEST_TOOLS_H_
 
+#include <ciel/alignment.hpp>
+#include <ciel/compare.hpp>
+#include <ciel/config.hpp>
+#include <ciel/exchange.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/iterator_base.hpp>
+#include <ciel/move_proxy.hpp>
+#include <ciel/worth_move.hpp>
+
 #include <condition_variable>
 #include <cstddef>
 #include <initializer_list>
@@ -9,10 +18,6 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-
-#include <ciel/config.hpp>
-#include <ciel/move_proxy.hpp>
-#include <ciel/type_traits.hpp>
 
 struct ConstructAndAssignCounter {
     // To not be considered as trivially_relocatable.

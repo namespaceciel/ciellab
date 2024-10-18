@@ -1,6 +1,16 @@
 #ifndef CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
 #define CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
 
+#include <ciel/compare.hpp>
+#include <ciel/compressed_pair.hpp>
+#include <ciel/config.hpp>
+#include <ciel/copy_n.hpp>
+#include <ciel/is_range.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/iterator_category.hpp>
+#include <ciel/range_destroyer.hpp>
+#include <ciel/swap.hpp>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
@@ -8,12 +18,6 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
-
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
-#include <ciel/copy_n.hpp>
-#include <ciel/range_destroyer.hpp>
-#include <ciel/type_traits.hpp>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -31,8 +35,6 @@ NAMESPACE_CIEL_BEGIN
 
 template<class, class>
 class vector;
-template<class, size_t, class>
-class small_vector;
 
 // Note that Allocator can be reference type as being used by vector,
 // however in this case, the assignment operator of split_buffer may be invalid.
@@ -62,14 +64,12 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init};
+    ciel::compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init};
 
     template<class, class>
     friend class split_buffer;
     template<class, class>
     friend class vector;
-    template<class, size_t, class>
-    friend class small_vector;
 
     void
     reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
@@ -140,7 +140,7 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
@@ -175,7 +175,7 @@ private:
         return begin;
     }
 
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb, pointer pos) noexcept {
         // Used by emplace_front and emplace_back respectively.
@@ -206,7 +206,7 @@ private:
         sb.set_nullptr();
     }
 
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
                     pointer pos) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
@@ -263,7 +263,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
@@ -274,7 +274,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
@@ -283,7 +283,7 @@ private:
 
         pointer new_begin = begin_ - n;
         pointer new_end   = new_begin;
-        range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
+        ciel::range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
             // clang-format off
@@ -336,7 +336,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
@@ -347,7 +347,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
@@ -356,7 +356,7 @@ private:
 
         pointer new_end   = end_ + n;
         pointer new_begin = new_end;
-        range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
+        ciel::range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
             // clang-format off
@@ -581,7 +581,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         while (first != last) {
@@ -590,7 +590,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = std::distance(first, last);
@@ -638,21 +638,22 @@ public:
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<
+                          ciel::is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
+                      = 0>
+    split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(rg.begin(), rg.end(), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<
+                          ciel::is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
+                      = 0>
+    split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
-    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && std::is_lvalue_reference<R>::value,
+                                              int>::type
+                      = 0>
+    split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = rg.size();
 
@@ -665,10 +666,10 @@ public:
         }
     }
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
-    split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
+    template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value,
+                                              int>::type
+                      = 0>
+    split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = rg.size();
 
@@ -765,7 +766,7 @@ public:
         CIEL_POSTCONDITION(size() == count);
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -773,7 +774,7 @@ public:
         assign(first, last, count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
         clear();
@@ -1096,16 +1097,19 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    template<class A = Allocator, class U = split_buffer,
-             typename std::enable_if<!std::is_reference<A>::value && is_trivially_relocatable<U>::value, int>::type = 0>
+    template<
+        class A = Allocator, class U = split_buffer,
+        typename std::enable_if<!std::is_reference<A>::value && ciel::is_trivially_relocatable<U>::value, int>::type
+        = 0>
     void
     swap(split_buffer& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
-    template<class A = Allocator, class U = split_buffer,
-             typename std::enable_if<!std::is_reference<A>::value && !is_trivially_relocatable<U>::value, int>::type
-             = 0>
+    template<
+        class A = Allocator, class U = split_buffer,
+        typename std::enable_if<!std::is_reference<A>::value && !ciel::is_trivially_relocatable<U>::value, int>::type
+        = 0>
     void
     swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value
                                        || alloc_traits::is_always_equal::value) {
@@ -1142,10 +1146,10 @@ public:
         return unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (is_range_with_size<R>::value) {
+        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value) {
             if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end(), rg.size());
 

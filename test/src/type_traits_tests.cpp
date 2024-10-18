@@ -1,11 +1,13 @@
-#include "tools.h"
 #include <gtest/gtest.h>
+
+#include <ciel/is_complete_type.hpp>
+#include <ciel/worth_move.hpp>
 
 #include <array>
 #include <memory>
 #include <vector>
 
-#include <ciel/type_traits.hpp>
+#include "tools.h"
 
 namespace {
 

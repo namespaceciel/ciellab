@@ -1,10 +1,10 @@
 #ifndef CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
 #define CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
 
+#include <ciel/config.hpp>
+
 #include <type_traits>
 #include <utility>
-
-#include <ciel/config.hpp>
 
 NAMESPACE_CIEL_BEGIN
 

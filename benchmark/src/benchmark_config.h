@@ -1,9 +1,10 @@
-#ifndef CIELUTILS_BENCHMARK_CONFIG_H
-#define CIELUTILS_BENCHMARK_CONFIG_H
+#ifndef CIELLAB_BENCHMARK_CONFIG_H
+#define CIELLAB_BENCHMARK_CONFIG_H
 
 #include <benchmark/benchmark.h>
 
-#include <ciel/type_traits.hpp>
+#include <ciel/config.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
 
 #include <algorithm>
 #include <random>
@@ -275,4 +276,4 @@ set_erase_value(Set s) noexcept {
 }
 */
 
-#endif // CIELUTILS_BENCHMARK_CONFIG_H
+#endif // CIELLAB_BENCHMARK_CONFIG_H
