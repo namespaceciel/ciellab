@@ -308,7 +308,7 @@ private:
 
 public:
     list()
-        : free_node_(nullptr), size_node_allocator_(0, default_init) {}
+        : free_node_(nullptr), size_node_allocator_(0, ciel::default_init) {}
 
     explicit list(const allocator_type& alloc)
         : free_node_(nullptr), size_node_allocator_(0, alloc) {}

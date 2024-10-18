@@ -64,7 +64,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    ciel::compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init};
+    ciel::compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, ciel::default_init};
 
     template<class, class>
     friend class split_buffer;

@@ -252,7 +252,7 @@ private:
 public:
     template<class... Args>
     control_block_with_instance(allocator_type alloc, Args&&... args)
-        : compressed_(default_init, alloc) {
+        : compressed_(ciel::default_init, alloc) {
         alloc_traits::construct(alloc, ptr_(), std::forward<Args>(args)...);
     }
 

@@ -46,7 +46,7 @@ private:
 
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    ciel::compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
+    ciel::compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, ciel::default_init};
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
