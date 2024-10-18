@@ -47,57 +47,7 @@ struct ciel::is_trivially_relocatable<NotRelocatable> : std::false_type {};
 
 When a type is trivially relocatable, we can use `memcpy` instead of move/copy constructing it at the new location and destructing it at the old location. This approach allows for a "destructible move," eliminating the need for constructions and destructions.
 
-#### 4. Worth-moving elements shall be moved from `std::initializer_list<move_proxy<T>>`.
-
-`std::initializer_list<T>` is a lightweight proxy that provides access to an array of objects of type **const T**, which means we cannot move elements directly from it.
-
-```cpp
-#include <iostream>
-#include <vector>
-#include <ciel/vector>
-
-struct Lifetime {
-    Lifetime() noexcept { std::cout << "Default\n"; }
-    Lifetime(const Lifetime&) noexcept { std::cout << "Copy\n"; }
-    Lifetime(Lifetime&&) noexcept { std::cout << "Move\n"; }
-};
-
-int main() {
-    std::vector<std::vector<Lifetime>> v1{std::vector<Lifetime>{{}}};
-    std::cout << "=========\n";
-    ciel::vector<ciel::vector<Lifetime>> v2{ciel::vector<Lifetime>{{}}};
-}
-
-/* Output:
-Default
-Copy
-Copy
-=========
-Default
-Move
-*/
-```
-
-In the case of `v1`, the `Lifetime` object is default constructed once, then copied to `std::vector<Lifetime>` as part of the `std::initializer_list<Lifetime>`, and subsequently copied again as part of the `std::initializer_list<std::vector<Lifetime>>`.
-
-For `v2`, both `Lifetime` and `ciel::vector<Lifetime>` are moved, making the initialization more efficient.
-
-**However, this optimization comes with a cost.**
-
-```cpp
-std::vector<std::vector<Lifetime>> v1{{{}}};
-ciel::vector<ciel::vector<Lifetime>> v2{{{}}};
-ciel::vector<ciel::vector<Lifetime>> v3(
-    std::initializer_list<ciel::move_proxy<ciel::vector<Lifetime>>>(
-        {ciel::move_proxy<ciel::vector<Lifetime>>(
-            ciel::vector<Lifetime>(
-                std::initializer_list<Lifetime>(
-                    {/* empty */})))}));
-```
-
-The use of `move_proxy` complicates the brace initialization. In this scenario, `v1` behaves as expected, but `v2` does not construct any `Lifetime` objects because it effectively equates to `v3`.
-
-#### 5. Provide `unchecked_emplace_back`, it serves as an `emplace_back` operation that does not check for available space, under the assumption that the container has sufficient capacity. It's crucial to call `reserve` in advance to allocate the necessary memory.
+#### 4. Provide `unchecked_emplace_back`, it serves as an `emplace_back` operation that does not check for available space, under the assumption that the container has sufficient capacity. It's crucial to call `reserve` in advance to allocate the necessary memory.
 
 ```cpp
 #include <ciel/vector>
@@ -109,7 +59,7 @@ for (int i = 0; i < 100; ++i) {
 }
 ```
 
-#### 6. You can move construct a `ciel::vector` from an rvalue reference of `std::vector`, then cast it back to `std::vector`, with the exception that this behavior is not applicable when `T` is `bool`.
+#### 5. You can move construct a `ciel::vector` from an rvalue reference of `std::vector`, then cast it back to `std::vector`, with the exception that this behavior is not applicable when `T` is `bool`.
 
 ```cpp
 std::vector<int> v{0, 1, 2, 3, 4};
@@ -117,7 +67,7 @@ ciel::vector<int> c{std::move(v)};
 v = std::move(c);
 ```
 
-#### 7. Adding `std::initializer_list` overloads for `emplace` and `emplace_back`.
+#### 6. Adding `std::initializer_list` overloads for `emplace` and `emplace_back`.
 
 ```cpp
 ciel::vector<ciel::vector<int>> v;

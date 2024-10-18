@@ -216,10 +216,10 @@ TEST(split_buffer_tests, copy_and_move_behavior) {
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
 
     ciel::split_buffer<ConstructAndAssignCounter> v6({{}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 3);
 
     v6 = {{}, {}, {}, {}};
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
 
     v6.assign(7, {});
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 7);
@@ -228,7 +228,7 @@ TEST(split_buffer_tests, copy_and_move_behavior) {
     ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
 
     v6.assign({{}, {}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
+    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
 }
 
 TEST(split_buffer_tests, copy_and_move_behavior2) {

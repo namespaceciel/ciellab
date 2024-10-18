@@ -12,7 +12,6 @@
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
-#include <ciel/move_proxy.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/type_traits.hpp>
 
@@ -636,17 +635,6 @@ public:
         }
     }
 
-    template<class InitializerList,
-             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
-             = 0>
-    split_buffer(InitializerList init, const allocator_type& alloc = allocator_type())
-        : split_buffer(init.begin(), init.end(), alloc) {}
-
-    template<class U = value_type, typename std::enable_if<worth_move_constructing<U>::value, int>::type = 0>
-    split_buffer(std::initializer_list<move_proxy<value_type>> init, const allocator_type& alloc = allocator_type())
-        : split_buffer(init.begin(), init.end(), alloc) {}
-
-    template<class U = value_type, typename std::enable_if<!worth_move_constructing<U>::value, int>::type = 0>
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
@@ -745,23 +733,6 @@ public:
         return *this;
     }
 
-    template<class InitializerList,
-             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
-             = 0>
-    split_buffer&
-    operator=(InitializerList ilist) {
-        assign(ilist.begin(), ilist.end());
-        return *this;
-    }
-
-    template<class U = value_type, typename std::enable_if<ciel::worth_move<U>::value, int>::type = 0>
-    split_buffer&
-    operator=(std::initializer_list<move_proxy<value_type>> ilist) {
-        assign(ilist.begin(), ilist.end());
-        return *this;
-    }
-
-    template<class U = value_type, typename std::enable_if<!ciel::worth_move<U>::value, int>::type = 0>
     split_buffer&
     operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
@@ -813,21 +784,6 @@ public:
         }
     }
 
-    template<class InitializerList,
-             typename std::enable_if<std::is_same<InitializerList, std::initializer_list<value_type>>::value, int>::type
-             = 0>
-    void
-    assign(InitializerList ilist) {
-        assign(ilist.begin(), ilist.end());
-    }
-
-    template<class U = value_type, typename std::enable_if<ciel::worth_move<U>::value, int>::type = 0>
-    void
-    assign(std::initializer_list<move_proxy<value_type>> ilist) {
-        assign(ilist.begin(), ilist.end());
-    }
-
-    template<class U = value_type, typename std::enable_if<!ciel::worth_move<U>::value, int>::type = 0>
     void
     assign(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
