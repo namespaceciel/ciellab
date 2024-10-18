@@ -147,10 +147,10 @@ private:
             CIEL_PRECONDITION(sb.front_spare() == front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
-            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * front_count);
+            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * front_count);
             // sb.begin_ = sb.begin_cap_;
 
-            std::memcpy(sb.end_, pos, sizeof(value_type) / sizeof(unsigned char) * back_count);
+            std::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
             sb.end_ += back_count;
 
             alloc_traits::deallocate(allocator_(), begin_, capacity());
@@ -210,7 +210,7 @@ private:
 
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
-            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) / sizeof(unsigned char) * size());
+            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * size());
             // sb.begin_ = sb.begin_cap_;
 
             alloc_traits::deallocate(allocator_(), begin_, capacity());
@@ -288,7 +288,7 @@ private:
         const auto back_count = end() - last;
 
         alloc_range_destroy(first, last);
-        std::memmove(first, last, sizeof(value_type) / sizeof(unsigned char) * back_count);
+        std::memmove(first, last, sizeof(value_type) * back_count);
         end_ -= distance;
 
         return begin() + index;
@@ -317,7 +317,7 @@ private:
         //                       first last
         //                       |  count |
         // relocate [pos, end) count units later
-        std::memmove(pos + count, pos, sizeof(value_type) / sizeof(unsigned char) * (end_ - pos));
+        std::memmove(pos + count, pos, sizeof(value_type) * (end_ - pos));
         // ----------------------          --------------
         // begin             new_end       pos    |   end
         //                       ----------       |
@@ -396,7 +396,7 @@ private:
         void
         operator()(iterator pos, Args&&... args) const {
             constexpr size_type count = 1;
-            std::memmove(pos + count, pos, sizeof(value_type) / sizeof(unsigned char) * (this_->end_ - pos));
+            std::memmove(pos + count, pos, sizeof(value_type) * (this_->end_ - pos));
 
             range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count, this_->allocator_()};
             const pointer old_end = this_->end_;

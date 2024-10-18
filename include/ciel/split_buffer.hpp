@@ -191,9 +191,9 @@ private:
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
             sb.begin_ -= front_count;
-            memcpy(sb.begin_, begin_, sizeof(value_type) / sizeof(unsigned char) * front_count);
+            memcpy(sb.begin_, begin_, sizeof(value_type) * front_count);
 
-            memcpy(sb.end_, pos, sizeof(value_type) / sizeof(unsigned char) * back_count);
+            memcpy(sb.end_, pos, sizeof(value_type) * back_count);
             sb.end_ += back_count;
 
             alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
@@ -269,7 +269,7 @@ private:
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
 
-        std::memmove(begin_ - n, begin_, sizeof(value_type) / sizeof(unsigned char) * size());
+        std::memmove(begin_ - n, begin_, sizeof(value_type) * size());
         begin_ -= n;
         end_ -= n;
     }
@@ -342,7 +342,7 @@ private:
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
 
-        std::memmove(begin_ + n, begin_, sizeof(value_type) / sizeof(unsigned char) * size());
+        std::memmove(begin_ + n, begin_, sizeof(value_type) * size());
         begin_ += n;
         end_ += n;
     }
