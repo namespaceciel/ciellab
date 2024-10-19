@@ -278,7 +278,7 @@ public:
         using func_type = details::func<DecayF, R(Args...)>;
 
         if CIEL_LIKELY (function::not_null(f)) {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (is_small_object<DecayF>::value) {
+            if (is_small_object<DecayF>::value) {
                 ::new (stack_ptr()) func_type(std::forward<F>(f));
                 f_ = 1;
 
@@ -369,7 +369,7 @@ public:
         using func_type = details::func<DecayF, R(Args...)>;
 
         if CIEL_LIKELY (function::not_null(f)) {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (is_small_object<DecayF>::value) {
+            if (is_small_object<DecayF>::value) {
                 ::new (stack_ptr()) func_type(std::forward<F>(f));
                 f_ = 1;
 

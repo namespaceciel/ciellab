@@ -500,8 +500,8 @@ public:
     template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value) {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+        if (ciel::is_range_with_size<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end(), rg.size());
 
             } else {
@@ -509,7 +509,7 @@ public:
             }
 
         } else {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end());
 
             } else {

@@ -299,12 +299,13 @@ private:
         CIEL_TRY {
             control_block_alloc_traits::construct(allocator, control_block, ptr, std::forward<Deleter>(dlt),
                                                   std::forward<Allocator>(alloc));
-            return control_block;
         }
         CIEL_CATCH (...) {
             control_block_alloc_traits::deallocate(allocator, control_block, 1);
             CIEL_THROW;
         }
+
+        return control_block;
     }
 
     // Serves for enable_shared_from_this.

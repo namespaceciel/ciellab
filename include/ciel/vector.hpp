@@ -49,6 +49,24 @@ private:
     pointer end_{nullptr};
     ciel::compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, ciel::value_init};
 
+    static constexpr bool should_pass_by_value
+        = std::is_trivially_copyable<value_type>::value && sizeof(value_type) <= 16;
+    using lvalue = typename std::conditional<should_pass_by_value, value_type, const value_type&>::type;
+    using rvalue = typename std::conditional<should_pass_by_value, value_type, value_type&&>::type;
+
+    bool
+    internal_value(const value_type& value) const noexcept {
+        if (should_pass_by_value) {
+            return false;
+        }
+
+        if CIEL_UNLIKELY (begin_ <= std::addressof(value) && std::addressof(value) < end_) {
+            return true;
+        }
+
+        return false;
+    }
+
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
         return end_cap_alloc_.first();
@@ -1174,24 +1192,27 @@ public:
     resize(const size_type count) {
         if (size() >= count) {
             end_ = destroy(begin_ + count, end_);
-            return;
+
+        } else {
+            reserve(count);
+            construct_at_end(count - size());
         }
-
-        reserve(count);
-
-        construct_at_end(count - size());
     }
 
     void
-    resize(const size_type count, const value_type& value) {
+    resize(const size_type count, lvalue value) {
         if (size() >= count) {
             end_ = destroy(begin_ + count, end_);
-            return;
+
+        } else if (count > capacity()) {
+            ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
+            sb.reserve_cap_and_offset_to(count, size());
+            sb.construct_at_end(count - size(), value);
+            swap_out_buffer(std::move(sb));
+
+        } else {
+            construct_at_end(count - size(), value);
         }
-
-        reserve(count);
-
-        construct_at_end(count - size(), value);
     }
 
     void
@@ -1225,8 +1246,8 @@ public:
     template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     void
     assign_range(R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value) {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+        if (ciel::is_range_with_size<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end(), rg.size());
 
             } else {
@@ -1234,7 +1255,7 @@ public:
             }
 
         } else {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end());
 
             } else {
@@ -1252,9 +1273,8 @@ public:
     template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>
     iterator
     insert_range(const_iterator pos, R&& rg) {
-        if CIEL_CONSTEXPR_SINCE_CXX17 (ciel::is_range_with_size<R>::value
-                                       && ciel::is_forward_iterator<decltype(rg.begin())>::value) {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+        if (ciel::is_range_with_size<R>::value && ciel::is_forward_iterator<decltype(rg.begin())>::value) {
+            if (std::is_lvalue_reference<R>::value) {
                 return insert(pos, rg.begin(), rg.end(), rg.size());
 
             } else {
@@ -1262,7 +1282,7 @@ public:
             }
 
         } else {
-            if CIEL_CONSTEXPR_SINCE_CXX17 (std::is_lvalue_reference<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
                 return insert(pos, rg.begin(), rg.end());
 
             } else {

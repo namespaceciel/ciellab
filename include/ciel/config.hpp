@@ -101,7 +101,7 @@
 #define CIEL_CATCH(X) catch (X)
 #define CIEL_THROW    throw
 #else
-#define CIEL_TRY      if CIEL_CONSTEXPR_SINCE_CXX17 (true)
+#define CIEL_TRY      if (true)
 #define CIEL_CATCH(X) else
 #define CIEL_THROW
 #endif
