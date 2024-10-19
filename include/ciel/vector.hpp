@@ -196,37 +196,11 @@ private:
         }
     }
 
-    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
-    void
-    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb, pointer pos) noexcept {
-        // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
-        if (begin_) {
-            const size_type front_count = pos - begin_;
-            const size_type back_count  = end_ - pos;
-
-            CIEL_PRECONDITION(sb.front_spare() == front_count);
-            CIEL_PRECONDITION(sb.back_spare() >= back_count);
-
-            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * front_count);
-            // sb.begin_ = sb.begin_cap_;
-
-            std::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
-            sb.end_ += back_count;
-
-            alloc_traits::deallocate(allocator_(), begin_, capacity());
-        }
-
-        begin_     = sb.begin_cap_;
-        end_       = sb.end_;
-        end_cap_() = sb.end_cap_();
-
-        sb.set_nullptr();
-    }
-
-    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb,
-                    pointer pos) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
+                    pointer pos) noexcept(ciel::is_trivially_relocatable<value_type>::value
+                                          || std::is_nothrow_move_constructible<value_type>::value) {
+        // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
             const size_type front_count = pos - begin_;
             const size_type back_count  = end_ - pos;
@@ -234,27 +208,35 @@ private:
             CIEL_PRECONDITION(sb.front_spare() == front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
-            for (pointer p = pos - 1; p >= begin_; --p) {
+            if (ciel::is_trivially_relocatable<value_type>::value) {
+                std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * front_count);
+                // sb.begin_ = sb.begin_cap_;
+
+                std::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
+                sb.end_ += back_count;
+
+            } else {
+                for (pointer p = pos - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
+                    sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
 #else
-                sb.unchecked_emplace_front_aux(std::move(*p));
+                    sb.unchecked_emplace_front_aux(std::move(*p));
 #endif
+                }
+
+                for (pointer p = pos; p < end_; ++p) {
+#ifdef CIEL_HAS_EXCEPTIONS
+                    sb.unchecked_emplace_back_aux(std::move_if_noexcept(*p));
+#else
+                    sb.unchecked_emplace_back_aux(std::move(*p));
+#endif
+                }
+
+                clear();
             }
 
-            for (pointer p = pos; p < end_; ++p) {
-#ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_back_aux(std::move_if_noexcept(*p));
-#else
-                sb.unchecked_emplace_back_aux(std::move(*p));
-#endif
-            }
-
-            clear();
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
-
-        CIEL_POSTCONDITION(sb.begin_ == sb.begin_cap_);
 
         begin_     = sb.begin_cap_;
         end_       = sb.end_;
@@ -263,46 +245,31 @@ private:
         sb.set_nullptr();
     }
 
-    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb) noexcept {
+    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb) noexcept(
+        ciel::is_trivially_relocatable<value_type>::value || std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
-            std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * size());
-            // sb.begin_ = sb.begin_cap_;
+            if (ciel::is_trivially_relocatable<value_type>::value) {
+                std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * size());
+                // sb.begin_ = sb.begin_cap_;
 
-            alloc_traits::deallocate(allocator_(), begin_, capacity());
-        }
-
-        begin_     = sb.begin_cap_;
-        end_       = sb.end_;
-        end_cap_() = sb.end_cap_();
-
-        sb.set_nullptr();
-    }
-
-    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
-    void
-    swap_out_buffer(ciel::split_buffer<value_type, allocator_type&>&& sb) noexcept(
-        std::is_nothrow_move_constructible<value_type>::value) {
-        CIEL_PRECONDITION(sb.front_spare() == size());
-
-        if (begin_) {
-            for (pointer p = end_ - 1; p >= begin_; --p) {
+            } else {
+                for (pointer p = end_ - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
+                    sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
 #else
-                sb.unchecked_emplace_front_aux(std::move(*p));
+                    sb.unchecked_emplace_front_aux(std::move(*p));
 #endif
+                }
+
+                clear();
             }
 
-            clear();
             alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
-
-        CIEL_POSTCONDITION(sb.begin_ == sb.begin_cap_);
 
         begin_     = sb.begin_cap_;
         end_       = sb.end_;

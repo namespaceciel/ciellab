@@ -231,9 +231,10 @@ private:
         }
     }
 
-    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb, pointer pos) noexcept {
+    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
+                    pointer pos) noexcept(ciel::is_trivially_relocatable<value_type>::value
+                                          || std::is_nothrow_move_constructible<value_type>::value) {
         // Used by emplace_front and emplace_back respectively.
         CIEL_PRECONDITION(pos == begin_ || pos == end_);
 
@@ -245,54 +246,33 @@ private:
             CIEL_PRECONDITION(sb.front_spare() >= front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
-            sb.begin_ -= front_count;
-            memcpy(sb.begin_, begin_, sizeof(value_type) * front_count);
+            if (ciel::is_trivially_relocatable<value_type>::value) {
+                sb.begin_ -= front_count;
+                memcpy(sb.begin_, begin_, sizeof(value_type) * front_count);
 
-            memcpy(sb.end_, pos, sizeof(value_type) * back_count);
-            sb.end_ += back_count;
+                memcpy(sb.end_, pos, sizeof(value_type) * back_count);
+                sb.end_ += back_count;
 
-            alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
-        }
-
-        begin_cap_ = sb.begin_cap_;
-        begin_     = sb.begin_;
-        end_       = sb.end_;
-        end_cap_() = sb.end_cap_();
-
-        sb.set_nullptr();
-    }
-
-    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
-    void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
-                    pointer pos) noexcept(std::is_nothrow_move_constructible<value_type>::value) {
-        // Used by emplace_front and emplace_back respectively.
-        CIEL_PRECONDITION(pos == begin_ || pos == end_);
-
-        if (begin_cap_) {
-            const size_type front_count = pos - begin_;
-            const size_type back_count  = end_ - pos;
-
-            CIEL_PRECONDITION(sb.front_spare() >= front_count);
-            CIEL_PRECONDITION(sb.back_spare() >= back_count);
-
-            for (pointer p = pos - 1; p >= begin_; --p) {
+            } else {
+                for (pointer p = pos - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
+                    sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
 #else
-                sb.unchecked_emplace_front_aux(std::move(*p));
+                    sb.unchecked_emplace_front_aux(std::move(*p));
 #endif
+                }
+
+                for (pointer p = pos; p < end_; ++p) {
+#ifdef CIEL_HAS_EXCEPTIONS
+                    sb.unchecked_emplace_back_aux(std::move_if_noexcept(*p));
+#else
+                    sb.unchecked_emplace_back_aux(std::move(*p));
+#endif
+                }
+
+                clear();
             }
 
-            for (pointer p = pos; p < end_; ++p) {
-#ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_back_aux(std::move_if_noexcept(*p));
-#else
-                sb.unchecked_emplace_back_aux(std::move(*p));
-#endif
-            }
-
-            clear();
             alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
         }
 
