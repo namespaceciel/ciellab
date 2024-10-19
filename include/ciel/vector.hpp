@@ -2,6 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 
 #include <ciel/alignment.hpp>
+#include <ciel/allocator_traits.hpp>
 #include <ciel/compare.hpp>
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
@@ -46,7 +47,7 @@ private:
 
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    ciel::compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, ciel::default_init};
+    ciel::compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, ciel::value_init};
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
@@ -92,7 +93,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            unchecked_emplace_back();
+            unchecked_emplace_back_aux();
         }
     }
 
@@ -101,7 +102,7 @@ private:
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            unchecked_emplace_back(value);
+            unchecked_emplace_back_aux(value);
         }
     }
 
@@ -111,33 +112,88 @@ private:
         CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
 
         while (first != last) {
-            unchecked_emplace_back(*first);
+            unchecked_emplace_back_aux(*first);
             ++first;
         }
     }
 
-    template<class U = value_type, typename std::enable_if<std::is_trivially_destructible<U>::value, int>::type = 0>
-    pointer
-    alloc_range_destroy(pointer begin, pointer end) noexcept {
-        CIEL_PRECONDITION(begin <= end);
-        CIEL_PRECONDITION(begin_ <= begin);
-        CIEL_PRECONDITION(end <= end_);
+    template<class... Args>
+    void
+    construct(pointer p, Args&&... args) {
+        if (ciel::allocator_has_trivial_construct<allocator_type, pointer, Args...>::value) {
+            new (p) value_type(std::forward<Args>(args)...);
 
-        return begin;
+        } else {
+            alloc_traits::construct(allocator_(), p, std::forward<Args>(args)...);
+        }
     }
 
-    template<class U = value_type, typename std::enable_if<!std::is_trivially_destructible<U>::value, int>::type = 0>
-    pointer
-    alloc_range_destroy(pointer begin, pointer end) noexcept {
-        CIEL_PRECONDITION(begin <= end);
-        CIEL_PRECONDITION(begin_ <= begin);
-        CIEL_PRECONDITION(end <= end_);
+    template<class U = value_type, typename std::enable_if<std::is_trivial<U>::value, int>::type = 0>
+    void
+    construct(pointer p, value_type value) {
+        if (ciel::allocator_has_trivial_copy_construct<allocator_type>::value) {
+            *p = value;
 
-        while (end != begin) {
-            alloc_traits::destroy(allocator_(), --end);
+        } else {
+            alloc_traits::construct(allocator_(), p, value);
+        }
+    }
+
+    template<class U = value_type, typename std::enable_if<!std::is_trivial<U>::value, int>::type = 0>
+    void
+    construct(pointer p, const value_type& value) {
+        if (ciel::allocator_has_trivial_copy_construct<allocator_type>::value) {
+            new (p) value_type(value);
+
+        } else {
+            alloc_traits::construct(allocator_(), p, value);
+        }
+    }
+
+    pointer
+    destroy(pointer first, pointer last) noexcept {
+        CIEL_PRECONDITION(begin_ <= first);
+        CIEL_PRECONDITION(first <= last);
+        CIEL_PRECONDITION(last <= end_);
+
+        const pointer res = first;
+
+        if (ciel::allocator_has_trivial_destroy<allocator_type>::value) {
+            if (!std::is_trivially_destructible<value_type>::value) {
+                for (; last - first >= 4; first += 4) {
+                    (first + 0)->~value_type();
+                    (first + 1)->~value_type();
+                    (first + 2)->~value_type();
+                    (first + 3)->~value_type();
+                }
+
+                for (; first != last; ++first) {
+                    first->~value_type();
+                }
+            }
+
+        } else {
+            for (; first != last; ++first) {
+                alloc_traits::destroy(allocator_(), first);
+            }
         }
 
-        return begin;
+        return res;
+    }
+
+    void
+    destroy(pointer p) noexcept {
+        CIEL_PRECONDITION(begin_ <= p);
+        CIEL_PRECONDITION(p <= end_); // called by pop_back
+
+        if (ciel::allocator_has_trivial_destroy<allocator_type>::value) {
+            if (!std::is_trivially_destructible<value_type>::value) {
+                p->~value_type();
+            }
+
+        } else {
+            alloc_traits::destroy(allocator_(), p);
+        }
     }
 
     template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
@@ -180,17 +236,17 @@ private:
 
             for (pointer p = pos - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_front(std::move_if_noexcept(*p));
+                sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
 #else
-                sb.unchecked_emplace_front(std::move(*p));
+                sb.unchecked_emplace_front_aux(std::move(*p));
 #endif
             }
 
             for (pointer p = pos; p < end_; ++p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_back(std::move_if_noexcept(*p));
+                sb.unchecked_emplace_back_aux(std::move_if_noexcept(*p));
 #else
-                sb.unchecked_emplace_back(std::move(*p));
+                sb.unchecked_emplace_back_aux(std::move(*p));
 #endif
             }
 
@@ -236,9 +292,9 @@ private:
         if (begin_) {
             for (pointer p = end_ - 1; p >= begin_; --p) {
 #ifdef CIEL_HAS_EXCEPTIONS
-                sb.unchecked_emplace_front(std::move_if_noexcept(*p));
+                sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
 #else
-                sb.unchecked_emplace_front(std::move(*p));
+                sb.unchecked_emplace_front_aux(std::move(*p));
 #endif
             }
 
@@ -269,7 +325,7 @@ private:
         difference_type n = old_end - to;
 
         for (pointer p = from_s + n; p < from_e; ++p) {
-            unchecked_emplace_back(std::move(*p));
+            unchecked_emplace_back_aux(std::move(*p));
         }
 
         std::move_backward(from_s, from_s + n, old_end);
@@ -291,7 +347,7 @@ private:
         const auto index      = first - begin();
         const auto back_count = end() - last;
 
-        alloc_range_destroy(first, last);
+        destroy(first, last);
         std::memmove(first, last, sizeof(value_type) * back_count);
         end_ -= distance;
 
@@ -306,7 +362,7 @@ private:
         const auto index = first - begin();
 
         iterator new_end = std::move(last, end(), first);
-        end_             = alloc_range_destroy(new_end, end_);
+        end_             = destroy(new_end, end_);
 
         return begin() + index;
     }
@@ -408,7 +464,7 @@ private:
             const pointer old_end = this_->end_;
             this_->end_           = pos;
 
-            this_->unchecked_emplace_back(std::forward<Args>(args)...);
+            this_->unchecked_emplace_back_aux(std::forward<Args>(args)...);
 
             this_->end_ = old_end + count;
             rd.release();
@@ -445,12 +501,12 @@ private:
             ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
 
-            sb.unchecked_emplace_back(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
 
             swap_out_buffer(std::move(sb), pos);
 
         } else if (pos == end_) { // equal to emplace_back
-            unchecked_emplace_back(std::forward<Args>(args)...);
+            unchecked_emplace_back_aux(std::forward<Args>(args)...);
 
         } else {
             cb(pos, std::forward<Args>(args)...);
@@ -460,32 +516,28 @@ private:
     }
 
     template<class... Args>
-    reference
+    void
     emplace_back_aux(Args&&... args) {
         if (end_ == end_cap_()) {
             ciel::split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
 
-            sb.unchecked_emplace_back(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
 
             swap_out_buffer(std::move(sb));
 
         } else {
-            return unchecked_emplace_back(std::forward<Args>(args)...);
+            return unchecked_emplace_back_aux(std::forward<Args>(args)...);
         }
-
-        return back();
     }
 
     template<class... Args>
-    reference
+    void
     unchecked_emplace_back_aux(Args&&... args) {
         CIEL_PRECONDITION(end_ < end_cap_());
 
-        alloc_traits::construct(allocator_(), end_, std::forward<Args>(args)...);
+        construct(end_, std::forward<Args>(args)...);
         ++end_;
-
-        return back();
     }
 
     template<class Iter>
@@ -497,7 +549,7 @@ private:
         }
 
         if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_);
+            end_ = destroy(begin_ + count, end_);
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -608,7 +660,7 @@ public:
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         while (first != last) {
-            emplace_back(*first);
+            emplace_back_aux(*first);
             ++first;
         }
     }
@@ -783,7 +835,7 @@ public:
         }
 
         if (size() > count) {
-            end_ = alloc_range_destroy(begin_ + count, end_);
+            end_ = destroy(begin_ + count, end_);
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -809,7 +861,7 @@ public:
         clear();
 
         while (first != last) {
-            emplace_back(*first);
+            emplace_back_aux(*first);
             ++first;
         }
     }
@@ -1010,7 +1062,7 @@ public:
 
     void
     clear() noexcept {
-        end_ = alloc_range_destroy(begin_, end_);
+        end_ = destroy(begin_, end_);
     }
 
     iterator
@@ -1058,7 +1110,7 @@ public:
         const size_type old_size = size();
 
         while (first != last) {
-            emplace_back(*first);
+            emplace_back_aux(*first);
             ++first;
         }
 
@@ -1121,37 +1173,40 @@ public:
 
     void
     push_back(const value_type& value) {
-        emplace_back(value);
+        emplace_back_aux(value);
     }
 
     void
     push_back(value_type&& value) {
-        emplace_back(std::move(value));
+        emplace_back_aux(std::move(value));
     }
 
     template<class... Args>
     reference
     emplace_back(Args&&... args) {
-        return emplace_back_aux(std::forward<Args>(args)...);
+        emplace_back_aux(std::forward<Args>(args)...);
+        return back();
     }
 
     template<class U, class... Args>
     reference
     emplace_back(std::initializer_list<U> il, Args&&... args) {
-        return emplace_back_aux(il, std::forward<Args>(args)...);
+        emplace_back_aux(il, std::forward<Args>(args)...);
+        return back();
     }
 
     void
     pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
-        end_ = alloc_range_destroy(end_ - 1, end_);
+        --end_;
+        destroy(end_);
     }
 
     void
     resize(const size_type count) {
         if (size() >= count) {
-            end_ = alloc_range_destroy(begin_ + count, end_);
+            end_ = destroy(begin_ + count, end_);
             return;
         }
 
@@ -1163,7 +1218,7 @@ public:
     void
     resize(const size_type count, const value_type& value) {
         if (size() >= count) {
-            end_ = alloc_range_destroy(begin_ + count, end_);
+            end_ = destroy(begin_ + count, end_);
             return;
         }
 
@@ -1172,13 +1227,6 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    template<class U = vector, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
-    void
-    swap(vector& other) noexcept {
-        ciel::relocatable_swap(*this, other);
-    }
-
-    template<class U = vector, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     void
     swap(vector& other) noexcept(alloc_traits::propagate_on_container_swap::value
                                  || alloc_traits::is_always_equal::value) {
@@ -1187,19 +1235,24 @@ public:
         swap(begin_, other.begin_);
         swap(end_, other.end_);
         swap(end_cap_(), other.end_cap_());
-        swap(allocator_(), other.allocator_());
+
+        if (alloc_traits::propagate_on_container_swap::value) {
+            swap(allocator_(), other.allocator_());
+        }
     }
 
     template<class... Args>
     reference
     unchecked_emplace_back(Args&&... args) {
-        return unchecked_emplace_back_aux(std::forward<Args>(args)...);
+        unchecked_emplace_back_aux(std::forward<Args>(args)...);
+        return back();
     }
 
     template<class U, class... Args>
     reference
     unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
-        return unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+        return back();
     }
 
     template<class R, typename std::enable_if<ciel::is_range<R>::value, int>::type = 0>

@@ -48,6 +48,9 @@ struct allocator_has_trivial_copy_construct : ciel::negation<detail::allocator_h
 template<class Alloc, class T = typename Alloc::value_type>
 struct allocator_has_trivial_move_construct : ciel::negation<detail::allocator_has_construct<Alloc, T*, T&&>> {};
 
+template<class Alloc, class Pointer, class... Args>
+struct allocator_has_trivial_construct : ciel::negation<detail::allocator_has_construct<Alloc, Pointer, Args...>> {};
+
 // allocator_has_trivial_destroy
 
 template<class Alloc, class T = typename Alloc::value_type>
@@ -63,6 +66,9 @@ struct allocator_has_trivial_copy_construct<std::allocator<T>> : std::true_type 
 
 template<class T>
 struct allocator_has_trivial_move_construct<std::allocator<T>> : std::true_type {};
+
+template<class T, class... Args>
+struct allocator_has_trivial_construct<std::allocator<T>, T*, Args...> : std::true_type {};
 
 template<class T>
 struct allocator_has_trivial_destroy<std::allocator<T>> : std::true_type {};
