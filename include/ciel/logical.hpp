@@ -23,6 +23,10 @@ struct disjunction : std::false_type {};
 template<class B1, class... Bn>
 struct disjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), B1, disjunction<Bn...>>::type {};
 
+// negation
+template<class B>
+struct negation : std::integral_constant<bool, !static_cast<bool>(B::value)> {};
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_LOGICAL_HPP_

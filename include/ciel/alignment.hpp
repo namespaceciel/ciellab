@@ -9,6 +9,7 @@
 NAMESPACE_CIEL_BEGIN
 
 // is_aligned
+
 CIEL_NODISCARD inline bool
 is_aligned(void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
@@ -18,6 +19,7 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
 }
 
 // align_up
+
 CIEL_NODISCARD inline uintptr_t
 align_up(uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(alignment != 0);
@@ -33,6 +35,7 @@ align_up(uintptr_t sz, const size_t alignment) noexcept {
 }
 
 // align_down
+
 CIEL_NODISCARD inline uintptr_t
 align_down(uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(alignment != 0);
@@ -48,6 +51,7 @@ align_down(uintptr_t sz, const size_t alignment) noexcept {
 }
 
 // max_align
+
 static constexpr size_t max_align =
 #ifdef __STDCPP_DEFAULT_NEW_ALIGNMENT__
     __STDCPP_DEFAULT_NEW_ALIGNMENT__
@@ -57,6 +61,7 @@ static constexpr size_t max_align =
     ;
 
 // is_overaligned_for_new
+
 CIEL_NODISCARD inline bool
 is_overaligned_for_new(const size_t alignment) noexcept {
     return alignment > max_align;

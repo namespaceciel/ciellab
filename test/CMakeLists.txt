@@ -20,6 +20,7 @@ set(SOURCES
     src/inplace_vector_tests.cpp
     src/compressed_pair_tests.cpp
     src/vector_exception_safety_tests.cpp
+    src/allocator_traits.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
