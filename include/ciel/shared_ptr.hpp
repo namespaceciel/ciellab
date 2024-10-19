@@ -77,7 +77,7 @@ public:
         if (shared_count_.fetch_sub(off, std::memory_order_release) == off) {
             std::atomic_thread_fence(std::memory_order_acquire);
 
-            delete_pointer();
+            dispose();
             weak_count_release(); // weak_count_ == weak_ref + (shared_count_ != 0)
         }
     }
@@ -88,11 +88,11 @@ public:
         // Avoid expensive atomic stores inspired by LLVM:
         // https://github.com/llvm/llvm-project/commit/ac9eec8602786b13a2bea685257d4f25b36030ff
         if (weak_count_.load(std::memory_order_acquire) == off) {
-            delete_control_block();
+            destroy();
 
         } else if (weak_count_.fetch_sub(off, std::memory_order_release) == off) {
             std::atomic_thread_fence(std::memory_order_acquire);
-            delete_control_block();
+            destroy();
         }
     }
 
@@ -115,15 +115,11 @@ public:
         return nullptr;
     }
 
-    virtual void
-    delete_pointer() noexcept
-        = 0;
-    virtual void
-    delete_control_block() noexcept
-        = 0;
-    virtual void*
-    managed_pointer() const noexcept
-        = 0;
+    // clang-format off
+    virtual void dispose() noexcept = 0;
+    virtual void destroy() noexcept = 0;
+    CIEL_NODISCARD virtual void* managed_pointer() const noexcept = 0;
+    // clang-format on
 
 }; // class shared_weak_count
 
@@ -133,6 +129,7 @@ class control_block_with_pointer final : public shared_weak_count {
 
 public:
     using pointer        = element_type*;
+    using const_pointer  = const element_type*;
     using deleter_type   = Deleter;
     using allocator_type = Allocator;
 
@@ -143,12 +140,12 @@ private:
 
     ciel::compressed_pair<ciel::compressed_pair<pointer, deleter_type>, control_block_allocator> compressed_;
 
-    CIEL_NODISCARD pointer&
+    CIEL_NODISCARD pointer
     ptr_() noexcept {
         return compressed_.first().first();
     }
 
-    CIEL_NODISCARD const pointer&
+    CIEL_NODISCARD const_pointer
     ptr_() const noexcept {
         return compressed_.first().first();
     }
@@ -182,34 +179,28 @@ public:
     get_deleter(const std::type_info& type) noexcept override {
         return (type == typeid(deleter_type)) ? static_cast<void*>(&deleter_()) : nullptr;
     }
-
 #endif
 
     virtual void
-    delete_pointer() noexcept override {
+    dispose() noexcept override {
         deleter_()(ptr_());
         deleter_().~deleter_type();
     }
 
     virtual void
-    delete_control_block() noexcept override {
+    destroy() noexcept override {
         control_block_allocator allocator = std::move(allocator_());
         allocator_().~control_block_allocator();
 
         control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
-    virtual void*
+    CIEL_NODISCARD virtual void*
     managed_pointer() const noexcept override {
-        return ptr_();
+        return const_cast<void*>(static_cast<const void*>(ptr_()));
     }
 
 }; // class control_block_with_pointer
-
-static_assert(sizeof(control_block_with_pointer<int, std::default_delete<int>, std::allocator<int>>)
-                      - sizeof(shared_weak_count)
-                  == 8,
-              "Empty Base Optimization is not working.");
 
 template<class element_type, class Allocator>
 class control_block_with_instance final : public shared_weak_count {
@@ -217,6 +208,7 @@ class control_block_with_instance final : public shared_weak_count {
 
 public:
     using pointer        = element_type*;
+    using const_pointer  = const element_type*;
     using allocator_type = Allocator;
 
 private:
@@ -224,19 +216,16 @@ private:
     using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_with_instance>;
     using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_with_instance>;
 
-    // TODO: union
-    ciel::compressed_pair<typename ciel::aligned_storage<sizeof(element_type), alignof(element_type)>::type,
-                          control_block_allocator>
-        compressed_;
+    ciel::compressed_pair<element_type, control_block_allocator> compressed_;
 
     CIEL_NODISCARD pointer
     ptr_() noexcept {
-        return static_cast<pointer>(static_cast<void*>(&compressed_.first()));
+        return &(compressed_.first());
     }
 
-    CIEL_NODISCARD const element_type*
+    CIEL_NODISCARD const_pointer
     ptr_() const noexcept {
-        return static_cast<const element_type*>(static_cast<const void*>(&compressed_.first()));
+        return &(compressed_.first());
     }
 
     CIEL_NODISCARD control_block_allocator&
@@ -252,28 +241,25 @@ private:
 public:
     template<class... Args>
     control_block_with_instance(allocator_type alloc, Args&&... args)
-        : compressed_(ciel::default_init, alloc) {
-        alloc_traits::construct(alloc, ptr_(), std::forward<Args>(args)...);
+        : compressed_(std::piecewise_construct, std::forward_as_tuple(std::forward<Args>(args)...),
+                      std::forward_as_tuple(std::move(alloc))) {}
+
+    virtual void
+    dispose() noexcept override {
+        ptr_()->~element_type();
     }
 
     virtual void
-    delete_pointer() noexcept override {
-        allocator_type alloc(allocator_());
-
-        alloc_traits::destroy(alloc, ptr_());
-    }
-
-    virtual void
-    delete_control_block() noexcept override {
+    destroy() noexcept override {
         control_block_allocator allocator = std::move(allocator_());
         allocator_().~control_block_allocator();
 
         control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
-    virtual void*
+    CIEL_NODISCARD virtual void*
     managed_pointer() const noexcept override {
-        return const_cast<void*>(static_cast<const void*>(&compressed_.first()));
+        return const_cast<void*>(static_cast<const void*>(ptr_()));
     }
 
 }; // class control_block_with_instance

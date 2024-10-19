@@ -21,12 +21,14 @@ target_include_directories(ciellab INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 # -Wno-class-memaccess: memcpy and memmove for trivially_relocatable objects.
 # -Wno-assume: suppress false alarms.
 # -Wno-invalid-offsetof: implementation of datasizeof
+# -Wno-unused-but-set-parameter: seems like a false alarm for std::forward_as_tuple
 target_compile_options(ciellab INTERFACE
     -Wno-unknown-warning-option
     -Wno-int-to-pointer-cast 
     -Wno-class-memaccess
     -Wno-assume
     -Wno-invalid-offsetof
+    -Wno-unused-but-set-parameter
 )
 
 if (CIELLAB_BUILD_TESTS)
