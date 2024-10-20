@@ -124,15 +124,10 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter>
     void
     construct_at_end(Iter first, Iter last) {
-        CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
-
-        while (first != last) {
-            unchecked_emplace_back_aux(*first);
-            ++first;
-        }
+        ciel::uninitialized_copy(allocator_(), first, last, end_);
     }
 
     template<class... Args>
@@ -334,31 +329,34 @@ private:
         std::move_backward(from_s, from_s + n, old_end);
     }
 
-    template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
     iterator
-    erase_impl(iterator first, iterator last, const size_type distance) noexcept {
-        CIEL_PRECONDITION(first < last);
+    erase_impl(pointer first, pointer last,
+               const difference_type distance) noexcept(ciel::is_trivially_relocatable<value_type>::value
+                                                        || std::is_nothrow_move_assignable<value_type>::value) {
+        CIEL_PRECONDITION(last - first == distance);
         CIEL_PRECONDITION(distance != 0);
 
-        const auto index      = first - begin();
-        const auto back_count = end() - last;
+        const auto index      = first - begin_;
+        const auto back_count = end_ - last;
 
-        destroy(first, last);
-        std::memmove(first, last, sizeof(value_type) * back_count);
-        end_ -= distance;
+        if (back_count == 0) {
+            end_ = destroy(first, end_);
 
-        return begin() + index;
-    }
+        } else if (ciel::is_trivially_relocatable<value_type>::value) {
+            destroy(first, last);
+            end_ -= distance;
 
-    template<class U = value_type, typename std::enable_if<!ciel::is_trivially_relocatable<U>::value, int>::type = 0>
-    iterator
-    erase_impl(iterator first, iterator last, const size_type) {
-        CIEL_PRECONDITION(first < last);
+            if (distance >= back_count) {
+                std::memcpy(first, last, sizeof(value_type) * back_count);
 
-        const auto index = first - begin();
+            } else {
+                std::memmove(first, last, sizeof(value_type) * back_count);
+            }
 
-        iterator new_end = std::move(last, end(), first);
-        end_             = destroy(new_end, end_);
+        } else {
+            pointer new_end = std::move(last, end_, first);
+            end_            = destroy(new_end, end_);
+        }
 
         return begin() + index;
     }
@@ -825,9 +823,18 @@ public:
     }
 
     void
-    assign(const size_type count, const value_type& value) {
+    assign(const size_type count, lvalue value) {
         if (capacity() < count) {
-            vector{count, value, allocator_()}.swap(*this);
+            if (internal_value(value)) {
+                value_type copy = std::move(*(begin_ + (std::addressof(value) - begin_)));
+                reset(count);
+                construct_at_end(count, copy);
+
+            } else {
+                reset(count);
+                construct_at_end(count, value);
+            }
+
             return;
         }
 
@@ -1152,27 +1159,27 @@ public:
 
     iterator
     erase(const_iterator p) {
-        iterator pos = begin() + (p - begin());
+        const iterator pos = begin() + (p - begin());
         CIEL_PRECONDITION(begin() <= pos);
         CIEL_PRECONDITION(pos < end());
 
-        return erase_impl(pos, pos + 1, 1);
+        return erase_impl(ciel::to_address(pos), ciel::to_address(pos + 1), 1);
     }
 
     iterator
     erase(const_iterator f, const_iterator l) {
-        iterator first = begin() + (f - begin());
-        iterator last  = begin() + (l - begin());
+        const iterator first = begin() + (f - begin());
+        const iterator last  = begin() + (l - begin());
         CIEL_PRECONDITION(begin() <= first);
         CIEL_PRECONDITION(last <= end());
 
-        const auto distance = std::distance(first, last);
+        const auto distance = last - first;
 
         if CIEL_UNLIKELY (distance <= 0) {
             return last;
         }
 
-        return erase_impl(first, last, distance);
+        return erase_impl(ciel::to_address(first), ciel::to_address(last), distance);
     }
 
     void

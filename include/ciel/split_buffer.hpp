@@ -159,15 +159,10 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter>
     void
     construct_at_end(Iter first, Iter last) {
-        CIEL_PRECONDITION(end_ + std::distance(first, last) <= end_cap_());
-
-        while (first != last) {
-            unchecked_emplace_back_aux(*first);
-            ++first;
-        }
+        ciel::uninitialized_copy(allocator_(), first, last, end_);
     }
 
     template<class... Args>
@@ -800,17 +795,19 @@ public:
     }
 
     void
-    assign(const size_type count, const value_type& value) {
+    assign(const size_type count, lvalue value) {
         if (back_spare() + size() < count) {
-            const size_type diff = count - back_spare() - size();
-
-            if (front_spare() >= diff) {
-                left_shift_n(diff);
+            if (internal_value(value)) {
+                value_type copy = std::move(*(begin_ + (std::addressof(value) - begin_)));
+                reset(count);
+                construct_at_end(count, copy);
 
             } else {
-                split_buffer{count, value, allocator_()}.swap(*this);
-                return;
+                reset(count);
+                construct_at_end(count, value);
             }
+
+            return;
 
         } else if (size() > count) {
             end_ = destroy(begin_ + count, end_);
