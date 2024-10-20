@@ -10,6 +10,7 @@
 NAMESPACE_CIEL_BEGIN
 
 // is_exactly_input_iterator
+
 template<class Iter, class = void>
 struct is_exactly_input_iterator : std::false_type {};
 
@@ -18,6 +19,7 @@ struct is_exactly_input_iterator<Iter, ciel::void_t<typename std::iterator_trait
     : std::is_same<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
 
 // is_forward_iterator
+
 template<class Iter, class = void>
 struct is_forward_iterator : std::false_type {};
 
@@ -26,12 +28,27 @@ struct is_forward_iterator<Iter, ciel::void_t<typename std::iterator_traits<Iter
     : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::forward_iterator_tag> {};
 
 // is_input_iterator
+
 template<class Iter, class = void>
 struct is_input_iterator : std::false_type {};
 
 template<class Iter>
 struct is_input_iterator<Iter, ciel::void_t<typename std::iterator_traits<Iter>::iterator_category>>
     : std::is_convertible<typename std::iterator_traits<Iter>::iterator_category, std::input_iterator_tag> {};
+
+// is_contiguous_iterator
+
+template<class Iter, class = void>
+struct is_contiguous_iterator : std::false_type {};
+
+#if CIEL_STD_VER >= 20
+template<class Iter>
+struct is_contiguous_iterator<Iter, ciel::void_t<typename std::iterator_traits<Iter>::iterator_concept>>
+    : std::is_convertible<typename std::iterator_traits<Iter>::iterator_concept, std::contiguous_iterator_tag> {};
+#endif
+
+template<class T>
+struct is_contiguous_iterator<T*> : std::true_type {};
 
 NAMESPACE_CIEL_END
 

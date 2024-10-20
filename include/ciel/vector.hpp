@@ -305,6 +305,24 @@ private:
     }
 
     void
+    set_nullptr() noexcept {
+        begin_     = nullptr;
+        end_       = nullptr;
+        end_cap_() = nullptr;
+    }
+
+    void
+    reset(const size_type count) {
+        CIEL_PRECONDITION(count != 0);
+
+        do_destroy();
+        set_nullptr();
+        begin_     = alloc_traits::allocate(allocator_(), count);
+        end_cap_() = begin_ + count;
+        end_       = begin_;
+    }
+
+    void
     move_range(pointer from_s, pointer from_e, pointer to) {
         pointer old_end   = end_;
         difference_type n = old_end - to;
@@ -314,13 +332,6 @@ private:
         }
 
         std::move_backward(from_s, from_s + n, old_end);
-    }
-
-    void
-    set_nullptr() noexcept {
-        begin_     = nullptr;
-        end_       = nullptr;
-        end_cap_() = nullptr;
     }
 
     template<class U = value_type, typename std::enable_if<ciel::is_trivially_relocatable<U>::value, int>::type = 0>
@@ -529,7 +540,8 @@ private:
     void
     assign(Iter first, Iter last, const size_type count) {
         if (capacity() < count) {
-            vector{first, last, allocator_()}.swap(*this);
+            reset(count);
+            construct_at_end(first, last);
             return;
         }
 
@@ -843,11 +855,18 @@ public:
     template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
-        clear();
+        pointer p = begin_;
+        for (; first != last && p != end_; ++first, ++p) {
+            *p = *first;
+        }
 
-        while (first != last) {
-            emplace_back_aux(*first);
-            ++first;
+        if (p != end_) {
+            end_ = destroy(p, end_);
+
+        } else {
+            for (; first != last; ++first) {
+                emplace_back_aux(*first);
+            }
         }
     }
 
