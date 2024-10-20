@@ -371,7 +371,6 @@ TEST(vector_tests, emplace_il) {
     ASSERT_EQ(v[2], ciel::vector<int>({5, 6}));
 }
 
-/* FIXME
 TEST(vector_tests, insert_self_reference) {
     {
         ciel::vector<Int> v{0, 1, 2, 3, 4};
@@ -395,4 +394,37 @@ TEST(vector_tests, insert_self_reference) {
         ASSERT_EQ(v, std::initializer_list<Int>({0, 2, 2, 2, 2, 2, 1, 2, 3, 4}));
     }
 }
-*/
+
+TEST(vector_tests, assign_self_reference) {
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        ASSERT_EQ(v.size(), v.capacity());
+
+        v.assign(2, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({2, 2}));
+    }
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        ASSERT_EQ(v.size(), v.capacity());
+
+        v.assign(6, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({2, 2, 2, 2, 2, 2}));
+    }
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        v.reserve(10);
+
+        v.assign(6, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({2, 2, 2, 2, 2, 2}));
+    }
+}
+
+TEST(vector_tests, resize_self_reference) {
+    {
+        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        ASSERT_EQ(v.size(), v.capacity());
+
+        v.resize(6, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4, 2}));
+    }
+}

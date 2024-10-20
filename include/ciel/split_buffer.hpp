@@ -77,34 +77,6 @@ private:
     using lvalue = typename std::conditional<should_pass_by_value, value_type, const value_type&>::type;
     using rvalue = typename std::conditional<should_pass_by_value, value_type, value_type&&>::type;
 
-    bool
-    internal_value(const value_type& value) const noexcept {
-        if (should_pass_by_value) {
-            return false;
-        }
-
-        if CIEL_UNLIKELY (begin_ <= std::addressof(value) && std::addressof(value) < end_) {
-            return true;
-        }
-
-        return false;
-    }
-
-    void
-    reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
-        CIEL_PRECONDITION(begin_cap_ == nullptr);
-        CIEL_PRECONDITION(begin_ == nullptr);
-        CIEL_PRECONDITION(end_ == nullptr);
-        CIEL_PRECONDITION(end_cap_() == nullptr);
-        CIEL_PRECONDITION(cap != 0);
-        CIEL_PRECONDITION(cap >= offset);
-
-        begin_cap_ = alloc_traits::allocate(allocator_(), cap);
-        end_cap_() = begin_cap_ + cap;
-        begin_     = begin_cap_ + offset;
-        end_       = begin_;
-    }
-
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
         return end_cap_alloc_.first();
@@ -142,6 +114,19 @@ private:
         }
 
         return std::max(cap * 2, new_size);
+    }
+
+    bool
+    internal_value(const value_type& value) const noexcept {
+        if (should_pass_by_value) {
+            return false;
+        }
+
+        if CIEL_UNLIKELY (begin_ <= std::addressof(value) && std::addressof(value) < end_) {
+            return true;
+        }
+
+        return false;
     }
 
     void
@@ -504,6 +489,21 @@ private:
     }
 
     void
+    reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
+        CIEL_PRECONDITION(begin_cap_ == nullptr);
+        CIEL_PRECONDITION(begin_ == nullptr);
+        CIEL_PRECONDITION(end_ == nullptr);
+        CIEL_PRECONDITION(end_cap_() == nullptr);
+        CIEL_PRECONDITION(cap != 0);
+        CIEL_PRECONDITION(cap >= offset);
+
+        begin_cap_ = alloc_traits::allocate(allocator_(), cap);
+        end_cap_() = begin_cap_ + cap;
+        begin_     = begin_cap_ + offset;
+        end_       = begin_;
+    }
+
+    void
     move_range(pointer from_s, pointer from_e, pointer to) {
         pointer old_end   = end_;
         difference_type n = old_end - to;
@@ -593,35 +593,6 @@ private:
         --begin_;
     }
 
-    template<class Iter>
-    void
-    assign(Iter first, Iter last, const size_type count) {
-        if (back_spare() + size() < count) {
-            const size_type diff = count - back_spare() - size();
-
-            if (front_spare() >= diff) {
-                left_shift_n(diff);
-
-            } else {
-                reset(count);
-                construct_at_end(first, last);
-                return;
-            }
-
-        } else if (size() > count) {
-            end_ = destroy(begin_ + count, end_);
-        }
-
-        CIEL_POSTCONDITION(size() <= count);
-
-        Iter mid = ciel::copy_n(first, size(), begin_);
-
-        // if mid < last
-        construct_at_end(mid, last);
-
-        CIEL_POSTCONDITION(size() == count);
-    }
-
 public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
 
@@ -700,21 +671,18 @@ public:
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
-    // non-standard extension
     template<class R, typename std::enable_if<
                           ciel::is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
                       = 0>
     split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(rg.begin(), rg.end(), alloc) {}
 
-    // non-standard extension
     template<class R, typename std::enable_if<
                           ciel::is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
                       = 0>
     split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
-    // non-standard extension
     template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && std::is_lvalue_reference<R>::value,
                                               int>::type
                       = 0>
@@ -728,7 +696,6 @@ public:
         }
     }
 
-    // non-standard extension
     template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value,
                                               int>::type
                       = 0>
@@ -805,6 +772,35 @@ public:
             }
 
             return;
+        }
+
+        if (count >= size()) {
+            std::fill_n(begin_, size(), value);
+            construct_at_end(count - size(), value);
+
+        } else {
+            std::fill_n(begin_, count, value);
+            end_ = destroy(begin_ + count, end_);
+        }
+
+        CIEL_POSTCONDITION(size() == count);
+    }
+
+private:
+    template<class Iter>
+    void
+    assign(Iter first, Iter last, const size_type count) {
+        if (back_spare() + size() < count) {
+            const size_type diff = count - back_spare() - size();
+
+            if (front_spare() >= diff) {
+                left_shift_n(diff);
+
+            } else {
+                reset(count);
+                construct_at_end(first, last);
+                return;
+            }
 
         } else if (size() > count) {
             end_ = destroy(begin_ + count, end_);
@@ -812,13 +808,15 @@ public:
 
         CIEL_POSTCONDITION(size() <= count);
 
-        std::fill_n(begin_, size(), value);
-        // if count > size()
-        construct_at_end(count - size(), value);
+        Iter mid = ciel::copy_n(first, size(), begin_);
+
+        // if mid < last
+        construct_at_end(mid, last);
 
         CIEL_POSTCONDITION(size() == count);
     }
 
+public:
     template<class Iter, typename std::enable_if<ciel::is_forward_iterator<Iter>::value, int>::type = 0>
     void
     assign(Iter first, Iter last) {
@@ -1015,7 +1013,6 @@ public:
 
         split_buffer<value_type, allocator_type&> sb(allocator_());
         sb.reserve_cap_and_offset_to(new_spare + size() + back_spare(), new_spare);
-
         swap_out_buffer(std::move(sb), begin_);
 
         CIEL_POSTCONDITION(new_spare <= front_spare());
@@ -1036,7 +1033,6 @@ public:
 
         split_buffer<value_type, allocator_type&> sb(allocator_());
         sb.reserve_cap_and_offset_to(new_spare + size() + front_spare(), front_spare());
-
         swap_out_buffer(std::move(sb), begin_);
 
         CIEL_POSTCONDITION(new_spare <= back_spare());
@@ -1058,7 +1054,6 @@ public:
 
             CIEL_TRY {
                 sb.reserve_cap_and_offset_to(size(), 0);
-
                 swap_out_buffer(std::move(sb), begin_);
             }
             CIEL_CATCH (...) {}
@@ -1075,12 +1070,13 @@ public:
     }
 
     void
-    push_back(const value_type& value) {
+    push_back(lvalue value) {
         emplace_back(value);
     }
 
+    template<bool Valid = !should_pass_by_value, typename std::enable_if<Valid, int>::type = 0>
     void
-    push_back(value_type&& value) {
+    push_back(rvalue value) {
         emplace_back(std::move(value));
     }
 
@@ -1107,12 +1103,13 @@ public:
     }
 
     void
-    push_front(const value_type& value) {
+    push_front(lvalue value) {
         emplace_front(value);
     }
 
+    template<bool Valid = !should_pass_by_value, typename std::enable_if<Valid, int>::type = 0>
     void
-    push_front(value_type&& value) {
+    push_front(rvalue value) {
         emplace_front(std::move(value));
     }
 

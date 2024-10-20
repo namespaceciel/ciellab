@@ -5,6 +5,7 @@
 #include <ciel/config.hpp>
 #include <ciel/void_t.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <type_traits>
 
@@ -12,7 +13,7 @@ NAMESPACE_CIEL_BEGIN
 
 // Destroy ranges in destructor for exception handling.
 // Note that Allocator can be reference type.
-template<class T, class Allocator, class = void>
+template<class T, class Allocator, bool = std::is_trivially_destructible<T>::value>
 class range_destroyer {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
@@ -62,8 +63,18 @@ public:
     }
 
     void
+    advance_forward(const ptrdiff_t n) noexcept {
+        end_() += n;
+    }
+
+    void
     advance_backward() noexcept {
         --begin_;
+    }
+
+    void
+    advance_backward(const ptrdiff_t n) noexcept {
+        begin_ -= n;
     }
 
     void
@@ -74,8 +85,7 @@ public:
 }; // class range_destroyer
 
 template<class T, class Allocator>
-class range_destroyer<T, Allocator,
-                      ciel::void_t<typename std::enable_if<std::is_trivially_destructible<T>::value, int>::type>> {
+class range_destroyer<T, Allocator, true> {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
 private:
@@ -96,7 +106,13 @@ public:
     advance_forward() noexcept {}
 
     void
+    advance_forward(ptrdiff_t) noexcept {}
+
+    void
     advance_backward() noexcept {}
+
+    void
+    advance_backward(ptrdiff_t) noexcept {}
 
     void
     release() noexcept {}
