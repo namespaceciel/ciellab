@@ -484,6 +484,12 @@ private:
     }
 
     void
+    reset() noexcept {
+        do_destroy();
+        set_nullptr();
+    }
+
+    void
     init(const size_type count) {
         CIEL_PRECONDITION(count != 0);
         CIEL_PRECONDITION(begin_cap_ == nullptr);
@@ -748,8 +754,7 @@ public:
 
         if (alloc_traits::propagate_on_container_copy_assignment::value) {
             if (allocator_() != other.allocator_()) {
-                split_buffer(other.begin(), other.end(), other.allocator_()).swap(*this);
-                return *this;
+                reset();
             }
 
             allocator_() = other.allocator_();
@@ -767,23 +772,15 @@ public:
             return *this;
         }
 
-        if (!alloc_traits::propagate_on_container_move_assignment::value && allocator_() != other.allocator_()) {
-            assign(other.begin(), other.end());
-            return *this;
+        if (std::is_same<allocator_type, std::allocator<value_type>>::value
+            || alloc_traits::propagate_on_container_move_assignment::value) {
+            swap(other);
+            // other.clear(); // It's not neccessary but...
+
+        } else {
+            reset(other.size());
+            construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
         }
-
-        if (alloc_traits::propagate_on_container_move_assignment::value) {
-            allocator_() = std::move(other.allocator_());
-        }
-
-        do_destroy();
-
-        begin_cap_ = other.begin_cap_;
-        begin_     = other.begin_;
-        end_       = other.end_;
-        end_cap_() = other.end_cap_();
-
-        other.set_nullptr();
 
         return *this;
     }

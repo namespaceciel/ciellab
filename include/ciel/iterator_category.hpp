@@ -50,6 +50,9 @@ struct is_contiguous_iterator<Iter, ciel::void_t<typename std::iterator_traits<I
 template<class T>
 struct is_contiguous_iterator<T*> : std::true_type {};
 
+template<class T>
+struct is_contiguous_iterator<std::move_iterator<T>> : is_contiguous_iterator<T> {};
+
 NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_ITERATOR_CATEGORY_HPP_

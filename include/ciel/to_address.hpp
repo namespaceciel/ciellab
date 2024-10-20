@@ -3,21 +3,20 @@
 
 #include <ciel/config.hpp>
 
-#include <type_traits>
+#include <utility>
 
 NAMESPACE_CIEL_BEGIN
 
 template<class T>
 T*
 to_address(T* p) noexcept {
-    static_assert(!std::is_function<T>::value, "");
     return p;
 }
 
 template<class T>
 auto
-to_address(const T& p) noexcept -> decltype(ciel::to_address(p.operator->())) {
-    return ciel::to_address(p.operator->());
+to_address(T&& p) noexcept -> decltype(ciel::to_address(std::forward<T>(p).base())) {
+    return ciel::to_address(std::forward<T>(p).base());
 }
 
 NAMESPACE_CIEL_END
