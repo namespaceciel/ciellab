@@ -10,7 +10,6 @@
 #include <ciel/is_trivially_relocatable.hpp>
 #include <ciel/iterator_category.hpp>
 #include <ciel/range_destroyer.hpp>
-#include <ciel/swap.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -116,7 +115,7 @@ private:
         return std::max(cap * 2, new_size);
     }
 
-    bool
+    CIEL_NODISCARD bool
     internal_value(const value_type& value) const noexcept {
         if (should_pass_by_value) {
             return false;
@@ -527,18 +526,14 @@ private:
                 // To support self reference operations like v.emplace_back(v[0]),
                 // we must construct temp object here and move it afterwards.
                 value_type tmp(std::forward<Args>(args)...);
-
                 left_shift_n(std::max<size_type>(front_spare() / 2, 1));
-
                 unchecked_emplace_back_aux(std::move(tmp));
 
             } else {
                 split_buffer<value_type, allocator_type&> sb(allocator_());
                 // end_ - begin_cap_ == front_spare() + size()
                 sb.reserve_cap_and_offset_to(recommend_cap(end_ - begin_cap_ + 1), end_ - begin_cap_);
-
                 sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
-
                 swap_out_buffer(std::move(sb), end_);
             }
 
@@ -554,9 +549,7 @@ private:
         if (front_spare() == 0) {
             if CIEL_UNLIKELY (back_spare() > size()) {
                 value_type tmp(std::forward<Args>(args)...);
-
                 right_shift_n(std::max<size_type>(back_spare() / 2, 1));
-
                 unchecked_emplace_front_aux(std::move(tmp));
 
             } else {
@@ -564,9 +557,7 @@ private:
                 // end_cap_() - begin_ == back_spare() + size()
                 const size_type new_cap = recommend_cap(end_cap_() - begin_ + 1);
                 sb.reserve_cap_and_offset_to(new_cap, new_cap - (end_cap_() - begin_));
-
                 sb.unchecked_emplace_front_aux(std::forward<Args>(args)...);
-
                 swap_out_buffer(std::move(sb), begin_);
             }
 
@@ -801,17 +792,16 @@ private:
                 construct_at_end(first, last);
                 return;
             }
-
-        } else if (size() > count) {
-            end_ = destroy(begin_ + count, end_);
         }
 
-        CIEL_POSTCONDITION(size() <= count);
+        if (size() > count) {
+            end_ = destroy(begin_ + count, end_);
+            ciel::copy_n(first, count, begin_); // count == size()
 
-        Iter mid = ciel::copy_n(first, size(), begin_);
-
-        // if mid < last
-        construct_at_end(mid, last);
+        } else {
+            Iter mid = ciel::copy_n(first, size(), begin_);
+            construct_at_end(mid, last);
+        }
 
         CIEL_POSTCONDITION(size() == count);
     }
@@ -1084,6 +1074,7 @@ public:
     reference
     emplace_back(Args&&... args) {
         emplace_back_aux(std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1091,6 +1082,7 @@ public:
     reference
     emplace_back(std::initializer_list<U> il, Args&&... args) {
         emplace_back_aux(il, std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1117,6 +1109,7 @@ public:
     reference
     emplace_front(Args&&... args) {
         emplace_front_aux(std::forward<Args>(args)...);
+
         return front();
     }
 
@@ -1124,6 +1117,7 @@ public:
     reference
     emplace_front(std::initializer_list<U> il, Args&&... args) {
         emplace_front_aux(il, std::forward<Args>(args)...);
+
         return front();
     }
 
@@ -1181,6 +1175,7 @@ public:
     reference
     unchecked_emplace_back(Args&&... args) {
         unchecked_emplace_back_aux(std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1188,6 +1183,7 @@ public:
     reference
     unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
         unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1195,6 +1191,7 @@ public:
     reference
     unchecked_emplace_front(Args&&... args) {
         unchecked_emplace_front_aux(std::forward<Args>(args)...);
+
         return front();
     }
 
@@ -1202,6 +1199,7 @@ public:
     reference
     unchecked_emplace_front(std::initializer_list<U> il, Args&&... args) {
         unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
+
         return front();
     }
 

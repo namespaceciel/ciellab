@@ -533,14 +533,12 @@ private:
 
         if (size() > count) {
             end_ = destroy(begin_ + count, end_);
+            ciel::copy_n(first, count, begin_); // count == size()
+
+        } else {
+            Iter mid = ciel::copy_n(first, size(), begin_);
+            construct_at_end(mid, last);
         }
-
-        CIEL_POSTCONDITION(size() <= count);
-
-        Iter mid = ciel::copy_n(first, size(), begin_);
-
-        // if mid < last
-        construct_at_end(mid, last);
 
         CIEL_POSTCONDITION(size() == count);
     }
@@ -1034,9 +1032,8 @@ public:
         const auto pos_index     = pos - begin();
         const size_type old_size = size();
 
-        while (first != last) {
+        for (; first != last; ++first) {
             emplace_back_aux(*first);
-            ++first;
         }
 
         std::rotate(begin() + pos_index, begin() + old_size, end());
@@ -1155,6 +1152,7 @@ public:
     reference
     emplace_back(Args&&... args) {
         emplace_back_aux(std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1163,6 +1161,7 @@ public:
     reference
     emplace_back(std::initializer_list<U> il, Args&&... args) {
         emplace_back_aux(il, std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1171,6 +1170,7 @@ public:
     reference
     unchecked_emplace_back(Args&&... args) {
         unchecked_emplace_back_aux(std::forward<Args>(args)...);
+
         return back();
     }
 
@@ -1179,6 +1179,7 @@ public:
     reference
     unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
         unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+
         return back();
     }
 
