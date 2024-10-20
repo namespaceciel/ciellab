@@ -93,6 +93,9 @@ private:
     void
     reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
         CIEL_PRECONDITION(begin_cap_ == nullptr);
+        CIEL_PRECONDITION(begin_ == nullptr);
+        CIEL_PRECONDITION(end_ == nullptr);
+        CIEL_PRECONDITION(end_cap_() == nullptr);
         CIEL_PRECONDITION(cap != 0);
         CIEL_PRECONDITION(cap >= offset);
 
@@ -151,7 +154,7 @@ private:
     }
 
     void
-    construct_at_end(const size_type n, const value_type& value) {
+    construct_at_end(const size_type n, lvalue value) {
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
@@ -476,7 +479,18 @@ private:
         CIEL_PRECONDITION(count != 0);
 
         do_destroy();
-        set_nullptr();
+        set_nullptr(); // It's neccessary since allocation would throw.
+        init(count);
+    }
+
+    void
+    init(const size_type count) {
+        CIEL_PRECONDITION(count != 0);
+        CIEL_PRECONDITION(begin_cap_ == nullptr);
+        CIEL_PRECONDITION(begin_ == nullptr);
+        CIEL_PRECONDITION(end_ == nullptr);
+        CIEL_PRECONDITION(end_cap_() == nullptr);
+
         begin_cap_ = alloc_traits::allocate(allocator_(), count);
         end_cap_() = begin_cap_ + count;
         begin_     = begin_cap_;
@@ -611,14 +625,10 @@ public:
     explicit split_buffer(const allocator_type& alloc) noexcept
         : end_cap_alloc_(nullptr, alloc) {}
 
-    split_buffer(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
+    split_buffer(const size_type count, lvalue value, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         if CIEL_LIKELY (count > 0) {
-            begin_cap_ = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_cap_ + count;
-            begin_     = begin_cap_;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(count, value);
         }
     }
@@ -626,11 +636,7 @@ public:
     explicit split_buffer(const size_type count, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         if CIEL_LIKELY (count > 0) {
-            begin_cap_ = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_cap_ + count;
-            begin_     = begin_cap_;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(count);
         }
     }
@@ -638,9 +644,8 @@ public:
     template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
-        while (first != last) {
+        for (; first != last; ++first) {
             emplace_back(*first);
-            ++first;
         }
     }
 
@@ -650,11 +655,7 @@ public:
         const auto count = std::distance(first, last);
 
         if CIEL_LIKELY (count > 0) {
-            begin_cap_ = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_cap_ + count;
-            begin_     = begin_cap_;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(first, last);
         }
     }
@@ -674,36 +675,40 @@ public:
         other.set_nullptr();
     }
 
-    split_buffer(split_buffer&& other, const allocator_type& alloc) {
-        if (alloc == other.get_allocator()) {
-            allocator_() = alloc;
-            begin_cap_   = other.begin_cap_;
-            begin_       = other.begin_;
-            end_         = other.end_;
-            end_cap_()   = other.end_cap_();
+    split_buffer(split_buffer&& other, const allocator_type& alloc)
+        : split_buffer(alloc) {
+        if (allocator_() == other.get_allocator()) {
+            begin_cap_ = other.begin_cap_;
+            begin_     = other.begin_;
+            end_       = other.end_;
+            end_cap_() = other.end_cap_();
 
             other.set_nullptr();
 
-        } else {
-            split_buffer(other, alloc).swap(*this);
+        } else if (other.size() > 0) {
+            init(other.size());
+            construct_at_end(other.begin(), other.end());
         }
     }
 
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
+    // non-standard extension
     template<class R, typename std::enable_if<
                           ciel::is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
                       = 0>
     split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(rg.begin(), rg.end(), alloc) {}
 
+    // non-standard extension
     template<class R, typename std::enable_if<
                           ciel::is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
                       = 0>
     split_buffer(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
+    // non-standard extension
     template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && std::is_lvalue_reference<R>::value,
                                               int>::type
                       = 0>
@@ -712,14 +717,12 @@ public:
         const auto count = rg.size();
 
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(rg.begin(), rg.end());
         }
     }
 
+    // non-standard extension
     template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value,
                                               int>::type
                       = 0>
@@ -728,10 +731,7 @@ public:
         const auto count = rg.size();
 
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
         }
     }

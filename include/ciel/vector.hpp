@@ -11,7 +11,6 @@
 #include <ciel/iterator_category.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/split_buffer.hpp>
-#include <ciel/swap.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -115,7 +114,7 @@ private:
     }
 
     void
-    construct_at_end(const size_type n, const value_type& value) {
+    construct_at_end(const size_type n, lvalue value) {
         CIEL_PRECONDITION(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
@@ -310,7 +309,17 @@ private:
         CIEL_PRECONDITION(count != 0);
 
         do_destroy();
-        set_nullptr();
+        set_nullptr(); // It's neccessary since allocation would throw.
+        init(count);
+    }
+
+    void
+    init(const size_type count) {
+        CIEL_PRECONDITION(count != 0);
+        CIEL_PRECONDITION(begin_ == nullptr);
+        CIEL_PRECONDITION(end_ == nullptr);
+        CIEL_PRECONDITION(end_cap_() == nullptr);
+
         begin_     = alloc_traits::allocate(allocator_(), count);
         end_cap_() = begin_ + count;
         end_       = begin_;
@@ -326,38 +335,6 @@ private:
         }
 
         std::move_backward(from_s, from_s + n, old_end);
-    }
-
-    iterator
-    erase_impl(pointer first, pointer last,
-               const difference_type distance) noexcept(ciel::is_trivially_relocatable<value_type>::value
-                                                        || std::is_nothrow_move_assignable<value_type>::value) {
-        CIEL_PRECONDITION(last - first == distance);
-        CIEL_PRECONDITION(distance != 0);
-
-        const auto index      = first - begin_;
-        const auto back_count = end_ - last;
-
-        if (back_count == 0) {
-            end_ = destroy(first, end_);
-
-        } else if (ciel::is_trivially_relocatable<value_type>::value) {
-            destroy(first, last);
-            end_ -= distance;
-
-            if (distance >= back_count) {
-                std::memcpy(first, last, sizeof(value_type) * back_count);
-
-            } else {
-                std::memmove(first, last, sizeof(value_type) * back_count);
-            }
-
-        } else {
-            pointer new_end = std::move(last, end_, first);
-            end_            = destroy(new_end, end_);
-        }
-
-        return begin() + index;
     }
 
     template<class T1, class T2, class U = value_type,
@@ -590,13 +567,10 @@ public:
     explicit vector(const allocator_type& alloc) noexcept
         : end_cap_alloc_(nullptr, alloc) {}
 
-    vector(const size_type count, const value_type& value, const allocator_type& alloc = allocator_type())
+    vector(const size_type count, lvalue value, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(count, value);
         }
     }
@@ -604,10 +578,7 @@ public:
     explicit vector(const size_type count, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(count);
         }
     }
@@ -615,9 +586,8 @@ public:
     template<class Iter, typename std::enable_if<ciel::is_exactly_input_iterator<Iter>::value, int>::type = 0>
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
-        while (first != last) {
+        for (; first != last; ++first) {
             emplace_back_aux(*first);
-            ++first;
         }
     }
 
@@ -627,10 +597,7 @@ public:
         const auto count = std::distance(first, last);
 
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(first, last);
         }
     }
@@ -647,35 +614,39 @@ public:
         other.set_nullptr();
     }
 
-    vector(vector&& other, const allocator_type& alloc) {
-        if (alloc == other.get_allocator()) {
-            allocator_() = alloc;
-            begin_       = other.begin_;
-            end_         = other.end_;
-            end_cap_()   = other.end_cap_();
+    vector(vector&& other, const allocator_type& alloc)
+        : vector(alloc) {
+        if (allocator_() == other.get_allocator()) {
+            begin_     = other.begin_;
+            end_       = other.end_;
+            end_cap_() = other.end_cap_();
 
             other.set_nullptr();
 
-        } else {
-            vector(other, alloc).swap(*this);
+        } else if (other.size() > 0) {
+            init(other.size());
+            construct_at_end(other.begin(), other.end());
         }
     }
 
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
+    // non-standard extension
     template<class R, typename std::enable_if<
                           ciel::is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
                       = 0>
     vector(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(rg.begin(), rg.end(), alloc) {}
 
+    // non-standard extension
     template<class R, typename std::enable_if<
                           ciel::is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
                       = 0>
     vector(ciel::from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
+    // non-standard extension
     template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && std::is_lvalue_reference<R>::value,
                                               int>::type
                       = 0>
@@ -684,14 +655,12 @@ public:
         const auto count = rg.size();
 
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(rg.begin(), rg.end());
         }
     }
 
+    // non-standard extension
     template<class R, typename std::enable_if<ciel::is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value,
                                               int>::type
                       = 0>
@@ -700,10 +669,7 @@ public:
         const auto count = rg.size();
 
         if CIEL_LIKELY (count > 0) {
-            begin_     = alloc_traits::allocate(allocator_(), count);
-            end_cap_() = begin_ + count;
-            end_       = begin_;
-
+            init(count);
             construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
         }
     }
@@ -1100,6 +1066,40 @@ public:
         return emplace_impl(insert_impl_callback{this}, pos, il, std::forward<Args>(args)...);
     }
 
+private:
+    iterator
+    erase_impl(pointer first, pointer last,
+               const difference_type distance) noexcept(ciel::is_trivially_relocatable<value_type>::value
+                                                        || std::is_nothrow_move_assignable<value_type>::value) {
+        CIEL_PRECONDITION(last - first == distance);
+        CIEL_PRECONDITION(distance != 0);
+
+        const auto index      = first - begin_;
+        const auto back_count = end_ - last;
+
+        if (back_count == 0) {
+            end_ = destroy(first, end_);
+
+        } else if (ciel::is_trivially_relocatable<value_type>::value) {
+            destroy(first, last);
+            end_ -= distance;
+
+            if (distance >= back_count) {
+                std::memcpy(first, last, sizeof(value_type) * back_count);
+
+            } else {
+                std::memmove(first, last, sizeof(value_type) * back_count);
+            }
+
+        } else {
+            pointer new_end = std::move(last, end_, first);
+            end_            = destroy(new_end, end_);
+        }
+
+        return begin() + index;
+    }
+
+public:
     iterator
     erase(const_iterator p) {
         const iterator pos = begin() + (p - begin());
