@@ -1,7 +1,6 @@
 #ifndef CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 
-#include <ciel/alignment.hpp>
 #include <ciel/allocator_traits.hpp>
 #include <ciel/compare.hpp>
 #include <ciel/compressed_pair.hpp>
@@ -585,44 +584,6 @@ private:
         return begin() + pos_index;
     }
 
-#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
-    struct std_vector_rob {
-        static_assert(!std::is_same<value_type, bool>::value, "");
-
-        static constexpr bool is_ebo_optimized
-            = std::is_empty<allocator_type>::value && !ciel::is_final<allocator_type>::value;
-
-        pointer* const begin_ptr;
-        pointer* const end_ptr;
-        pointer* const end_cap_ptr;
-        allocator_type* const alloc_ptr;
-
-        std_vector_rob(std::vector<value_type, allocator_type>&& other) noexcept
-#if defined(_LIBCPP_VECTOR)
-            : begin_ptr((pointer*)(&other)),
-              end_ptr(begin_ptr + 1),
-              end_cap_ptr(end_ptr + 1),
-              alloc_ptr(is_ebo_optimized
-                            ? (allocator_type*)end_cap_ptr
-                            : (allocator_type*)ciel::align_up((uintptr_t)(end_cap_ptr + 1), alignof(allocator_type)))
-#elif defined(_GLIBCXX_VECTOR)
-            : begin_ptr(is_ebo_optimized
-                            ? (pointer*)(&other)
-                            : (pointer*)ciel::align_up((uintptr_t)(&other) + ciel::datasizeof<allocator_type>::value,
-                                                       alignof(pointer))),
-              end_ptr(begin_ptr + 1),
-              end_cap_ptr(end_ptr + 1),
-              alloc_ptr((allocator_type*)(&other))
-#endif
-        {
-            CIEL_PRECONDITION(other.data() == *begin_ptr);
-            CIEL_PRECONDITION(other.size() == static_cast<size_t>(*end_ptr - *begin_ptr));
-            CIEL_PRECONDITION(other.capacity() == static_cast<size_t>(*end_cap_ptr - *begin_ptr));
-        }
-
-    }; // struct std_vector_rob
-#endif
-
 public:
     vector() noexcept(noexcept(allocator_type())) = default;
 
@@ -746,24 +707,6 @@ public:
             construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
         }
     }
-
-#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
-    template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>
-    vector(std::vector<value_type, allocator_type>&& other) noexcept {
-        std_vector_rob svr(std::move(other));
-
-        allocator_()     = std::move(*svr.alloc_ptr);
-        begin_           = *svr.begin_ptr;
-        end_             = *svr.end_ptr;
-        end_cap_()       = *svr.end_cap_ptr;
-        *svr.begin_ptr   = nullptr;
-        *svr.end_ptr     = nullptr;
-        *svr.end_cap_ptr = nullptr;
-
-        CIEL_POSTCONDITION(other.size() == 0);
-        CIEL_POSTCONDITION(other.capacity() == 0);
-    }
-#endif
 
     ~vector() {
         do_destroy();
@@ -1316,24 +1259,6 @@ public:
             }
         }
     }
-
-#if defined(_LIBCPP_VECTOR) || defined(_GLIBCXX_VECTOR)
-    template<class U = value_type, typename std::enable_if<!std::is_same<U, bool>::value, int>::type = 0>
-    operator std::vector<value_type, allocator_type>() && noexcept {
-        std::vector<value_type, allocator_type> res;
-        std_vector_rob svr(std::move(res));
-
-        *svr.alloc_ptr   = std::move(allocator_());
-        *svr.begin_ptr   = begin_;
-        *svr.end_ptr     = end_;
-        *svr.end_cap_ptr = end_cap_();
-        begin_           = nullptr;
-        end_             = nullptr;
-        end_cap_()       = nullptr;
-
-        return res;
-    }
-#endif
 
 }; // class vector
 
