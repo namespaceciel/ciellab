@@ -21,10 +21,13 @@ copy_n(InputIt first, Size count, OutputIt result) {
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
     if (ciel::is_contiguous_iterator<InputIt>::value && ciel::is_contiguous_iterator<OutputIt>::value
-        && std::is_same<T, U>::value && std::is_trivially_copyable<T>::value) {
-        // assume no overlap
-        std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
-        return first + count;
+        && std::is_same<T, U>::value && std::is_trivially_copy_assignable<T>::value) {
+        if (count != 0) {
+            // assume no overlap
+            std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+        }
+
+        return std::next(first, count);
 
     } else {
         for (Size i = 0; i < count; ++i) {
@@ -44,8 +47,11 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
     if (ciel::is_contiguous_iterator<InputIt>::value && ciel::is_contiguous_iterator<OutputIt>::value
-        && std::is_same<T, U>::value && std::is_trivially_copyable<T>::value) {
-        std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+        && std::is_same<T, U>::value && std::is_trivially_copy_constructible<T>::value) {
+        if (count != 0) {
+            std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+        }
+
         return std::next(first, count);
 
     } else {
@@ -74,10 +80,12 @@ uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) 
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
     if (ciel::is_contiguous_iterator<InputIt>::value && ciel::is_contiguous_iterator<OutputIt>::value
-        && std::is_same<T, U>::value && std::is_trivially_copyable<T>::value) {
+        && std::is_same<T, U>::value && std::is_trivially_copy_constructible<T>::value) {
         const size_t count = std::distance(first, last);
-        std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
-        result += count;
+        if (count != 0) {
+            std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+            result += count;
+        }
 
     } else {
         for (; first != last; ++first, ++result) {
