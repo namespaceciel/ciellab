@@ -43,13 +43,10 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
     using T = typename std::iterator_traits<InputIt>::value_type;
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
-    using alloc_traits = std::allocator_traits<Alloc>;
-    static_assert(std::is_same<typename alloc_traits::value_type, T>::value, "");
-
     if (ciel::is_contiguous_iterator<InputIt>::value && ciel::is_contiguous_iterator<OutputIt>::value
         && std::is_same<T, U>::value && std::is_trivially_copyable<T>::value) {
         std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
-        return first + count;
+        return std::next(first, count);
 
     } else {
         for (Size i = 0; i < count; ++i) {
@@ -57,6 +54,8 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
                 new (ciel::to_address(result)) T(*first);
 
             } else {
+                using alloc_traits = std::allocator_traits<Alloc>;
+
                 alloc_traits::construct(alloc, ciel::to_address(result), *first);
             }
 
@@ -74,12 +73,9 @@ uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) 
     using T = typename std::iterator_traits<InputIt>::value_type;
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
-    using alloc_traits = std::allocator_traits<Alloc>;
-    static_assert(std::is_same<typename alloc_traits::value_type, T>::value, "");
-
     if (ciel::is_contiguous_iterator<InputIt>::value && ciel::is_contiguous_iterator<OutputIt>::value
         && std::is_same<T, U>::value && std::is_trivially_copyable<T>::value) {
-        const size_t count = last - first;
+        const size_t count = std::distance(first, last);
         std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
         result += count;
 
@@ -89,6 +85,8 @@ uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) 
                 new (ciel::to_address(result)) T(*first);
 
             } else {
+                using alloc_traits = std::allocator_traits<Alloc>;
+
                 alloc_traits::construct(alloc, ciel::to_address(result), *first);
             }
         }
