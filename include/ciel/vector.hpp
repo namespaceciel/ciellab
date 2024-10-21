@@ -474,8 +474,7 @@ public:
             return *this;
         }
 
-        if (std::is_same<allocator_type, std::allocator<value_type>>::value
-            || alloc_traits::propagate_on_container_move_assignment::value) {
+        if (alloc_traits::propagate_on_container_move_assignment::value) {
             swap(other);
             // other.clear(); // It's not neccessary but...
 
