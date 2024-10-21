@@ -4,6 +4,7 @@
 #include <ciel/compare.hpp>
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
+#include <ciel/cstring.hpp>
 #include <ciel/is_range.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 #include <ciel/iterator_category.hpp>
@@ -13,7 +14,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -71,7 +71,7 @@ struct has_non_trivial_move_constructor {
 template<class D>
 struct has_trivially_relocatable_move_constructor {
     has_trivially_relocatable_move_constructor(has_trivially_relocatable_move_constructor&& o) noexcept {
-        std::memcpy(this, &o, sizeof(D));
+        ciel::memcpy(this, &o, sizeof(D));
         static_cast<D&&>(o).size_ = 0;
     }
 };
@@ -145,7 +145,7 @@ struct has_trivially_relocatable_move_assignment {
             return *this;
         }
 
-        std::memcpy(this, &o, sizeof(D));
+        ciel::memcpy(this, &o, sizeof(D));
         static_cast<D&&>(o).size_ = 0;
 
         return *this;

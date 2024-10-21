@@ -6,6 +6,7 @@
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
+#include <ciel/cstring.hpp>
 #include <ciel/is_range.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 #include <ciel/iterator_category.hpp>
@@ -14,7 +15,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstring>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -215,7 +215,7 @@ private:
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
             if (ciel::is_trivially_relocatable<value_type>::value) {
-                std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * size());
+                ciel::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * size());
                 // sb.begin_ = sb.begin_cap_;
 
             } else {
@@ -253,10 +253,10 @@ private:
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
             if (ciel::is_trivially_relocatable<value_type>::value) {
-                std::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * front_count);
+                ciel::memcpy(sb.begin_cap_, begin_, sizeof(value_type) * front_count);
                 // sb.begin_ = sb.begin_cap_;
 
-                std::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
+                ciel::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
                 sb.end_ += back_count;
 
             } else {
@@ -780,7 +780,7 @@ private:
         void
         operator()(pointer pos, Args&&... args) const {
             constexpr size_type count = 1;
-            std::memmove(pos + count, pos, sizeof(value_type) * (this_->end_ - pos));
+            ciel::memmove(pos + count, pos, sizeof(value_type) * (this_->end_ - pos));
 
             ciel::range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count,
                                                                   this_->allocator_()};
@@ -905,7 +905,7 @@ private:
         //                       first last
         //                       |  count |
         // relocate [pos, end) count units later
-        std::memmove(pos + count, pos, sizeof(value_type) * (end_ - pos));
+        ciel::memmove(pos + count, pos, sizeof(value_type) * (end_ - pos));
         // ----------------------          --------------
         // begin             new_end       pos    |   end
         //                       ----------       |
@@ -1071,10 +1071,10 @@ private:
             end_ -= count;
 
             if (count >= back_count) {
-                std::memcpy(first, last, sizeof(value_type) * back_count);
+                ciel::memcpy(first, last, sizeof(value_type) * back_count);
 
             } else {
-                std::memmove(first, last, sizeof(value_type) * back_count);
+                ciel::memmove(first, last, sizeof(value_type) * back_count);
             }
 
         } else {

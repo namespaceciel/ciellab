@@ -5,6 +5,7 @@
 #include <ciel/buffer_cast.hpp>
 #include <ciel/compare.hpp>
 #include <ciel/config.hpp>
+#include <ciel/cstring.hpp>
 #include <ciel/exchange.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 #include <ciel/memory.hpp>
@@ -12,7 +13,6 @@
 #include <ciel/swap.hpp>
 
 #include <cstddef>
-#include <cstring>
 #include <functional>
 #include <memory>
 #include <typeinfo>
@@ -263,7 +263,7 @@ public:
             case state::Null :
                 break;
             case state::Small :
-                std::memcpy(&buffer_, &other.buffer_, sizeof(buffer_type));
+                ciel::memcpy(&buffer_, &other.buffer_, sizeof(buffer_type));
                 other.f_ = 0;
                 f_       = 1;
                 break;
@@ -347,7 +347,7 @@ public:
             case state::Null :
                 break;
             case state::Small :
-                std::memcpy(&buffer_, &other.buffer_, sizeof(buffer_type));
+                ciel::memcpy(&buffer_, &other.buffer_, sizeof(buffer_type));
                 other.f_ = 0;
                 f_       = 1;
                 break;

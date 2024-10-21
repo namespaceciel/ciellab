@@ -2,10 +2,10 @@
 #define CIELLAB_INCLUDE_CIEL__HPP_
 
 #include <ciel/config.hpp>
+#include <ciel/cstring.hpp>
 #include <ciel/datasizeof.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 
-#include <cstring>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -19,9 +19,9 @@ relocatable_swap(T& lhs, T& rhs) noexcept {
     constexpr size_t buffer_bytes = ciel::datasizeof<T>::value;
     unsigned char buffer[buffer_bytes];
 
-    std::memcpy(std::addressof(buffer), std::addressof(lhs), buffer_bytes);
-    std::memmove(std::addressof(lhs), std::addressof(rhs), buffer_bytes);
-    std::memcpy(std::addressof(rhs), std::addressof(buffer), buffer_bytes);
+    ciel::memcpy(std::addressof(buffer), std::addressof(lhs), buffer_bytes);
+    ciel::memmove(std::addressof(lhs), std::addressof(rhs), buffer_bytes);
+    ciel::memcpy(std::addressof(rhs), std::addressof(buffer), buffer_bytes);
 }
 
 template<class T, size_t N>
@@ -30,9 +30,9 @@ relocatable_swap(T (&lhs)[N], T (&rhs)[N]) noexcept {
     constexpr size_t buffer_bytes = sizeof(lhs);
     unsigned char buffer[buffer_bytes];
 
-    std::memcpy(std::addressof(buffer), std::addressof(lhs), buffer_bytes);
-    std::memmove(std::addressof(lhs), std::addressof(rhs), buffer_bytes);
-    std::memcpy(std::addressof(rhs), std::addressof(buffer), buffer_bytes);
+    ciel::memcpy(std::addressof(buffer), std::addressof(lhs), buffer_bytes);
+    ciel::memmove(std::addressof(lhs), std::addressof(rhs), buffer_bytes);
+    ciel::memcpy(std::addressof(rhs), std::addressof(buffer), buffer_bytes);
 }
 
 inline void
@@ -44,9 +44,9 @@ relocatable_swap(void* f1, void* f2, size_t bytes) noexcept {
     unsigned char* first2 = static_cast<unsigned char*>(f2);
 
     while (bytes >= buffer_bytes) {
-        std::memcpy(std::addressof(buffer), first1, buffer_bytes);
-        std::memmove(first1, first2, buffer_bytes);
-        std::memcpy(first2, std::addressof(buffer), buffer_bytes);
+        ciel::memcpy(std::addressof(buffer), first1, buffer_bytes);
+        ciel::memmove(first1, first2, buffer_bytes);
+        ciel::memcpy(first2, std::addressof(buffer), buffer_bytes);
 
         first1 += buffer_bytes;
         first2 += buffer_bytes;
@@ -54,9 +54,9 @@ relocatable_swap(void* f1, void* f2, size_t bytes) noexcept {
     }
 
     if (bytes != 0) {
-        std::memcpy(std::addressof(buffer), first1, bytes);
-        std::memmove(first1, first2, bytes);
-        std::memcpy(first2, std::addressof(buffer), bytes);
+        ciel::memcpy(std::addressof(buffer), first1, bytes);
+        ciel::memmove(first1, first2, bytes);
+        ciel::memcpy(first2, std::addressof(buffer), bytes);
     }
 }
 

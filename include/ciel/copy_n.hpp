@@ -3,10 +3,10 @@
 
 #include <ciel/allocator_traits.hpp>
 #include <ciel/config.hpp>
+#include <ciel/cstring.hpp>
 #include <ciel/iterator_category.hpp>
 #include <ciel/to_address.hpp>
 
-#include <cstring>
 #include <iterator>
 #include <type_traits>
 
@@ -24,7 +24,7 @@ copy_n(InputIt first, Size count, OutputIt result) {
         && std::is_same<T, U>::value && std::is_trivially_copy_assignable<T>::value) {
         if (count != 0) {
             // assume no overlap
-            std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+            ciel::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
         }
 
         return std::next(first, count);
@@ -49,7 +49,7 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
     if (ciel::is_contiguous_iterator<InputIt>::value && ciel::is_contiguous_iterator<OutputIt>::value
         && std::is_same<T, U>::value && std::is_trivially_copy_constructible<T>::value) {
         if (count != 0) {
-            std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+            ciel::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
         }
 
         return std::next(first, count);
@@ -83,7 +83,7 @@ uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) 
         && std::is_same<T, U>::value && std::is_trivially_copy_constructible<T>::value) {
         const size_t count = std::distance(first, last);
         if (count != 0) {
-            std::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
+            ciel::memcpy(ciel::to_address(result), ciel::to_address(first), count * sizeof(T));
             result += count;
         }
 

@@ -9,6 +9,7 @@
 NAMESPACE_CIEL_BEGIN
 
 // allocate
+
 template<class T>
 CIEL_NODISCARD T*
 allocate(const size_t n) {
@@ -21,6 +22,7 @@ allocate(const size_t n) {
 }
 
 // deallocate
+
 template<class T>
 void
 deallocate(T* ptr) noexcept {

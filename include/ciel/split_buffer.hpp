@@ -6,6 +6,7 @@
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
+#include <ciel/cstring.hpp>
 #include <ciel/is_range.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 #include <ciel/iterator_category.hpp>
@@ -13,7 +14,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstring>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -248,9 +248,9 @@ private:
 
             if (ciel::is_trivially_relocatable<value_type>::value) {
                 sb.begin_ -= front_count;
-                memcpy(sb.begin_, begin_, sizeof(value_type) * front_count);
+                ciel::memcpy(sb.begin_, begin_, sizeof(value_type) * front_count);
 
-                memcpy(sb.end_, pos, sizeof(value_type) * back_count);
+                ciel::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
                 sb.end_ += back_count;
 
             } else {
@@ -304,7 +304,7 @@ private:
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
 
-        std::memmove(begin_ - n, begin_, sizeof(value_type) * size());
+        ciel::memmove(begin_ - n, begin_, sizeof(value_type) * size());
         begin_ -= n;
         end_ -= n;
     }
@@ -377,7 +377,7 @@ private:
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
 
-        std::memmove(begin_ + n, begin_, sizeof(value_type) * size());
+        ciel::memmove(begin_ + n, begin_, sizeof(value_type) * size());
         begin_ += n;
         end_ += n;
     }
