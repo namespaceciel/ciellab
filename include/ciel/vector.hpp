@@ -932,15 +932,15 @@ private:
     insert_impl(pointer pos, Iter first, Iter last, size_type count) {
         CIEL_PRECONDITION(count != 0);
 
-        const size_type old_count        = count;
-        pointer old_end                  = end_;
-        auto mid                         = std::next(first, count);
-        const size_type pos_end_distance = end_ - pos;
+        const size_type old_count  = count;
+        pointer old_end            = end_;
+        auto mid                   = std::next(first, count);
+        const size_type back_count = end_ - pos;
 
-        if (count > pos_end_distance) {
-            mid = std::next(first, pos_end_distance);
+        if (count > back_count) {
+            mid = std::next(first, back_count);
             construct_at_end(mid, last);
-            count = pos_end_distance;
+            count = back_count;
         }
 
         if (count > 0) {
@@ -954,12 +954,12 @@ private:
     insert_impl(pointer pos, size_type count, const value_type& value, const size_type old_count) {
         pointer old_end = end_;
 
-        const size_type pos_end_distance = end_ - pos;
+        const size_type back_count = end_ - pos;
 
-        if (count > pos_end_distance) {
-            const size_type n = count - pos_end_distance;
+        if (count > back_count) {
+            const size_type n = count - back_count;
             construct_at_end(n, value);
-            count = pos_end_distance;
+            count = back_count;
         }
 
         if (count > 0) {
@@ -1055,10 +1055,10 @@ public:
 private:
     iterator
     erase_impl(pointer first, pointer last,
-               const difference_type distance) noexcept(ciel::is_trivially_relocatable<value_type>::value
-                                                        || std::is_nothrow_move_assignable<value_type>::value) {
-        CIEL_PRECONDITION(last - first == distance);
-        CIEL_PRECONDITION(distance != 0);
+               const difference_type count) noexcept(ciel::is_trivially_relocatable<value_type>::value
+                                                     || std::is_nothrow_move_assignable<value_type>::value) {
+        CIEL_PRECONDITION(last - first == count);
+        CIEL_PRECONDITION(count != 0);
 
         const auto index      = first - begin_;
         const auto back_count = end_ - last;
@@ -1068,9 +1068,9 @@ private:
 
         } else if (ciel::is_trivially_relocatable<value_type>::value) {
             destroy(first, last);
-            end_ -= distance;
+            end_ -= count;
 
-            if (distance >= back_count) {
+            if (count >= back_count) {
                 std::memcpy(first, last, sizeof(value_type) * back_count);
 
             } else {
@@ -1102,13 +1102,13 @@ public:
         CIEL_PRECONDITION(begin() <= first);
         CIEL_PRECONDITION(last <= end());
 
-        const auto distance = last - first;
+        const auto count = last - first;
 
-        if CIEL_UNLIKELY (distance <= 0) {
+        if CIEL_UNLIKELY (count <= 0) {
             return last;
         }
 
-        return erase_impl(ciel::to_address(first), ciel::to_address(last), distance);
+        return erase_impl(ciel::to_address(first), ciel::to_address(last), count);
     }
 
 private:
