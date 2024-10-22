@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <iterator>
+#include <type_traits>
 
 // Simulate input_iterator using T array base.
 
@@ -22,28 +23,33 @@ public:
 private:
     pointer ptr;
 
+    static value_type
+    invalid() noexcept {
+        return value_type{~0};
+    }
+
 public:
-    InputIterator(pointer p) noexcept
+    InputIterator(const pointer p) noexcept
         : ptr(p) {
-        CIEL_PRECONDITION(p != nullptr);
+        CIEL_PRECONDITION(ptr == nullptr || *ptr != invalid());
     }
 
     void
     go_next() noexcept {
-        CIEL_PRECONDITION(*ptr != -1);
-        *ptr = -1;
+        CIEL_PRECONDITION(*ptr != invalid());
+        *ptr = invalid();
         ++ptr;
     }
 
     reference
     operator*() const noexcept {
-        CIEL_PRECONDITION(*ptr != -1);
+        CIEL_PRECONDITION(*ptr != invalid());
         return *ptr;
     }
 
     pointer
     operator->() const noexcept {
-        CIEL_PRECONDITION(*ptr != -1);
+        CIEL_PRECONDITION(*ptr != invalid());
         return ptr;
     }
 

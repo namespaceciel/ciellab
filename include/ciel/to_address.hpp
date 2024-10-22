@@ -14,9 +14,9 @@ to_address(T* p) noexcept {
 }
 
 template<class T>
-auto
-to_address(T&& p) noexcept -> decltype(ciel::to_address(std::forward<T>(p).base())) {
-    return ciel::to_address(std::forward<T>(p).base());
+decltype(std::declval<T&&>().operator->())
+to_address(T&& p) noexcept {
+    return ciel::to_address(p.operator->());
 }
 
 NAMESPACE_CIEL_END

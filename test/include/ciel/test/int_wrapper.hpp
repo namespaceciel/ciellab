@@ -3,91 +3,103 @@
 
 #include <ciel/config.hpp>
 #include <ciel/exchange.hpp>
+#include <ciel/is_trivially_relocatable.hpp>
 
 #include <cstddef>
 
-struct Int {
-private:
-    int i_;
+#define IntWrapperDefinition(TypeName, IsNothrowMovable)         \
+    struct TypeName {                                            \
+    private:                                                     \
+        int i_;                                                  \
+                                                                 \
+    public:                                                      \
+        TypeName(const int i = 0) noexcept                       \
+            : i_(i) {}                                           \
+                                                                 \
+        TypeName(const TypeName&) noexcept = default;            \
+        TypeName&                                                \
+        operator=(const TypeName&) noexcept                      \
+            = default;                                           \
+                                                                 \
+        TypeName(TypeName&& other) noexcept(IsNothrowMovable)    \
+            : i_(ciel::exchange(other.i_, -1)) {}                \
+                                                                 \
+        TypeName&                                                \
+        operator=(TypeName&& other) noexcept(IsNothrowMovable) { \
+            i_ = ciel::exchange(other.i_, -1);                   \
+            return *this;                                        \
+        }                                                        \
+                                                                 \
+        TypeName&                                                \
+        operator++() noexcept {                                  \
+            ++i_;                                                \
+            return *this;                                        \
+        }                                                        \
+                                                                 \
+        CIEL_NODISCARD TypeName                                  \
+        operator++(int) noexcept {                               \
+            auto res = *this;                                    \
+            ++(*this);                                           \
+            return res;                                          \
+        }                                                        \
+                                                                 \
+        TypeName&                                                \
+        operator--() noexcept {                                  \
+            --i_;                                                \
+            return *this;                                        \
+        }                                                        \
+                                                                 \
+        CIEL_NODISCARD TypeName                                  \
+        operator--(int) noexcept {                               \
+            auto res = *this;                                    \
+            --(*this);                                           \
+            return res;                                          \
+        }                                                        \
+                                                                 \
+        TypeName&                                                \
+        operator+=(const TypeName other) noexcept {              \
+            i_ += other.i_;                                      \
+            return *this;                                        \
+        }                                                        \
+                                                                 \
+        TypeName&                                                \
+        operator-=(const TypeName other) noexcept {              \
+            return (*this) += (-other);                          \
+        }                                                        \
+                                                                 \
+        CIEL_NODISCARD TypeName                                  \
+        operator-() noexcept {                                   \
+            TypeName res(-i_);                                   \
+            return res;                                          \
+        }                                                        \
+                                                                 \
+        CIEL_NODISCARD                                           \
+        operator int() const noexcept {                          \
+            return i_;                                           \
+        }                                                        \
+                                                                 \
+        CIEL_NODISCARD friend TypeName                           \
+        operator+(TypeName lhs, const TypeName rhs) noexcept {   \
+            lhs.i_ += rhs.i_;                                    \
+            return lhs;                                          \
+        }                                                        \
+                                                                 \
+        CIEL_NODISCARD friend TypeName                           \
+        operator-(TypeName lhs, const TypeName rhs) noexcept {   \
+            lhs.i_ -= rhs.i_;                                    \
+            return lhs;                                          \
+        }                                                        \
+                                                                 \
+    } // struct Int
 
-public:
-    Int(const int i = 0) noexcept
-        : i_(i) {}
+IntWrapperDefinition(Int, true);
+IntWrapperDefinition(TRInt, true);
+IntWrapperDefinition(TMInt, false);
 
-    Int(const Int&) noexcept = default;
-    // clang-format off
-    Int& operator=(const Int&) noexcept = default;
-    // clang-format on
+template<>
+struct ciel::is_trivially_relocatable<Int> : std::false_type {};
 
-    Int(Int&& other) noexcept
-        : i_(ciel::exchange(other.i_, -1)) {}
-
-    Int&
-    operator=(Int&& other) noexcept {
-        i_ = ciel::exchange(other.i_, -1);
-        return *this;
-    }
-
-    Int&
-    operator++() noexcept {
-        ++i_;
-        return *this;
-    }
-
-    CIEL_NODISCARD Int
-    operator++(int) noexcept {
-        auto res = *this;
-        ++(*this);
-        return res;
-    }
-
-    Int&
-    operator--() noexcept {
-        --i_;
-        return *this;
-    }
-
-    CIEL_NODISCARD Int
-    operator--(int) noexcept {
-        auto res = *this;
-        --(*this);
-        return res;
-    }
-
-    Int&
-    operator+=(const Int other) noexcept {
-        i_ += other.i_;
-        return *this;
-    }
-
-    Int&
-    operator-=(const Int other) noexcept {
-        return (*this) += (-other);
-    }
-
-    CIEL_NODISCARD Int
-    operator-() noexcept {
-        Int res(-i_);
-        return res;
-    }
-
-    CIEL_NODISCARD
-    operator int() const noexcept {
-        return i_;
-    }
-
-    CIEL_NODISCARD friend Int
-    operator+(Int lhs, const Int rhs) noexcept {
-        lhs.i_ += rhs.i_;
-        return lhs;
-    }
-
-    CIEL_NODISCARD friend Int
-    operator-(Int lhs, const Int rhs) noexcept {
-        lhs.i_ -= rhs.i_;
-        return lhs;
-    }
-
-}; // struct Int
+template<>
+struct ciel::is_trivially_relocatable<TRInt> : std::true_type {};
 
 #endif // CIELLAB_INCLUDE_CIEL_INT_WRAPPER_HPP_

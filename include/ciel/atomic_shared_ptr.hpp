@@ -75,7 +75,7 @@ public:
     atomic_shared_ptr() noexcept
         : counted_control_block_(nullptr) {}
 
-    atomic_shared_ptr(std::nullptr_t) noexcept
+    atomic_shared_ptr(nullptr_t) noexcept
         : counted_control_block_(nullptr) {}
 
     // Not an atomic operation, like any other atomics.
@@ -99,7 +99,7 @@ public:
     }
 
     void
-    operator=(std::nullptr_t) noexcept {
+    operator=(nullptr_t) noexcept {
         store(nullptr);
     }
 

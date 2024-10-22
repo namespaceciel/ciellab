@@ -19,8 +19,9 @@ set(SOURCES
     src/function_tests.cpp
     src/inplace_vector_tests.cpp
     src/compressed_pair_tests.cpp
-    src/vector.exception_safety.cpp
     src/allocator_traits.cpp
+    src/vector.constructor.cpp
+    src/vector.exception_safety.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS

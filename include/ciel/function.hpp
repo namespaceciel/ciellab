@@ -243,7 +243,7 @@ private:
 public:
     function() noexcept = default;
 
-    function(std::nullptr_t) noexcept {}
+    function(nullptr_t) noexcept {}
 
     function(const function& other) {
         switch (other.check_state()) {
@@ -357,7 +357,7 @@ public:
     }
 
     void
-    assign(std::nullptr_t) noexcept {
+    assign(nullptr_t) noexcept {
         clear();
     }
 
@@ -418,7 +418,7 @@ public:
     }
 
     function&
-    operator=(std::nullptr_t) noexcept {
+    operator=(nullptr_t) noexcept {
         clear();
         return *this;
     }
@@ -505,7 +505,7 @@ struct is_trivially_relocatable<function<R(Args...)>> : std::true_type {};
 
 template<class R, class... ArgTypes>
 CIEL_NODISCARD bool
-operator==(const function<R(ArgTypes...)>& f, std::nullptr_t) noexcept {
+operator==(const function<R(ArgTypes...)>& f, nullptr_t) noexcept {
     return !f;
 }
 

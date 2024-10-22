@@ -110,6 +110,7 @@
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
 
+using std::nullptr_t;
 using std::ptrdiff_t;
 using std::size_t;
 

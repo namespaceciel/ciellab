@@ -25,7 +25,7 @@ public:
     observer_ptr() noexcept
         : ptr_{nullptr} {}
 
-    observer_ptr(std::nullptr_t) noexcept
+    observer_ptr(nullptr_t) noexcept
         : ptr_{nullptr} {}
 
     explicit observer_ptr(element_type* p) noexcept
@@ -100,13 +100,13 @@ operator==(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
 
 template<class W>
 CIEL_NODISCARD bool
-operator==(const observer_ptr<W>& p, std::nullptr_t) noexcept {
+operator==(const observer_ptr<W>& p, nullptr_t) noexcept {
     return !p;
 }
 
 template<class W>
 CIEL_NODISCARD bool
-operator==(std::nullptr_t, const observer_ptr<W>& p) noexcept {
+operator==(nullptr_t, const observer_ptr<W>& p) noexcept {
     return !p;
 }
 

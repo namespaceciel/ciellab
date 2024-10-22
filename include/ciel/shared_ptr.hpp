@@ -341,7 +341,7 @@ public:
     shared_ptr() noexcept
         : ptr_(nullptr), control_block_(nullptr) {}
 
-    shared_ptr(std::nullptr_t) noexcept
+    shared_ptr(nullptr_t) noexcept
         : ptr_(nullptr), control_block_(nullptr) {}
 
     template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
@@ -371,7 +371,7 @@ public:
     }
 
     template<class Deleter>
-    shared_ptr(std::nullptr_t ptr, Deleter d)
+    shared_ptr(nullptr_t ptr, Deleter d)
         : ptr_(nullptr) {
         CIEL_TRY {
             control_block_ = alloc_control_block(ptr_, std::move(d), std::allocator<T>());
@@ -398,7 +398,7 @@ public:
     }
 
     template<class Deleter, class Alloc>
-    shared_ptr(std::nullptr_t ptr, Deleter d, Alloc alloc)
+    shared_ptr(nullptr_t ptr, Deleter d, Alloc alloc)
         : ptr_(nullptr) {
         CIEL_TRY {
             control_block_ = alloc_control_block(ptr_, std::move(d), std::move(alloc));
@@ -620,13 +620,13 @@ operator==(const shared_ptr<T>& lhs, const shared_ptr<U>& rhs) noexcept {
 
 template<class T>
 CIEL_NODISCARD bool
-operator==(const shared_ptr<T>& lhs, std::nullptr_t) noexcept {
+operator==(const shared_ptr<T>& lhs, nullptr_t) noexcept {
     return !lhs;
 }
 
 template<class T>
 CIEL_NODISCARD bool
-operator==(std::nullptr_t, const shared_ptr<T>& rhs) noexcept {
+operator==(nullptr_t, const shared_ptr<T>& rhs) noexcept {
     return !rhs;
 }
 

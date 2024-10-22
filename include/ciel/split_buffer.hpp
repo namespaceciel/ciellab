@@ -156,10 +156,10 @@ private:
     void
     construct(pointer p, Args&&... args) {
         if (ciel::allocator_has_trivial_construct<allocator_type, pointer, Args...>::value) {
-            new (p) value_type(std::forward<Args>(args)...);
+            new (ciel::to_address(p)) value_type(std::forward<Args>(args)...);
 
         } else {
-            alloc_traits::construct(allocator_(), p, std::forward<Args>(args)...);
+            alloc_traits::construct(allocator_(), ciel::to_address(p), std::forward<Args>(args)...);
         }
     }
 
@@ -171,7 +171,7 @@ private:
             *p = value;
 
         } else {
-            alloc_traits::construct(allocator_(), p, value);
+            alloc_traits::construct(allocator_(), ciel::to_address(p), value);
         }
     }
 
@@ -180,10 +180,10 @@ private:
     void
     construct(pointer p, const value_type& value) {
         if (ciel::allocator_has_trivial_copy_construct<allocator_type>::value) {
-            new (p) value_type(value);
+            new (ciel::to_address(p)) value_type(value);
 
         } else {
-            alloc_traits::construct(allocator_(), p, value);
+            alloc_traits::construct(allocator_(), ciel::to_address(p), value);
         }
     }
 
@@ -198,20 +198,20 @@ private:
         if (ciel::allocator_has_trivial_destroy<allocator_type>::value) {
             if (!std::is_trivially_destructible<value_type>::value) {
                 for (; last - first >= 4; first += 4) {
-                    (first + 0)->~value_type();
-                    (first + 1)->~value_type();
-                    (first + 2)->~value_type();
-                    (first + 3)->~value_type();
+                    (ciel::to_address(first + 0))->~value_type();
+                    (ciel::to_address(first + 1))->~value_type();
+                    (ciel::to_address(first + 2))->~value_type();
+                    (ciel::to_address(first + 3))->~value_type();
                 }
 
                 for (; first != last; ++first) {
-                    first->~value_type();
+                    ciel::to_address(first)->~value_type();
                 }
             }
 
         } else {
             for (; first != last; ++first) {
-                alloc_traits::destroy(allocator_(), first);
+                alloc_traits::destroy(allocator_(), ciel::to_address(first));
             }
         }
 
@@ -250,9 +250,9 @@ private:
 
             if (ciel::is_trivially_relocatable<value_type>::value) {
                 sb.begin_ -= front_count;
-                ciel::memcpy(sb.begin_, begin_, sizeof(value_type) * front_count);
+                ciel::memcpy(ciel::to_address(sb.begin_), ciel::to_address(begin_), sizeof(value_type) * front_count);
 
-                ciel::memcpy(sb.end_, pos, sizeof(value_type) * back_count);
+                ciel::memcpy(ciel::to_address(sb.end_), ciel::to_address(pos), sizeof(value_type) * back_count);
                 sb.end_ += back_count;
 
             } else {
