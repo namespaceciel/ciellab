@@ -163,7 +163,8 @@ private:
         }
     }
 
-    template<class U = value_type, typename std::enable_if<std::is_trivial<U>::value, int>::type = 0>
+    template<class U                                                                            = value_type,
+             typename std::enable_if<std::is_trivially_copy_constructible<U>::value, int>::type = 0>
     void
     construct(pointer p, value_type value) {
         if (ciel::allocator_has_trivial_copy_construct<allocator_type>::value) {
@@ -174,7 +175,8 @@ private:
         }
     }
 
-    template<class U = value_type, typename std::enable_if<!std::is_trivial<U>::value, int>::type = 0>
+    template<class U                                                                             = value_type,
+             typename std::enable_if<!std::is_trivially_copy_constructible<U>::value, int>::type = 0>
     void
     construct(pointer p, const value_type& value) {
         if (ciel::allocator_has_trivial_copy_construct<allocator_type>::value) {
