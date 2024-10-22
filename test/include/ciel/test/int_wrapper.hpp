@@ -89,8 +89,7 @@
             lhs.i_ -= rhs.i_;                                    \
             return lhs;                                          \
         }                                                        \
-                                                                 \
-    } // struct Int
+    }
 
 IntWrapperDefinition(Int, true);
 IntWrapperDefinition(TRInt, true);
@@ -98,6 +97,9 @@ IntWrapperDefinition(TMInt, false);
 
 template<>
 struct ciel::is_trivially_relocatable<Int> : std::false_type {};
+
+template<>
+struct ciel::is_trivially_relocatable<TMInt> : std::false_type {};
 
 template<>
 struct ciel::is_trivially_relocatable<TRInt> : std::true_type {};

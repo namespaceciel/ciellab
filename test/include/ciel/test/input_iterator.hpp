@@ -36,6 +36,7 @@ public:
 
     void
     go_next() noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
         *ptr = invalid();
         ++ptr;
@@ -43,12 +44,14 @@ public:
 
     reference
     operator*() const noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
         return *ptr;
     }
 
     pointer
     operator->() const noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
         return ptr;
     }

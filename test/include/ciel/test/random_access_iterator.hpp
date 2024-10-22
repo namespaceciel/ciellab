@@ -29,16 +29,31 @@ public:
 
     void
     go_next() noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
         ++ptr;
+    }
+
+    void
+    go_prev() noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
+        --ptr;
+    }
+
+    void
+    advance(difference_type n) noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
+        ptr += n;
     }
 
     reference
     operator*() const noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
         return *ptr;
     }
 
     pointer
     operator->() const noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
         return ptr;
     }
 
