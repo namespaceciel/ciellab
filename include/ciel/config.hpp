@@ -98,11 +98,11 @@
 // try catch throw
 #ifdef CIEL_HAS_EXCEPTIONS
 #define CIEL_TRY      try
-#define CIEL_CATCH(X) catch (X)
+#define CIEL_CATCH(x) catch (x)
 #define CIEL_THROW    throw
 #else
 #define CIEL_TRY      if (true)
-#define CIEL_CATCH(X) else
+#define CIEL_CATCH(x) else
 #define CIEL_THROW
 #endif
 

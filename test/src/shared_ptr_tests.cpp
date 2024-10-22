@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <ciel/shared_ptr.hpp>
+#include <ciel/test/simple_latch.hpp>
 
 #include <thread>
 #include <vector>

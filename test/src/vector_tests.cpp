@@ -1,6 +1,7 @@
 #include "tools.h"
 #include <gtest/gtest.h>
 
+#include <ciel/test/int_wrapper.hpp>
 #include <ciel/vector.hpp>
 
 TEST(vector_tests, constructors) {

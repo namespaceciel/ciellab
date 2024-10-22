@@ -19,7 +19,7 @@ set(SOURCES
     src/function_tests.cpp
     src/inplace_vector_tests.cpp
     src/compressed_pair_tests.cpp
-    src/vector_exception_safety_tests.cpp
+    src/vector.exception_safety.cpp
     src/allocator_traits.cpp
 )
 
@@ -52,6 +52,8 @@ function (add_ciellab_test CXX_STANDARD ENABLE_EXCEPTIONS ENABLE_RTTI)
     else ()
         message(FATAL_ERROR "CXX_STANDARD ${CXX_STANDARD} is not available.")
     endif ()
+
+    target_include_directories(${SUB_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
     target_link_libraries(${SUB_PROJECT_NAME} PRIVATE ciellab GTest::gtest)
 
