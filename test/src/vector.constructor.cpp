@@ -185,3 +185,58 @@ TEST(vector, constructor_iterator_range) {
         ASSERT_TRUE(v.empty());
     }
 }
+
+TEST(vector, copy_constructor) {
+    {
+        vector<Int> v1({0, 1, 2, 3, 4});
+        vector<Int> v2(v1);
+
+        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
+    }
+    {
+        vector<TRInt> v1({0, 1, 2, 3, 4});
+        vector<TRInt> v2(v1);
+
+        ASSERT_EQ(v2, std::initializer_list<TRInt>({0, 1, 2, 3, 4}));
+    }
+    {
+        vector<Int, min_allocator<Int>> v1({0, 1, 2, 3, 4});
+        vector<Int, min_allocator<Int>> v2(v1);
+
+        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
+    }
+    {
+        vector<TRInt, min_allocator<TRInt>> v1({0, 1, 2, 3, 4});
+        vector<TRInt, min_allocator<TRInt>> v2(v1);
+
+        ASSERT_EQ(v2, std::initializer_list<TRInt>({0, 1, 2, 3, 4}));
+    }
+}
+
+TEST(vector, move_constructor) {
+    {
+        vector<Int> v1({0, 1, 2, 3, 4});
+        vector<Int> v2(std::move(v1));
+
+        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
+    }
+    {
+        vector<Int, min_allocator<Int>> v1({0, 1, 2, 3, 4});
+        vector<Int, min_allocator<Int>> v2(std::move(v1));
+
+        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
+    }
+}
+
+TEST(vector, constructor_initializer_list) {
+    {
+        vector<Int> v({0, 1, 2, 3, 4});
+
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
+    }
+    {
+        vector<Int, min_allocator<Int>> v({0, 1, 2, 3, 4});
+
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
+    }
+}

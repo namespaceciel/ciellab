@@ -6,41 +6,6 @@
 
 using namespace ciel;
 
-TEST(vector_tests, constructors) {
-    const ciel::vector<Int> v1;
-    ASSERT_TRUE(v1.empty());
-    ASSERT_EQ(v1.size(), 0);
-    ASSERT_EQ(v1.capacity(), 0);
-
-    const ciel::vector<Int> v2(v1);
-    ASSERT_TRUE(v2.empty());
-
-    const ciel::vector<Int> v3(10, 20);
-    ASSERT_EQ(v3.size(), 10);
-
-    const ciel::vector<Int> v4(15);
-    ASSERT_EQ(v4.size(), 15);
-
-    ciel::vector<Int> v5(v4);
-    ASSERT_EQ(v5.size(), 15);
-
-    const ciel::vector<Int> v6(std::move(v5));
-    ASSERT_EQ(v5.size(), 0);
-    ASSERT_EQ(v6.size(), 15);
-
-    const ciel::vector<Int> v7({1, 2, 3, 4, 5});
-    ASSERT_EQ(v7.size(), 5);
-
-    const ciel::vector<Int> v8(0, 10);
-    ASSERT_TRUE(v8.empty());
-
-    const ciel::vector<Int> v9(0);
-    ASSERT_TRUE(v9.empty());
-
-    const ciel::vector<Int> v10(v7.begin(), v7.begin());
-    ASSERT_TRUE(v10.empty());
-}
-
 TEST(vector_tests, assignments) {
     ciel::vector<Int> v1({1, 2, 3, 4, 5});
     ciel::vector<Int> v2{};
@@ -86,43 +51,6 @@ TEST(vector_tests, at) {
 #ifdef CIEL_HAS_EXCEPTIONS
     ASSERT_THROW(CIEL_UNUSED(v1.at(-1)), std::out_of_range);
 #endif
-}
-
-TEST(vector_tests, push_and_pop) {
-    // empty
-    ciel::vector<Int> v1;
-    ASSERT_EQ(v1.emplace_back(0), 0);
-
-    v1.push_back(1);
-    ASSERT_EQ(v1.emplace_back(2), 2);
-    {
-        std::initializer_list<Int> il{0, 1, 2};
-        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
-    }
-
-    ciel::vector<Int> v2({0, 1, 2, 3, 4});
-    ASSERT_EQ(v2.emplace_back(5), 5);
-
-    v2.shrink_to_fit();
-    ASSERT_EQ(v2.emplace_back(6), 6);
-    {
-        std::initializer_list<Int> il{0, 1, 2, 3, 4, 5, 6};
-        ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
-    }
-
-    v2.shrink_to_fit();
-    v2.reserve(100);
-    ASSERT_EQ(v2.emplace_back(7), 7);
-    ASSERT_EQ(v2.back(), 7);
-
-    v2.pop_back();
-    v2.pop_back();
-    ASSERT_EQ(v2.back(), 5);
-
-    // self assignment when expansion
-    v2.shrink_to_fit();
-    v2.push_back(v2[2]);
-    ASSERT_EQ(v2.back(), 2);
 }
 
 TEST(vector_tests, resize) {
@@ -354,24 +282,6 @@ TEST(vector_tests, vector_bool) {
     ciel::vector<bool> v{true, false, false, true, true};
 
     ASSERT_TRUE(std::equal(il.begin(), il.end(), v.begin()));
-}
-
-TEST(vector_tests, emplace_il) {
-    ciel::vector<ciel::vector<int>> v;
-
-    v.emplace_back({1, 2});
-
-    v.emplace(v.end(), {3, 4});
-
-    v.reserve(3);
-    v.unchecked_emplace_back({5, 6});
-
-    // v.emplace_back({}); // error: we can't deduce type for this.
-
-    ASSERT_EQ(v.size(), 3);
-    ASSERT_EQ(v[0], ciel::vector<int>({1, 2}));
-    ASSERT_EQ(v[1], ciel::vector<int>({3, 4}));
-    ASSERT_EQ(v[2], ciel::vector<int>({5, 6}));
 }
 
 TEST(vector_tests, insert_self_reference) {

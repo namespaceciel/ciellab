@@ -375,9 +375,14 @@ public:
         }
     }
 
+    CIEL_DIAGNOSTIC_PUSH
+    CIEL_GCC_DIAGNOSTIC_IGNORED("-Wunused-result")
+
     vector(const vector& other)
         : vector(other.begin(), other.end(),
                  alloc_traits::select_on_container_copy_construction(other.get_allocator())) {}
+
+    CIEL_DIAGNOSTIC_POP
 
     vector(const vector& other, const allocator_type& alloc)
         : vector(other.begin(), other.end(), alloc) {}

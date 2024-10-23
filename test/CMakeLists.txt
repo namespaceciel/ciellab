@@ -21,6 +21,8 @@ set(SOURCES
     src/compressed_pair_tests.cpp
     src/allocator_traits.cpp
     src/vector.constructor.cpp
+    src/vector.compare.cpp
+    src/vector.emplace_back.cpp
     src/vector.exception_safety.cpp
 )
 
