@@ -40,9 +40,15 @@ public:
     explicit compressed_pair_elem(U&& u)
         : value_(std::forward<U>(u)) {}
 
+    CIEL_DIAGNOSTIC_PUSH
+    // seems like a false alarm for std::forward_as_tuple
+    CIEL_GCC_DIAGNOSTIC_IGNORED("-Wunused-but-set-parameter")
+
     template<class... Args, size_t... Ints>
     explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, ciel::index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
+
+    CIEL_DIAGNOSTIC_POP
 
     reference
     get() noexcept {

@@ -14,25 +14,6 @@ add_library(ciellab INTERFACE)
 
 target_include_directories(ciellab INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# -Wno-unknown-warning-option: ignore unrecognized compiler options.
-# -Wno-int-to-pointer-cast: current split_reference_count atomic_shared_ptr's implementation needs
-#   48-bit uintptr_t and 16-bit local_ref_count to be packed in a std::atomic.
-#   TODO: change to boost::atomic to support DWCAS.
-# -Wno-class-memaccess: memcpy and memmove for trivially_relocatable objects.
-# -Wno-assume: suppress false alarms.
-# -Wno-invalid-offsetof: implementation of datasizeof
-# -Wno-unused-but-set-parameter: seems like a false alarm for std::forward_as_tuple
-# -Wdeprecated-declarations: move_iterator's operator-> has been deprecated in C++20
-target_compile_options(ciellab INTERFACE
-    -Wno-unknown-warning-option
-    -Wno-int-to-pointer-cast 
-    -Wno-class-memaccess
-    -Wno-assume
-    -Wno-invalid-offsetof
-    -Wno-unused-but-set-parameter
-    -Wno-deprecated-declarations
-)
-
 if (CIELLAB_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)

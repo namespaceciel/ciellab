@@ -11,6 +11,12 @@ NAMESPACE_CIEL_BEGIN
 // This is an over simplified split_reference_count implementation of atomic<shared_ptr<T>> only for educational
 // purposes. We don't consider any memory_orders, hence all are seq_cst.
 //
+CIEL_DIAGNOSTIC_PUSH
+// current split_reference_count atomic_shared_ptr's implementation needs
+// 48-bit uintptr_t and 16-bit local_ref_count to be packed in a std::atomic.
+CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wint-to-pointer-cast")
+CIEL_GCC_DIAGNOSTIC_IGNORED("-Wint-to-pointer-cast")
+
 template<class T>
 class atomic_shared_ptr {
 private:
@@ -194,6 +200,8 @@ public:
 #endif // CIEL_STD_VER >= 17
 
 }; // class atomic_shared_ptr
+
+CIEL_DIAGNOSTIC_POP
 
 template<class T>
 struct is_trivially_relocatable<atomic_shared_ptr<T>> : std::true_type {};

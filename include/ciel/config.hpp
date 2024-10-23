@@ -106,6 +106,27 @@
 #define CIEL_THROW
 #endif
 
+#define CIEL_TO_STRING2(x) #x
+#define CIEL_TO_STRING(x)  CIEL_TO_STRING2(x)
+
+// compiler diagnostic ignored
+#if defined(__clang__)
+#define CIEL_DIAGNOSTIC_PUSH               _Pragma("clang diagnostic push")
+#define CIEL_DIAGNOSTIC_POP                _Pragma("clang diagnostic pop")
+#define CIEL_CLANG_DIAGNOSTIC_IGNORED(str) _Pragma(CIEL_TO_STRING(clang diagnostic ignored str))
+#define CIEL_GCC_DIAGNOSTIC_IGNORED(str)
+#elif defined(__GNUC__)
+#define CIEL_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
+#define CIEL_DIAGNOSTIC_POP  _Pragma("GCC diagnostic pop")
+#define CIEL_CLANG_DIAGNOSTIC_IGNORED(str)
+#define CIEL_GCC_DIAGNOSTIC_IGNORED(str) _Pragma(CIEL_TO_STRING(GCC diagnostic ignored str))
+#else
+#define CIEL_DIAGNOSTIC_PUSH
+#define CIEL_DIAGNOSTIC_POP
+#define CIEL_CLANG_DIAGNOSTIC_IGNORED(str)
+#define CIEL_GCC_DIAGNOSTIC_IGNORED(str)
+#endif
+
 // namespace ciel
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
