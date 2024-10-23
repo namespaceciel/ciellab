@@ -7,6 +7,8 @@
 
 #include <cstddef>
 
+NAMESPACE_CIEL_BEGIN
+
 #define IntWrapperDefinition(TypeName, IsNothrowMovable)         \
     struct TypeName {                                            \
     private:                                                     \
@@ -96,12 +98,14 @@ IntWrapperDefinition(TRInt, true);
 IntWrapperDefinition(TMInt, false);
 
 template<>
-struct ciel::is_trivially_relocatable<Int> : std::false_type {};
+struct is_trivially_relocatable<Int> : std::false_type {};
 
 template<>
-struct ciel::is_trivially_relocatable<TMInt> : std::false_type {};
+struct is_trivially_relocatable<TMInt> : std::false_type {};
 
 template<>
-struct ciel::is_trivially_relocatable<TRInt> : std::true_type {};
+struct is_trivially_relocatable<TRInt> : std::true_type {};
+
+NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_INT_WRAPPER_HPP_

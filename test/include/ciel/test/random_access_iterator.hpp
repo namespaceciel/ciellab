@@ -8,6 +8,8 @@
 #include <iterator>
 #include <type_traits>
 
+NAMESPACE_CIEL_BEGIN
+
 // Simulate random_access_iterator using T array base.
 
 template<class T>
@@ -24,6 +26,8 @@ private:
     pointer ptr;
 
 public:
+    RandomAccessIterator() noexcept = default;
+
     RandomAccessIterator(const pointer p) noexcept
         : ptr(p) {}
 
@@ -45,19 +49,25 @@ public:
         ptr += n;
     }
 
-    reference
+    CIEL_NODISCARD reference
     operator*() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         return *ptr;
     }
 
-    pointer
+    CIEL_NODISCARD pointer
     operator->() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         return ptr;
     }
 
-    pointer
+    CIEL_NODISCARD reference
+    operator[](difference_type n) const noexcept {
+        CIEL_PRECONDITION(ptr != nullptr);
+        return *(ptr + n);
+    }
+
+    CIEL_NODISCARD pointer
     base() const noexcept {
         return ptr;
     }
@@ -67,11 +77,40 @@ public:
         return lhs.base() == rhs.base();
     }
 
+    CIEL_NODISCARD friend bool
+    operator<(const RandomAccessIterator& lhs, const RandomAccessIterator& rhs) noexcept {
+        return lhs.base() < rhs.base();
+    }
+
+    CIEL_NODISCARD friend RandomAccessIterator
+    operator+(RandomAccessIterator iter, difference_type n) noexcept {
+        iter += n;
+        return iter;
+    }
+
+    CIEL_NODISCARD friend RandomAccessIterator
+    operator+(difference_type n, RandomAccessIterator iter) noexcept {
+        iter += n;
+        return iter;
+    }
+
+    CIEL_NODISCARD friend RandomAccessIterator
+    operator-(RandomAccessIterator iter, difference_type n) noexcept {
+        iter -= n;
+        return iter;
+    }
+
     CIEL_NODISCARD friend difference_type
     operator-(const RandomAccessIterator& lhs, const RandomAccessIterator& rhs) noexcept {
         return lhs.base() - rhs.base();
     }
 
 }; // class RandomAccessIterator
+
+#if CIEL_STD_VER >= 20
+static_assert(std::random_access_iterator<RandomAccessIterator<int*>>);
+#endif
+
+NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_RANDOM_ACCESS_ITERATOR_HPP_

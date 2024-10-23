@@ -7,6 +7,8 @@
 #include <thread>
 #include <vector>
 
+using namespace ciel;
+
 TEST(shared_ptr_tests, default_constuctor) {
     const ciel::shared_ptr<int> s;
 }

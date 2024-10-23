@@ -373,6 +373,4 @@ public:
 
 NAMESPACE_CIEL_END
 
-using ciel::min_allocator;
-
 #endif // CIELLAB_INCLUDE_CIEL_MIN_ALLOCATOR_HPP_

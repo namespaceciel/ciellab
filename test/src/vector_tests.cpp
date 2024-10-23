@@ -4,6 +4,8 @@
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/vector.hpp>
 
+using namespace ciel;
+
 TEST(vector_tests, constructors) {
     const ciel::vector<Int> v1;
     ASSERT_TRUE(v1.empty());

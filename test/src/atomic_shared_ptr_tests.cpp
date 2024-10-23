@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 
+using namespace ciel;
+
 TEST(atomic_shared_ptr_test_suite, construction_empty) {
     ciel::atomic_shared_ptr<int> p;
 

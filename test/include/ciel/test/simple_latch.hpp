@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <mutex>
 
+NAMESPACE_CIEL_BEGIN
+
 class SimpleLatch {
 public:
     SimpleLatch(const size_t count_down) noexcept
@@ -30,5 +32,7 @@ private:
     size_t count_down_;
 
 }; // class SimpleLatch
+
+NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL__HPP_

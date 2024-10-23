@@ -8,6 +8,8 @@
 #include <iterator>
 #include <type_traits>
 
+NAMESPACE_CIEL_BEGIN
+
 // Simulate forward_iterator using T array base.
 
 template<class T>
@@ -24,6 +26,8 @@ private:
     pointer ptr;
 
 public:
+    ForwardIterator() noexcept = default;
+
     ForwardIterator(const pointer p) noexcept
         : ptr(p) {}
 
@@ -33,19 +37,19 @@ public:
         ++ptr;
     }
 
-    reference
+    CIEL_NODISCARD reference
     operator*() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         return *ptr;
     }
 
-    pointer
+    CIEL_NODISCARD pointer
     operator->() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         return ptr;
     }
 
-    pointer
+    CIEL_NODISCARD pointer
     base() const noexcept {
         return ptr;
     }
@@ -56,5 +60,11 @@ public:
     }
 
 }; // class ForwardIterator
+
+#if CIEL_STD_VER >= 20
+static_assert(std::forward_iterator<ForwardIterator<int*>>);
+#endif
+
+NAMESPACE_CIEL_END
 
 #endif // CIELLAB_INCLUDE_CIEL_FORWARD_ITERATOR_HPP_
