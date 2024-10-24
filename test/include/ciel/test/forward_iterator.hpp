@@ -62,7 +62,7 @@ public:
 }; // class ForwardIterator
 
 #if CIEL_STD_VER >= 20
-static_assert(std::forward_iterator<ForwardIterator<int*>>);
+static_assert(std::forward_iterator<ForwardIterator<int>>);
 #endif
 
 NAMESPACE_CIEL_END

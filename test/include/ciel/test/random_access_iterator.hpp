@@ -108,7 +108,7 @@ public:
 }; // class RandomAccessIterator
 
 #if CIEL_STD_VER >= 20
-static_assert(std::random_access_iterator<RandomAccessIterator<int*>>);
+static_assert(std::random_access_iterator<RandomAccessIterator<int>>);
 #endif
 
 NAMESPACE_CIEL_END

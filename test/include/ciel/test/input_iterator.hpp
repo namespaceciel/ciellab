@@ -73,7 +73,7 @@ public:
 }; // class InputIterator
 
 #if CIEL_STD_VER >= 20
-static_assert(std::input_iterator<InputIterator<int*>>);
+static_assert(std::input_iterator<InputIterator<int>>);
 #endif
 
 NAMESPACE_CIEL_END
