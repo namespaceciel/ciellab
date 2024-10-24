@@ -187,6 +187,12 @@ NAMESPACE_CIEL_END
 // assert
 #ifdef CIEL_IS_DEBUGGING
 #define CIEL_ASSERT(cond) assert(cond)
+#elif defined(__clang__)
+#define CIEL_ASSERT(cond)                     \
+    CIEL_DIAGNOSTIC_PUSH                      \
+    CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wassume") \
+    CIEL_ASSUME(cond)                         \
+    CIEL_DIAGNOSTIC_POP
 #else
 #define CIEL_ASSERT(cond) CIEL_ASSUME(cond)
 #endif
