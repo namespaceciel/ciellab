@@ -24,6 +24,7 @@ set(SOURCES
     src/vector.compare.cpp
     src/vector.emplace_back.cpp
     src/vector.exception_safety.cpp
+    src/is_nullable.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
