@@ -2,7 +2,7 @@
 
 #include <ciel/finally.hpp>
 
-TEST(finally_tests, defer) {
+TEST(finally, defer) {
     bool deferCalled = false;
     {
         CIEL_DEFER({ deferCalled = true; });
@@ -10,7 +10,7 @@ TEST(finally_tests, defer) {
     ASSERT_TRUE(deferCalled);
 }
 
-TEST(finally_tests, defer_order) {
+TEST(finally, defer_order) {
     int counter = 0;
     int a = 0, b = 0, c = 0;
     {
@@ -23,7 +23,7 @@ TEST(finally_tests, defer_order) {
     ASSERT_EQ(c, 1);
 }
 
-TEST(finally_tests, defer_order_2) {
+TEST(finally, defer_order_2) {
     int counter = 0;
     int a = 0, b = 0, c = 0;
     {

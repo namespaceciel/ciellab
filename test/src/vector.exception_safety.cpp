@@ -1,14 +1,17 @@
 #include <gtest/gtest.h>
 
 #include "tools.h"
+#include <ciel/test/exception_generator.hpp>
 #include <ciel/vector.hpp>
+
+using namespace ciel;
 
 #ifdef CIEL_HAS_EXCEPTIONS
 
 TEST(vector_exception_safety_tests, push_back_in_capacity) {
     using EG    = ExceptionGenerator<1, DefaultConstructor | CopyConstructor, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(8);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -43,9 +46,9 @@ TEST(vector_exception_safety_tests, push_back_in_capacity) {
 
 TEST(vector_exception_safety_tests, push_back_beyond_capacity_trivially_relocatable) {
     using EG = ExceptionGeneratorTriviallyRelocatable<1, DefaultConstructor | CopyConstructor, true>;
-    static_assert(ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -80,9 +83,9 @@ TEST(vector_exception_safety_tests, push_back_beyond_capacity_trivially_relocata
 
 TEST(vector_exception_safety_tests, push_back_beyond_capacity_noexcept_move) {
     using EG = ExceptionGenerator<1, DefaultConstructor | CopyConstructor, true>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -117,9 +120,9 @@ TEST(vector_exception_safety_tests, push_back_beyond_capacity_noexcept_move) {
 
 TEST(vector_exception_safety_tests, push_back_beyond_capacity_copy) {
     using EG = ExceptionGenerator<1, DefaultConstructor | CopyConstructor | MoveConstructor, false>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -154,9 +157,9 @@ TEST(vector_exception_safety_tests, push_back_beyond_capacity_copy) {
 
 TEST(vector_exception_safety_tests, insert_in_capacity_N_gt_pos_end_dis) {
     using EG = ExceptionGenerator<3, CopyConstructor | CopyAssignment, true>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(8);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -178,9 +181,9 @@ TEST(vector_exception_safety_tests, insert_in_capacity_N_gt_pos_end_dis) {
 
 TEST(vector_exception_safety_tests, insert_in_capacity_N_lt_pos_end_dis) {
     using EG = ExceptionGenerator<3, CopyConstructor | CopyAssignment, true>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(8);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -202,9 +205,9 @@ TEST(vector_exception_safety_tests, insert_in_capacity_N_lt_pos_end_dis) {
 
 TEST(vector_exception_safety_tests, insert_in_capacity_N_gt_pos_end_dis_trivially_relocatable) {
     using EG = ExceptionGeneratorTriviallyRelocatable<3, CopyConstructor | CopyAssignment, true>;
-    static_assert(ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(8);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -226,9 +229,9 @@ TEST(vector_exception_safety_tests, insert_in_capacity_N_gt_pos_end_dis_triviall
 
 TEST(vector_exception_safety_tests, insert_in_capacity_N_lt_pos_end_dis_trivially_relocatable) {
     using EG = ExceptionGeneratorTriviallyRelocatable<3, CopyConstructor | CopyAssignment, true>;
-    static_assert(ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(8);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -251,7 +254,7 @@ TEST(vector_exception_safety_tests, insert_in_capacity_N_lt_pos_end_dis_triviall
 TEST(vector_exception_safety_tests, insert_in_capacity_one_at_end) {
     using EG    = ExceptionGenerator<1, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(6);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -275,9 +278,9 @@ TEST(vector_exception_safety_tests, insert_in_capacity_one_at_end) {
 
 TEST(vector_exception_safety_tests, insert_beyond_capacity_noexcept_move) {
     using EG = ExceptionGenerator<3, CopyConstructor | CopyAssignment, true>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -299,9 +302,9 @@ TEST(vector_exception_safety_tests, insert_beyond_capacity_noexcept_move) {
 
 TEST(vector_exception_safety_tests, insert_beyond_capacity_copy) {
     using EG = ExceptionGenerator<5, CopyConstructor | CopyAssignment, false>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -323,9 +326,9 @@ TEST(vector_exception_safety_tests, insert_beyond_capacity_copy) {
 
 TEST(vector_exception_safety_tests, insert_beyond_capacity_trivially_relocatable) {
     using EG = ExceptionGeneratorTriviallyRelocatable<3, CopyConstructor | CopyAssignment, true>;
-    static_assert(ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -348,7 +351,7 @@ TEST(vector_exception_safety_tests, insert_beyond_capacity_trivially_relocatable
 TEST(vector_exception_safety_tests, insert_beyond_capacity_one_at_end) {
     using EG    = ExceptionGenerator<1, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -372,9 +375,9 @@ TEST(vector_exception_safety_tests, insert_beyond_capacity_one_at_end) {
 
 TEST(vector_exception_safety_tests, erase_N_gt_pos_end_dis) {
     using EG = ExceptionGenerator<3, MoveConstructor | MoveAssignment, false>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(10);
     for (size_t i = 0; i < 10; ++i) {
         v.emplace_back(i);
@@ -394,9 +397,9 @@ TEST(vector_exception_safety_tests, erase_N_gt_pos_end_dis) {
 
 TEST(vector_exception_safety_tests, erase_N_lt_pos_end_dis) {
     using EG = ExceptionGenerator<3, MoveConstructor | MoveAssignment, false>;
-    static_assert(not ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(not is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(10);
     for (size_t i = 0; i < 10; ++i) {
         v.emplace_back(i);
@@ -417,9 +420,9 @@ TEST(vector_exception_safety_tests, erase_N_lt_pos_end_dis) {
 TEST(vector_exception_safety_tests, erase_trivially_relocatable) {
     using EG = ExceptionGeneratorTriviallyRelocatable<
         1, DefaultConstructor | CopyConstructor | CopyAssignment | MoveConstructor | MoveAssignment, false>;
-    static_assert(ciel::is_trivially_relocatable<EG>::value, "");
+    static_assert(is_trivially_relocatable<EG>::value, "");
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(10);
     for (size_t i = 0; i < 10; ++i) {
         v.emplace_back(i);
@@ -440,7 +443,7 @@ TEST(vector_exception_safety_tests, erase_trivially_relocatable) {
 TEST(vector_exception_safety_tests, assign_N_lt_size) {
     using EG    = ExceptionGenerator<3, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -462,7 +465,7 @@ TEST(vector_exception_safety_tests, assign_N_lt_size) {
 TEST(vector_exception_safety_tests, assign_N_gt_size_lt_capacity) {
     using EG    = ExceptionGenerator<7, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(10);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -484,7 +487,7 @@ TEST(vector_exception_safety_tests, assign_N_gt_size_lt_capacity) {
 TEST(vector_exception_safety_tests, assign_N_gt_capacity) {
     using EG    = ExceptionGenerator<3, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -507,7 +510,7 @@ TEST(vector_exception_safety_tests, resize_N_lt_size) {
     using EG = ExceptionGeneratorTriviallyRelocatable<
         1, DefaultConstructor | CopyConstructor | CopyAssignment | MoveConstructor | MoveAssignment, false>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -529,7 +532,7 @@ TEST(vector_exception_safety_tests, resize_N_lt_size) {
 TEST(vector_exception_safety_tests, resize_N_gt_size_lt_capacity) {
     using EG    = ExceptionGenerator<2, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(10);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);
@@ -551,7 +554,7 @@ TEST(vector_exception_safety_tests, resize_N_gt_size_lt_capacity) {
 TEST(vector_exception_safety_tests, resize_N_gt_capacity) {
     using EG    = ExceptionGenerator<2, CopyConstructor | CopyAssignment, true>;
     EG::enabled = false;
-    ciel::vector<EG> v;
+    vector<EG> v;
     v.reserve(5);
     for (size_t i = 0; i < 5; ++i) {
         v.emplace_back(i);

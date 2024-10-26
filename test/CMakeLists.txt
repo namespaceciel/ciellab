@@ -6,7 +6,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(SOURCES
     src/main.cpp
     src/tools.cpp
-    src/finally_tests.cpp
+    src/finally.cpp
     src/list_tests.cpp
     src/split_buffer_tests.cpp
     src/vector_tests.cpp
@@ -18,7 +18,7 @@ set(SOURCES
     src/type_traits_tests.cpp
     src/function_tests.cpp
     src/inplace_vector_tests.cpp
-    src/compressed_pair_tests.cpp
+    src/compressed_pair.cpp
     src/allocator_traits.cpp
     src/vector.constructor.cpp
     src/vector.compare.cpp
