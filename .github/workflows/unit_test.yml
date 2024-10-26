@@ -1,7 +1,9 @@
 name: unit_test
 
 on:
-  push: {}
+  push:
+    branches:
+      - main
 
 jobs:
   job:

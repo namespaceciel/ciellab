@@ -1,7 +1,9 @@
 name: benchmark
 
 on:
-  push: {}
+  push:
+    branches:
+      - main
 
 jobs:
   job:
