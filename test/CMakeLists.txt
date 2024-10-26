@@ -5,24 +5,25 @@ set(CMAKE_BUILD_TYPE "Debug")
 
 set(SOURCES
     src/main.cpp
-    src/finally.cpp
-    src/list.cpp
-    src/split_buffer.cpp
-    src/vector.cpp
-    src/exception_safety.cpp
-    src/shared_ptr.cpp
+    src/allocator_traits.cpp
     src/atomic_shared_ptr.cpp
-    src/observer_ptr.cpp
-    src/worth_move.cpp
+    src/can_be_destroyed_from_base.cpp
+    src/compressed_pair.cpp
+    src/exception_safety.cpp
+    src/finally.cpp
     src/function.cpp
     src/inplace_vector.cpp
-    src/compressed_pair.cpp
-    src/allocator_traits.cpp
+    src/is_nullable.cpp
+    src/list.cpp
+    src/observer_ptr.cpp
+    src/shared_ptr.cpp
+    src/split_buffer.cpp
+    src/vector.cpp
     src/vector.constructor.cpp
     src/vector.compare.cpp
     src/vector.emplace_back.cpp
     src/vector.exception_safety.cpp
-    src/is_nullable.cpp
+    src/worth_move.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
