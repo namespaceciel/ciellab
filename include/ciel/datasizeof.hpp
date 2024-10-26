@@ -40,7 +40,7 @@ struct datasizeof {
 #else
 template<class T>
 struct datasizeof {
-    template<class U, bool = std::is_class<U>::value && !ciel::is_final<U>::value>
+    template<class U, bool = std::is_class<U>::value && !is_final<U>::value>
     struct FirstPaddingByte {
         U v;
         char first_padding_byte;

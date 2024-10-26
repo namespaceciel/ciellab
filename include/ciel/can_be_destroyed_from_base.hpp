@@ -10,8 +10,7 @@ NAMESPACE_CIEL_BEGIN
 
 template<class Base, class Derived>
 struct can_be_destroyed_from_base
-    : ciel::conjunction<std::is_destructible<Base>, std::has_virtual_destructor<Base>, std::is_base_of<Base, Derived>> {
-};
+    : conjunction<std::is_destructible<Base>, std::has_virtual_destructor<Base>, std::is_base_of<Base, Derived>> {};
 
 NAMESPACE_CIEL_END
 

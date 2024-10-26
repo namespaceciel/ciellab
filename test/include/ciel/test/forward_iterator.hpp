@@ -13,7 +13,7 @@ NAMESPACE_CIEL_BEGIN
 // Simulate forward_iterator using T array base.
 
 template<class T>
-class ForwardIterator : public ciel::input_iterator_base<ForwardIterator<T>> {
+class ForwardIterator : public input_iterator_base<ForwardIterator<T>> {
 public:
     using difference_type   = ptrdiff_t;
     using value_type        = T;

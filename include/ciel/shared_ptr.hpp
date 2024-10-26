@@ -138,7 +138,7 @@ private:
     using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_with_pointer>;
     using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_with_pointer>;
 
-    ciel::compressed_pair<ciel::compressed_pair<pointer, deleter_type>, control_block_allocator> compressed_;
+    compressed_pair<compressed_pair<pointer, deleter_type>, control_block_allocator> compressed_;
 
     CIEL_NODISCARD pointer
     ptr_() noexcept {
@@ -172,7 +172,7 @@ private:
 
 public:
     control_block_with_pointer(pointer ptr, deleter_type&& deleter, control_block_allocator&& alloc)
-        : compressed_(ciel::compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {}
+        : compressed_(compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {}
 
 #ifdef CIEL_HAS_RTTI
     CIEL_NODISCARD virtual void*
@@ -216,7 +216,7 @@ private:
     using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_with_instance>;
     using control_block_alloc_traits = typename alloc_traits::template rebind_traits<control_block_with_instance>;
 
-    ciel::compressed_pair<element_type, control_block_allocator> compressed_;
+    compressed_pair<element_type, control_block_allocator> compressed_;
 
     CIEL_NODISCARD pointer
     ptr_() noexcept {

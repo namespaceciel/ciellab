@@ -14,14 +14,14 @@ template<class T, class = void>
 struct is_range : std::false_type {};
 
 template<class T>
-struct is_range<T, ciel::void_t<decltype(std::declval<T>().begin(), std::declval<T>().end())>> : std::true_type {};
+struct is_range<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end())>> : std::true_type {};
 
 template<class T, class = void>
 struct is_range_with_size : std::false_type {};
 
 template<class T>
 struct is_range_with_size<
-    T, ciel::void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), std::declval<T>().size())>>
+    T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), std::declval<T>().size())>>
     : std::true_type {};
 
 template<class T>

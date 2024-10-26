@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 #include <ciel/config.hpp>
+
+#include <iostream>
 
 int
 main(int argc, char** argv) {

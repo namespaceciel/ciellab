@@ -149,7 +149,7 @@ public:
 
 template<class T>
 struct is_small_object : std::integral_constant<bool, sizeof(T) <= sizeof(void*) * 3 && alignof(void*) % alignof(T) == 0
-                                                          && ciel::is_trivially_relocatable<T>::value> {};
+                                                          && is_trivially_relocatable<T>::value> {};
 
 struct assume_trivially_relocatable_t {};
 
@@ -161,7 +161,7 @@ public:
     using result_type = R;
 
 private:
-    using buffer_type = ciel::aligned_storage<sizeof(void*) * 3, alignof(void*)>::type;
+    using buffer_type = aligned_storage<sizeof(void*) * 3, alignof(void*)>::type;
     using base_type   = details::func_base<R(Args...)>;
 
     buffer_type buffer_;
@@ -515,7 +515,7 @@ template<class R, class... Args>
 function(R (*)(Args...)) -> function<R(Args...)>;
 
 template<class F>
-function(F) -> function<ciel::strip_signature_t<decltype(&F::operator())>>;
+function(F) -> function<strip_signature_t<decltype(&F::operator())>>;
 
 #endif
 

@@ -25,7 +25,7 @@ private:
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
     pointer begin_;
-    ciel::compressed_pair<pointer, Allocator> end_alloc_;
+    compressed_pair<pointer, Allocator> end_alloc_;
 
     CIEL_NODISCARD pointer&
     end_() noexcept {

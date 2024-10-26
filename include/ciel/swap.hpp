@@ -16,7 +16,7 @@ NAMESPACE_CIEL_BEGIN
 template<class T>
 void
 relocatable_swap(T& lhs, T& rhs) noexcept {
-    constexpr size_t buffer_bytes = ciel::datasizeof<T>::value;
+    constexpr size_t buffer_bytes = datasizeof<T>::value;
     unsigned char buffer[buffer_bytes];
 
     ciel::memcpy(std::addressof(buffer), std::addressof(lhs), buffer_bytes);

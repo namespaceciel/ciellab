@@ -7,6 +7,8 @@
 
 #include <random>
 
+using namespace ciel;
+
 #ifdef CIEL_HAS_EXCEPTIONS
 
 // We use random number generator to throw some exceptions, use valgrind to test if there are any memory leaks.
@@ -131,13 +133,13 @@ const std::initializer_list<NothrowMoveStruct> il{{11}, {12}, {13}, {}, {14}, {1
     }                      \
     CIEL_CATCH (...) {}
 
-TEST(exception_safety_tests, vector_strong) {
+TEST(exception_safety, vector_strong) {
     // These vector functions provide strong exception safety:
     // emplace_back, push_back, reserve, shrink_to_fit
     // When these functions throw, they have no effects, so we test if v changes its state in catch block
 
-    ciel::vector<NothrowMoveStruct> v;
-    ciel::vector<NothrowMoveStruct> state_holder;
+    vector<NothrowMoveStruct> v;
+    vector<NothrowMoveStruct> state_holder;
 
     for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.shrink_to_fit());
@@ -148,15 +150,13 @@ TEST(exception_safety_tests, vector_strong) {
     }
 }
 
-TEST(exception_safety_tests, vector_basic) {
+TEST(exception_safety, vector_basic) {
     // Throw lots of exceptions and use valgrind checking for memory leaks
 
-    ciel::vector<NothrowMoveStruct> v;
+    vector<NothrowMoveStruct> v;
     can_throw = true;
 
     for (size_t i = 0; i < 1000; ++i) {
-        // Use random numbers to insert or erase at any position in v: v.begin() + g() % ciel::max<size_t>(v.size(), 1)
-
         BASIC_TEST_CASE(v.emplace_back());
 
         BASIC_TEST_CASE(v.emplace(v.begin() + g() % std::max<size_t>(v.size(), 1), 10ULL));
@@ -178,12 +178,12 @@ TEST(exception_safety_tests, vector_basic) {
     }
 }
 
-TEST(exception_safety_tests, split_buffer_strong) {
+TEST(exception_safety, split_buffer_strong) {
     // These split_buffer functions provide strong exception safety:
     // emplace_front/back, push_front/back, shrink_to_fit
 
-    ciel::split_buffer<NothrowMoveStruct> v;
-    ciel::split_buffer<NothrowMoveStruct> state_holder;
+    split_buffer<NothrowMoveStruct> v;
+    split_buffer<NothrowMoveStruct> state_holder;
 
     for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.emplace_back(2));
@@ -194,15 +194,13 @@ TEST(exception_safety_tests, split_buffer_strong) {
     }
 }
 
-TEST(exception_safety_tests, split_buffer_basic) {
+TEST(exception_safety, split_buffer_basic) {
     // Throw lots of exceptions and use valgrind checking for memory leaks
 
-    ciel::split_buffer<NothrowMoveStruct> v;
+    split_buffer<NothrowMoveStruct> v;
     can_throw = true;
 
     for (size_t i = 0; i < 1000; ++i) {
-        // Use random numbers to insert or erase at any position in v: v.begin() + g() % ciel::max<size_t>(v.size(), 1)
-
         BASIC_TEST_CASE(v.emplace_back(1));
 
         BASIC_TEST_CASE(v.assign(il));
@@ -215,12 +213,12 @@ TEST(exception_safety_tests, split_buffer_basic) {
     }
 }
 
-TEST(exception_safety_tests, list_strong) {
+TEST(exception_safety, list_strong) {
     // These list functions provide strong exception safety:
     // insert, emplace, push_back, emplace_back, push_front, emplace_front
 
-    ciel::list<NothrowMoveStruct> v;
-    ciel::list<NothrowMoveStruct> state_holder;
+    list<NothrowMoveStruct> v;
+    list<NothrowMoveStruct> state_holder;
 
     for (size_t i = 0; i < 200; ++i) {
         STRONG_TEST_CASE(v.emplace_front(1));
@@ -235,10 +233,10 @@ TEST(exception_safety_tests, list_strong) {
     }
 }
 
-TEST(exception_safety_tests, list_basic) {
+TEST(exception_safety, list_basic) {
     // Throw lots of exceptions and use valgrind checking for memory leaks
 
-    ciel::list<NothrowMoveStruct> v;
+    list<NothrowMoveStruct> v;
     can_throw = true;
 
     for (size_t i = 0; i < 1000; ++i) {

@@ -13,7 +13,7 @@ NAMESPACE_CIEL_BEGIN
 // Simulate random_access_iterator using T array base.
 
 template<class T>
-class RandomAccessIterator : public ciel::random_access_iterator_base<RandomAccessIterator<T>> {
+class RandomAccessIterator : public random_access_iterator_base<RandomAccessIterator<T>> {
 public:
     using difference_type   = ptrdiff_t;
     using value_type        = T;

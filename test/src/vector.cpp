@@ -1,4 +1,3 @@
-#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/test/int_wrapper.hpp>
@@ -6,9 +5,9 @@
 
 using namespace ciel;
 
-TEST(vector_tests, assignments) {
-    ciel::vector<Int> v1({1, 2, 3, 4, 5});
-    ciel::vector<Int> v2{};
+TEST(vector, assignments) {
+    vector<Int> v1({1, 2, 3, 4, 5});
+    vector<Int> v2{};
 
     v2 = std::move(v1);
     ASSERT_TRUE(v1.empty());
@@ -17,7 +16,7 @@ TEST(vector_tests, assignments) {
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
     }
 
-    ciel::vector<Int> v3{};
+    vector<Int> v3{};
     v3 = v2;
     ASSERT_EQ(v2, v3);
 
@@ -39,8 +38,8 @@ TEST(vector_tests, assignments) {
     }
 }
 
-TEST(vector_tests, at) {
-    const ciel::vector<size_t> v1({0, 1, 2, 3, 4, 5});
+TEST(vector, at) {
+    const vector<size_t> v1({0, 1, 2, 3, 4, 5});
     for (size_t i = 0; i < v1.size(); ++i) {
         ASSERT_EQ(v1[i], i);
     }
@@ -53,8 +52,8 @@ TEST(vector_tests, at) {
 #endif
 }
 
-TEST(vector_tests, resize) {
-    ciel::vector<Int> v1(10, 5);
+TEST(vector, resize) {
+    vector<Int> v1(10, 5);
     ASSERT_EQ(v1.size(), 10);
     for (const Int& i : v1) {
         ASSERT_EQ(i, 5);
@@ -82,8 +81,8 @@ TEST(vector_tests, resize) {
     }
 }
 
-TEST(vector_tests, insert_and_emplace) {
-    ciel::vector<Int> v1{0, 1, 2, 3, 4, 5, 6};
+TEST(vector, insert_and_emplace) {
+    vector<Int> v1{0, 1, 2, 3, 4, 5, 6};
 
     // insert at front
     ASSERT_EQ(*v1.insert(v1.begin(), 21), 21);
@@ -138,8 +137,8 @@ TEST(vector_tests, insert_and_emplace) {
     }
 }
 
-TEST(vector_tests, erase) {
-    ciel::vector<Int> v1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+TEST(vector, erase) {
+    vector<Int> v1{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     ASSERT_EQ(*v1.erase(v1.begin()), 1);
     {
@@ -171,136 +170,30 @@ TEST(vector_tests, erase) {
     }
 }
 
-TEST(vector_tests, copy_and_move_behavior) {
-    ConstructAndAssignCounter::reset();
-
-    const ciel::vector<ConstructAndAssignCounter> v1(5);
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
-
-    ciel::vector<ConstructAndAssignCounter> v2(6, ConstructAndAssignCounter{});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 6);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
-
-    const ciel::vector<ConstructAndAssignCounter> v3 = v1;
-    const ciel::vector<ConstructAndAssignCounter> v4 = std::move(v2);
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
-
-    const ciel::vector<ConstructAndAssignCounter> v5(v1.begin(), v1.end() - 1);
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
-
-    ciel::vector<ConstructAndAssignCounter> v6({{}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 3);
-
-    v6.reserve(100);
-    ConstructAndAssignCounter::reset();
-
-    v6 = {{}, {}, {}, {}};
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
-
-    v6.assign(7, {});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 7);
-
-    v6.assign(v1.begin(), v1.end());
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 5);
-
-    v6.assign({{}, {}, {}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 4);
-}
-
-TEST(vector_tests, copy_and_move_behavior2) {
-    ciel::vector<ConstructAndAssignCounter> v1;
-    v1.reserve(50);
-    ConstructAndAssignCounter::reset();
-
-    for (size_t i = 0; i < 10; ++i) {
-        v1.emplace_back();
-    }
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 0);
-
-    for (size_t i = 0; i < 10; ++i) {
-        v1.push_back({});
-    }
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 10);
-
-    ConstructAndAssignCounter tmp;
-
-    for (size_t i = 0; i < 10; ++i) {
-        v1.push_back(std::move(tmp));
-    }
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 10);
-
-    for (size_t i = 0; i < 10; ++i) {
-        v1.push_back(tmp);
-    }
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 10);
-
-    ASSERT_EQ(v1.size(), 40);
-
-    v1.reserve(100);
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 40);
-
-    v1.shrink_to_fit();
-    ASSERT_EQ(ConstructAndAssignCounter::move(), 40);
-}
-
-TEST(vector_tests, copy_and_move_behavior3) {
-    ConstructAndAssignCounter::reset();
-
-    ciel::vector<ConstructAndAssignCounter> v1(10);
-    v1.erase(v1.begin());
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-
-    v1.erase(v1.begin() + 5, v1.begin() + 7);
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-
-    v1.insert(v1.begin(), ConstructAndAssignCounter{});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-
-    constexpr ConstructAndAssignCounter tmp;
-    v1.insert(v1.begin(), tmp);
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 1);
-
-    v1.insert(v1.begin(), 3, {});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 3);
-
-    v1.insert(v1.begin(), {{}, {}});
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 2);
-
-    v1.shrink_to_fit(); // capacity turns to 14
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 0);
-
-    v1.insert(v1.end() - 2, v1.begin(), v1.begin() + 2);
-    ASSERT_EQ(ConstructAndAssignCounter::copy(), 2);
-}
-
-TEST(vector_tests, vector_bool) {
+TEST(vector, vector_bool) {
     std::initializer_list<bool> il{true, false, false, true, true};
-    ciel::vector<bool> v{true, false, false, true, true};
+    vector<bool> v{true, false, false, true, true};
 
     ASSERT_TRUE(std::equal(il.begin(), il.end(), v.begin()));
 }
 
-TEST(vector_tests, insert_self_reference) {
+TEST(vector, insert_self_reference) {
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         ASSERT_EQ(v.size(), v.capacity());
 
         v.insert(v.begin() + 1, v[2]);
         ASSERT_EQ(v, std::initializer_list<Int>({0, 2, 1, 2, 3, 4}));
     }
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         v.reserve(10);
 
         v.insert(v.begin() + 1, v[2]);
         ASSERT_EQ(v, std::initializer_list<Int>({0, 2, 1, 2, 3, 4}));
     }
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         v.reserve(10);
 
         v.insert(v.begin() + 1, 5, v[2]);
@@ -308,23 +201,23 @@ TEST(vector_tests, insert_self_reference) {
     }
 }
 
-TEST(vector_tests, assign_self_reference) {
+TEST(vector, assign_self_reference) {
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         ASSERT_EQ(v.size(), v.capacity());
 
         v.assign(2, v[2]);
         ASSERT_EQ(v, std::initializer_list<Int>({2, 2}));
     }
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         ASSERT_EQ(v.size(), v.capacity());
 
         v.assign(6, v[2]);
         ASSERT_EQ(v, std::initializer_list<Int>({2, 2, 2, 2, 2, 2}));
     }
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         v.reserve(10);
 
         v.assign(6, v[2]);
@@ -332,9 +225,9 @@ TEST(vector_tests, assign_self_reference) {
     }
 }
 
-TEST(vector_tests, resize_self_reference) {
+TEST(vector, resize_self_reference) {
     {
-        ciel::vector<Int> v{0, 1, 2, 3, 4};
+        vector<Int> v{0, 1, 2, 3, 4};
         ASSERT_EQ(v.size(), v.capacity());
 
         v.resize(6, v[2]);

@@ -71,9 +71,9 @@ public:
 #ifndef __clang__ // clang is unhappy about this.
 CIEL_NODISCARD inline void*
 operator new(const size_t count) {
-    const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), ciel::max_align);
-    CIEL_POSTCONDITION(extra >= ciel::max_align);
-    CIEL_POSTCONDITION(extra % ciel::max_align == 0);
+    const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), max_align);
+    CIEL_POSTCONDITION(extra >= max_align);
+    CIEL_POSTCONDITION(extra % max_align == 0);
 
     void* ptr = std::malloc(count + extra);
     if (ptr == nullptr) {
@@ -86,7 +86,7 @@ operator new(const size_t count) {
 
     ptr = (void*)((uintptr_t)ptr + extra);
 
-    CIEL_POSTCONDITION(ciel::is_aligned(ptr, ciel::max_align));
+    CIEL_POSTCONDITION(ciel::is_aligned(ptr, max_align));
     return ptr;
 }
 
@@ -101,16 +101,16 @@ operator delete(void* ptr) noexcept {
         return;
     }
 
-    const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), ciel::max_align);
-    CIEL_POSTCONDITION(extra >= ciel::max_align);
-    CIEL_POSTCONDITION(extra % ciel::max_align == 0);
+    const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), max_align);
+    CIEL_POSTCONDITION(extra >= max_align);
+    CIEL_POSTCONDITION(extra % max_align == 0);
 
     ptr = (void*)((uintptr_t)ptr - extra);
 
     HeapMemoryListNode* node = static_cast<HeapMemoryListNode*>(ptr);
     node->pop();
 
-    CIEL_POSTCONDITION(ciel::is_aligned(ptr, ciel::max_align));
+    CIEL_POSTCONDITION(ciel::is_aligned(ptr, max_align));
     std::free(ptr);
 }
 

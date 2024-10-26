@@ -13,7 +13,7 @@ NAMESPACE_CIEL_BEGIN
 // Simulate input_iterator using T array base.
 
 template<class T>
-class InputIterator : public ciel::input_iterator_base<InputIterator<T>> {
+class InputIterator : public input_iterator_base<InputIterator<T>> {
 public:
     using difference_type   = ptrdiff_t;
     using value_type        = T;

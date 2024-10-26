@@ -1,7 +1,8 @@
-#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/inplace_vector.hpp>
+
+using namespace ciel;
 
 namespace {
 
@@ -29,43 +30,43 @@ struct NotTrivial {
 
 } // namespace
 
-TEST(inplace_vector_tests, constructors) {
-    const ciel::inplace_vector<int, 8> v1;
+TEST(inplace_vector, constructors) {
+    const inplace_vector<int, 8> v1;
     ASSERT_TRUE(v1.empty());
     ASSERT_EQ(v1.size(), 0);
     ASSERT_EQ(v1.capacity(), 8);
 
-    const ciel::inplace_vector<int, 8> v2(v1);
+    const inplace_vector<int, 8> v2(v1);
     ASSERT_TRUE(v2.empty());
 
-    const ciel::inplace_vector<int, 10> v3(10, 20);
+    const inplace_vector<int, 10> v3(10, 20);
     ASSERT_EQ(v3.size(), 10);
 
-    const ciel::inplace_vector<int, 15> v4(15);
+    const inplace_vector<int, 15> v4(15);
     ASSERT_EQ(v4.size(), 15);
 
-    ciel::inplace_vector<int, 15> v5(v4);
+    inplace_vector<int, 15> v5(v4);
     ASSERT_EQ(v5.size(), 15);
 
-    const ciel::inplace_vector<int, 15> v6(std::move(v5));
+    const inplace_vector<int, 15> v6(std::move(v5));
     ASSERT_EQ(v6.size(), 15);
 
-    const ciel::inplace_vector<int, 5> v7({1, 2, 3, 4, 5});
+    const inplace_vector<int, 5> v7({1, 2, 3, 4, 5});
     ASSERT_EQ(v7.size(), 5);
 
-    const ciel::inplace_vector<int, 8> v8(0, 10);
+    const inplace_vector<int, 8> v8(0, 10);
     ASSERT_TRUE(v8.empty());
 
-    const ciel::inplace_vector<int, 8> v9(0);
+    const inplace_vector<int, 8> v9(0);
     ASSERT_TRUE(v9.empty());
 
-    const ciel::inplace_vector<int, 8> v10(v7.begin(), v7.begin());
+    const inplace_vector<int, 8> v10(v7.begin(), v7.begin());
     ASSERT_TRUE(v10.empty());
 }
 
-TEST(inplace_vector_tests, assignments) {
-    ciel::inplace_vector<int, 10> v1({1, 2, 3, 4, 5});
-    ciel::inplace_vector<int, 10> v2{};
+TEST(inplace_vector, assignments) {
+    inplace_vector<int, 10> v1({1, 2, 3, 4, 5});
+    inplace_vector<int, 10> v2{};
 
     v2 = std::move(v1);
     {
@@ -73,7 +74,7 @@ TEST(inplace_vector_tests, assignments) {
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v2.begin()));
     }
 
-    ciel::inplace_vector<int, 10> v3{};
+    inplace_vector<int, 10> v3{};
     v3 = v2;
     ASSERT_EQ(v2, v3);
 
@@ -92,8 +93,8 @@ TEST(inplace_vector_tests, assignments) {
     }
 }
 
-TEST(inplace_vector_tests, at) {
-    const ciel::inplace_vector<size_t, 6> v1({0, 1, 2, 3, 4, 5});
+TEST(inplace_vector, at) {
+    const inplace_vector<size_t, 6> v1({0, 1, 2, 3, 4, 5});
     for (size_t i = 0; i < v1.size(); ++i) {
         ASSERT_EQ(v1[i], i);
     }
@@ -106,9 +107,9 @@ TEST(inplace_vector_tests, at) {
 #endif
 }
 
-TEST(inplace_vector_tests, push_and_pop) {
+TEST(inplace_vector, push_and_pop) {
     // empty
-    ciel::inplace_vector<int, 8> v1;
+    inplace_vector<int, 8> v1;
     ASSERT_EQ(v1.emplace_back(0), 0);
 
     v1.push_back(1);
@@ -118,7 +119,7 @@ TEST(inplace_vector_tests, push_and_pop) {
         ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
     }
 
-    ciel::inplace_vector<int, 16> v2({0, 1, 2, 3, 4});
+    inplace_vector<int, 16> v2({0, 1, 2, 3, 4});
     ASSERT_EQ(v2.emplace_back(5), 5);
 
     ASSERT_EQ(v2.emplace_back(6), 6);
@@ -138,8 +139,8 @@ TEST(inplace_vector_tests, push_and_pop) {
     ASSERT_EQ(v2.back(), 2);
 }
 
-TEST(inplace_vector_tests, resize) {
-    ciel::inplace_vector<int, 16> v1(10, 5);
+TEST(inplace_vector, resize) {
+    inplace_vector<int, 16> v1(10, 5);
     ASSERT_EQ(v1.size(), 10);
     for (const int i : v1) {
         ASSERT_EQ(i, 5);
@@ -163,8 +164,8 @@ TEST(inplace_vector_tests, resize) {
     }
 }
 
-TEST(inplace_vector_tests, emplace_il) {
-    ciel::inplace_vector<ciel::inplace_vector<int, 8>, 8> v;
+TEST(inplace_vector, emplace_il) {
+    inplace_vector<inplace_vector<int, 8>, 8> v;
 
     v.emplace_back({1, 2});
 
@@ -173,21 +174,21 @@ TEST(inplace_vector_tests, emplace_il) {
     // v.emplace_back({}); // error: we can't deduce type for this.
 
     ASSERT_EQ(v.size(), 2);
-    using inplace_vector_int_8 = ciel::inplace_vector<int, 8>;
+    using inplace_vector_int_8 = inplace_vector<int, 8>;
     ASSERT_EQ(v[0], inplace_vector_int_8({1, 2}));
     ASSERT_EQ(v[1], inplace_vector_int_8({5, 6}));
 }
 
-TEST(inplace_vector_tests, trivial) {
-    static_assert(std::is_trivially_copy_constructible<ciel::inplace_vector<Trivial, 8>>::value, "");
-    static_assert(std::is_trivially_move_constructible<ciel::inplace_vector<Trivial, 8>>::value, "");
-    static_assert(std::is_trivially_copy_assignable<ciel::inplace_vector<Trivial, 8>>::value, "");
-    static_assert(std::is_trivially_move_assignable<ciel::inplace_vector<Trivial, 8>>::value, "");
-    static_assert(std::is_trivially_destructible<ciel::inplace_vector<Trivial, 8>>::value, "");
+TEST(inplace_vector, trivial) {
+    static_assert(std::is_trivially_copy_constructible<inplace_vector<Trivial, 8>>::value, "");
+    static_assert(std::is_trivially_move_constructible<inplace_vector<Trivial, 8>>::value, "");
+    static_assert(std::is_trivially_copy_assignable<inplace_vector<Trivial, 8>>::value, "");
+    static_assert(std::is_trivially_move_assignable<inplace_vector<Trivial, 8>>::value, "");
+    static_assert(std::is_trivially_destructible<inplace_vector<Trivial, 8>>::value, "");
 
-    static_assert(not std::is_trivially_copy_constructible<ciel::inplace_vector<NotTrivial, 8>>::value, "");
-    static_assert(not std::is_trivially_move_constructible<ciel::inplace_vector<NotTrivial, 8>>::value, "");
-    static_assert(not std::is_trivially_copy_assignable<ciel::inplace_vector<NotTrivial, 8>>::value, "");
-    static_assert(not std::is_trivially_move_assignable<ciel::inplace_vector<NotTrivial, 8>>::value, "");
-    static_assert(not std::is_trivially_destructible<ciel::inplace_vector<NotTrivial, 8>>::value, "");
+    static_assert(not std::is_trivially_copy_constructible<inplace_vector<NotTrivial, 8>>::value, "");
+    static_assert(not std::is_trivially_move_constructible<inplace_vector<NotTrivial, 8>>::value, "");
+    static_assert(not std::is_trivially_copy_assignable<inplace_vector<NotTrivial, 8>>::value, "");
+    static_assert(not std::is_trivially_move_assignable<inplace_vector<NotTrivial, 8>>::value, "");
+    static_assert(not std::is_trivially_destructible<inplace_vector<NotTrivial, 8>>::value, "");
 }

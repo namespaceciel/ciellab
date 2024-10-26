@@ -1,4 +1,3 @@
-#include "tools.h"
 #include <gtest/gtest.h>
 
 #include <ciel/atomic_shared_ptr.hpp>
@@ -10,27 +9,27 @@
 
 using namespace ciel;
 
-TEST(atomic_shared_ptr_test_suite, construction_empty) {
-    ciel::atomic_shared_ptr<int> p;
+TEST(atomic_shared_ptr, construction_empty) {
+    atomic_shared_ptr<int> p;
 
     auto s = p.load();
     ASSERT_FALSE(s);
     ASSERT_EQ(s, nullptr);
 }
 
-TEST(atomic_shared_ptr_test_suite, construction_value) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{std::move(s)};
+TEST(atomic_shared_ptr, construction_value) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{std::move(s)};
 
     auto s2 = p.load();
     ASSERT_EQ(s2.use_count(), 2);
     ASSERT_EQ(*s2, 5);
 }
 
-TEST(atomic_shared_ptr_test_suite, store_copy) {
-    ciel::atomic_shared_ptr<int> p;
+TEST(atomic_shared_ptr, store_copy) {
+    atomic_shared_ptr<int> p;
 
-    ciel::shared_ptr<int> s{new int(5)};
+    shared_ptr<int> s{new int(5)};
     ASSERT_EQ(s.use_count(), 1);
     p.store(s);
     ASSERT_EQ(s.use_count(), 2);
@@ -40,10 +39,10 @@ TEST(atomic_shared_ptr_test_suite, store_copy) {
     ASSERT_EQ(*s2, 5);
 }
 
-TEST(atomic_shared_ptr_test_suite, store_move) {
-    ciel::atomic_shared_ptr<int> p;
+TEST(atomic_shared_ptr, store_move) {
+    atomic_shared_ptr<int> p;
 
-    ciel::shared_ptr<int> s{new int(5)};
+    shared_ptr<int> s{new int(5)};
     auto s2 = s;
     ASSERT_EQ(s.use_count(), 2);
 
@@ -53,106 +52,106 @@ TEST(atomic_shared_ptr_test_suite, store_move) {
     ASSERT_EQ(s.use_count(), 2);
 }
 
-TEST(atomic_shared_ptr_test_suite, load) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{std::move(s)};
+TEST(atomic_shared_ptr, load) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{std::move(s)};
     ASSERT_FALSE(s);
     ASSERT_EQ(s, nullptr);
 
-    ciel::shared_ptr<int> l = p.load();
+    shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 5);
     ASSERT_EQ(l.use_count(), 2);
 }
 
-TEST(atomic_shared_ptr_test_suite, exchange) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{std::move(s)};
+TEST(atomic_shared_ptr, exchange) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{std::move(s)};
     ASSERT_FALSE(s);
     ASSERT_EQ(s, nullptr);
 
-    ciel::shared_ptr<int> s2{new int(42)};
-    ciel::shared_ptr<int> s3 = p.exchange(std::move(s2));
+    shared_ptr<int> s2{new int(42)};
+    shared_ptr<int> s3 = p.exchange(std::move(s2));
 
     ASSERT_EQ(*s3, 5);
     ASSERT_EQ(s3.use_count(), 1);
 
-    ciel::shared_ptr<int> l = p.load();
+    shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 42);
     ASSERT_EQ(l.use_count(), 2);
 }
 
-TEST(atomic_shared_ptr_test_suite, compare_exchange_weak_true) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{s};
+TEST(atomic_shared_ptr, compare_exchange_weak_true) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{s};
     ASSERT_TRUE(s);
     ASSERT_EQ(s.use_count(), 2);
 
-    ciel::shared_ptr<int> s2{new int(42)};
+    shared_ptr<int> s2{new int(42)};
     bool result = p.compare_exchange_weak(s, std::move(s2));
     ASSERT_TRUE(result);
     ASSERT_FALSE(s2);
     ASSERT_EQ(s2, nullptr);
 
-    ciel::shared_ptr<int> l = p.load();
+    shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 42);
     ASSERT_EQ(l.use_count(), 2);
 }
 
-TEST(atomic_shared_ptr_test_suite, compare_exchange_weak_false) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{s};
+TEST(atomic_shared_ptr, compare_exchange_weak_false) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{s};
     ASSERT_TRUE(s);
     ASSERT_EQ(s.use_count(), 2);
 
-    ciel::shared_ptr<int> s2{new int(42)};
-    ciel::shared_ptr<int> s3{new int(5)};
+    shared_ptr<int> s2{new int(42)};
+    shared_ptr<int> s3{new int(5)};
     bool result = p.compare_exchange_weak(s3, std::move(s2));
     ASSERT_FALSE(result);
 
-    ciel::shared_ptr<int> l = p.load();
+    shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 5);
     ASSERT_EQ(l.use_count(), 4);
 }
 
-TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_true) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{s};
+TEST(atomic_shared_ptr, compare_exchange_strong_true) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{s};
     ASSERT_TRUE(s);
     ASSERT_EQ(s.use_count(), 2);
 
-    ciel::shared_ptr<int> s2{new int(42)};
+    shared_ptr<int> s2{new int(42)};
     bool result = p.compare_exchange_strong(s, std::move(s2));
     ASSERT_TRUE(result);
     ASSERT_FALSE(s2);
     ASSERT_EQ(s2, nullptr);
 
-    ciel::shared_ptr<int> l = p.load();
+    shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 42);
     ASSERT_EQ(l.use_count(), 2);
 }
 
-TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
-    ciel::shared_ptr<int> s{new int(5)};
-    ciel::atomic_shared_ptr<int> p{s};
+TEST(atomic_shared_ptr, compare_exchange_strong_false) {
+    shared_ptr<int> s{new int(5)};
+    atomic_shared_ptr<int> p{s};
     ASSERT_TRUE(s);
     ASSERT_EQ(s.use_count(), 2);
 
-    ciel::shared_ptr<int> s2{new int(42)};
-    ciel::shared_ptr<int> s3{new int(5)};
+    shared_ptr<int> s2{new int(42)};
+    shared_ptr<int> s3{new int(5)};
     bool result = p.compare_exchange_strong(s3, std::move(s2));
     ASSERT_FALSE(result);
 
-    ciel::shared_ptr<int> l = p.load();
+    shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 5);
     ASSERT_EQ(l.use_count(), 4);
 }
 
 // FIXME
-// TEST(atomic_shared_ptr_test_suite, concurrent_store_and_loads) {
+// TEST(atomic_shared_ptr, concurrent_store_and_loads) {
 //    constexpr size_t threads_num = 64;
 //    constexpr size_t operations_num = 10000;
 //
-//    ciel::atomic_shared_ptr<size_t> s;
+//    atomic_shared_ptr<size_t> s;
 //    std::latch go{threads_num};
 //
 //    std::vector<std::thread> consumers;
@@ -180,7 +179,7 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 //            go.arrive_and_wait();
 //
 //            for (size_t j = 0; j < operations_num; ++j) {
-//                s.store(ciel::make_shared<size_t>(123));
+//                s.store(make_shared<size_t>(123));
 //            }
 //        });
 //    }
@@ -194,11 +193,11 @@ TEST(atomic_shared_ptr_test_suite, compare_exchange_strong_false) {
 //    }
 //}
 
-TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
+TEST(atomic_shared_ptr, concurrent_exchange) {
     constexpr size_t threads_num    = 64;
     constexpr size_t operations_num = 200;
 
-    ciel::atomic_shared_ptr<size_t> s(ciel::make_shared<size_t>(0));
+    atomic_shared_ptr<size_t> s(make_shared<size_t>(0));
     SimpleLatch go{threads_num};
 
     std::vector<size_t> local_sums_produced(threads_num);
@@ -215,10 +214,10 @@ TEST(atomic_shared_ptr_test_suite, concurrent_exchange) {
                 size_t local_sum_consumed = 0;
 
                 for (size_t j = 0; j < operations_num; ++j) {
-                    ciel::shared_ptr<size_t> new_sp = ciel::make_shared<size_t>(std::rand());
+                    shared_ptr<size_t> new_sp = make_shared<size_t>(std::rand());
                     local_sum_produced += *new_sp;
 
-                    ciel::shared_ptr<size_t> old_sp = s.exchange(std::move(new_sp));
+                    shared_ptr<size_t> old_sp = s.exchange(std::move(new_sp));
                     ASSERT_TRUE(old_sp);
                     local_sum_consumed += *old_sp;
                 }

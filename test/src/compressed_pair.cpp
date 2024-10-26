@@ -11,7 +11,7 @@ struct Empty {};
 
 } // namespace
 
-TEST(compressed_pair_tests, constructor) {
+TEST(compressed_pair, constructor) {
     using IntPair = compressed_pair<int, int>;
 
     IntPair p1;
@@ -25,7 +25,7 @@ TEST(compressed_pair_tests, constructor) {
     ASSERT_EQ(p1.second(), 0);
 }
 
-TEST(compressed_pair_tests, default_init) {
+TEST(compressed_pair, default_init) {
     using IntPair = compressed_pair<int, int>;
 
     IntPair p1;
@@ -45,13 +45,13 @@ TEST(compressed_pair_tests, default_init) {
     ASSERT_EQ(p1.second(), 3);
 }
 
-TEST(compressed_pair_tests, both_same_empty_bases) {
+TEST(compressed_pair, both_same_empty_bases) {
     compressed_pair<Empty, Empty> p;
     static_assert(sizeof(p) == 2, "");
 }
 
 #ifdef CIEL_HAS_EXCEPTIONS
-TEST(compressed_pair_tests, exception_safety) {
+TEST(compressed_pair, exception_safety) {
     using EG = ExceptionGenerator<
         2, DefaultConstructor | CopyConstructor | MoveConstructor | CopyAssignment | MoveAssignment, false>;
     EG::reset();

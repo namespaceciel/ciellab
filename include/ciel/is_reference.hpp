@@ -23,8 +23,8 @@ struct is_const_rvalue_reference<const T&&> : std::true_type {};
 
 // is_const_reference
 template<class T>
-struct is_const_reference : std::integral_constant<bool, ciel::is_const_lvalue_reference<T>::value
-                                                             || ciel::is_const_rvalue_reference<T>::value> {};
+struct is_const_reference
+    : std::integral_constant<bool, is_const_lvalue_reference<T>::value || is_const_rvalue_reference<T>::value> {};
 
 NAMESPACE_CIEL_END
 

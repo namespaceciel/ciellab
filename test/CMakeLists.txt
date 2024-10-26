@@ -5,19 +5,17 @@ set(CMAKE_BUILD_TYPE "Debug")
 
 set(SOURCES
     src/main.cpp
-    src/tools.cpp
     src/finally.cpp
-    src/list_tests.cpp
-    src/split_buffer_tests.cpp
-    src/vector_tests.cpp
-    src/exception_safety_tests.cpp
-    src/shared_ptr_tests.cpp
-    src/atomic_shared_ptr_tests.cpp
-    src/move_proxy_tests.cpp
-    src/observer_ptr_tests.cpp
-    src/type_traits_tests.cpp
-    src/function_tests.cpp
-    src/inplace_vector_tests.cpp
+    src/list.cpp
+    src/split_buffer.cpp
+    src/vector.cpp
+    src/exception_safety.cpp
+    src/shared_ptr.cpp
+    src/atomic_shared_ptr.cpp
+    src/observer_ptr.cpp
+    src/worth_move.cpp
+    src/function.cpp
+    src/inplace_vector.cpp
     src/compressed_pair.cpp
     src/allocator_traits.cpp
     src/vector.constructor.cpp

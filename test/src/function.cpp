@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <ciel/function.hpp>
+
 #include <deque>
 
-#include <ciel/function.hpp>
+using namespace ciel;
 
 namespace {
 
@@ -16,34 +18,34 @@ test2(double, float, long) noexcept {
 
 } // namespace
 
-TEST(function_tests, constructors_and_assignments) {
-    const ciel::function<void()> f0{nullptr};
+TEST(function, constructors_and_assignments) {
+    const function<void()> f0{nullptr};
 
 #ifdef CIEL_HAS_EXCEPTIONS
     ASSERT_THROW(f0(), std::bad_function_call);
 #endif
 
-    const ciel::function<void()> f1{test1};
+    const function<void()> f1{test1};
     f1();
 
-    const ciel::function<int(double, float, long)> f2{test2};
+    const function<int(double, float, long)> f2{test2};
     static_assert(std::is_same<decltype(f2(1.0, 1.f, 1)), int>::value, "");
     CIEL_UNUSED(f2(1.0, 1.f, 1));
 
-    ciel::function<void()> f3{[] {}};
+    function<void()> f3{[] {}};
     f3();
 
     int i = 1;
-    ciel::function<int()> f4{[&] {
+    function<int()> f4{[&] {
         return i;
     }};
     static_assert(std::is_same<decltype(f4()), int>::value, "");
     CIEL_UNUSED(f4());
 
-    const ciel::function<int()> f5{f4};
+    const function<int()> f5{f4};
     CIEL_UNUSED(f5());
 
-    ciel::function<int()> f6{std::move(f4)};
+    function<int()> f6{std::move(f4)};
     ASSERT_FALSE(f4);
     CIEL_UNUSED(f6());
 
@@ -61,9 +63,9 @@ TEST(function_tests, constructors_and_assignments) {
     ASSERT_FALSE(f6);
     CIEL_UNUSED(f4());
 
-    static_assert(not ciel::is_small_object<std::deque<int>>::value, "");
+    static_assert(not is_small_object<std::deque<int>>::value, "");
     std::deque<int> deque{1, 2, 3, 4, 5};
-    ciel::function<void()> f7{[deque] {
+    function<void()> f7{[deque] {
         CIEL_UNUSED(deque);
     }};
     f7();
@@ -84,7 +86,7 @@ TEST(function_tests, constructors_and_assignments) {
     f7();
 }
 
-TEST(function_tests, swap) {
+TEST(function, swap) {
     const std::deque<int> d{1, 2, 3, 4, 5};
     const std::vector<int> v{6, 7, 8, 9, 10};
     auto large_lambda = [d] {
@@ -94,8 +96,8 @@ TEST(function_tests, swap) {
         return v;
     };
 
-    ciel::function<std::vector<int>()> large_function{large_lambda};
-    ciel::function<std::vector<int>()> small_function{ciel::assume_trivially_relocatable, small_lambda};
+    function<std::vector<int>()> large_function{large_lambda};
+    function<std::vector<int>()> small_function{assume_trivially_relocatable, small_lambda};
 
     ASSERT_EQ(large_function(), std::vector<int>({1, 2, 3, 4, 5}));
     ASSERT_EQ(small_function(), std::vector<int>({6, 7, 8, 9, 10}));

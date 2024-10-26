@@ -24,7 +24,7 @@ private:
         uintptr_t control_block_ : 48;
         size_t local_count_      : 16; // TODO: Use spin_lock as a backup when local_count_ is beyond 2 ^ 16
 
-        counted_control_block(ciel::shared_weak_count* other, const size_t local_count = 0) noexcept
+        counted_control_block(shared_weak_count* other, const size_t local_count = 0) noexcept
             : control_block_((uintptr_t)other), local_count_(local_count) {
             CIEL_PRECONDITION((uintptr_t)other < (1ULL << 48));
         }
@@ -72,8 +72,8 @@ private:
         // Already pointing to another control_block by store().
         // store() already help us update the remote ref count, so we just decrement that.
         if (old_control_block.control_block_ != prev_control_block.control_block_
-            && (ciel::shared_weak_count*)prev_control_block.control_block_ != nullptr) {
-            ((ciel::shared_weak_count*)prev_control_block.control_block_)->shared_count_release();
+            && (shared_weak_count*)prev_control_block.control_block_ != nullptr) {
+            ((shared_weak_count*)prev_control_block.control_block_)->shared_count_release();
         }
     }
 
@@ -85,7 +85,7 @@ public:
         : counted_control_block_(nullptr) {}
 
     // Not an atomic operation, like any other atomics.
-    atomic_shared_ptr(ciel::shared_ptr<T> desired) noexcept
+    atomic_shared_ptr(shared_ptr<T> desired) noexcept
         : counted_control_block_(desired.control_block_) {
         desired.clear();
     }
@@ -100,7 +100,7 @@ public:
     }
 
     void
-    operator=(ciel::shared_ptr<T> desired) noexcept {
+    operator=(shared_ptr<T> desired) noexcept {
         store(desired);
     }
 
@@ -117,30 +117,29 @@ public:
     }
 
     void
-    store(ciel::shared_ptr<T> desired) noexcept {
+    store(shared_ptr<T> desired) noexcept {
         counted_control_block new_control_block{desired.control_block_};
         desired.clear();
 
         counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
         // Help inflight loads to update those local refcounts to the global.
-        if ((ciel::shared_weak_count*)old_control_block.control_block_ != nullptr) {
-            ((ciel::shared_weak_count*)old_control_block.control_block_)
-                ->shared_add_ref(old_control_block.local_count_);
-            ((ciel::shared_weak_count*)old_control_block.control_block_)->shared_count_release();
+        if ((shared_weak_count*)old_control_block.control_block_ != nullptr) {
+            ((shared_weak_count*)old_control_block.control_block_)->shared_add_ref(old_control_block.local_count_);
+            ((shared_weak_count*)old_control_block.control_block_)->shared_count_release();
         }
     }
 
-    CIEL_NODISCARD ciel::shared_ptr<T>
+    CIEL_NODISCARD shared_ptr<T>
     load() const noexcept {
         // Atomically increment local ref count, so that store() after this can be safe.
         counted_control_block cur_control_block = increment_local_ref_count();
 
-        if ((ciel::shared_weak_count*)cur_control_block.control_block_ != nullptr) {
-            ((ciel::shared_weak_count*)cur_control_block.control_block_)->shared_add_ref();
+        if ((shared_weak_count*)cur_control_block.control_block_ != nullptr) {
+            ((shared_weak_count*)cur_control_block.control_block_)->shared_add_ref();
         }
 
-        ciel::shared_ptr<T> result{(ciel::shared_weak_count*)cur_control_block.control_block_}; // private constructor
+        shared_ptr<T> result{(shared_weak_count*)cur_control_block.control_block_}; // private constructor
 
         decrement_local_ref_count(cur_control_block);
 
@@ -148,28 +147,28 @@ public:
     }
 
     CIEL_NODISCARD
-    operator ciel::shared_ptr<T>() const noexcept {
+    operator shared_ptr<T>() const noexcept {
         return load();
     }
 
-    CIEL_NODISCARD ciel::shared_ptr<T>
-    exchange(ciel::shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD shared_ptr<T>
+    exchange(shared_ptr<T> desired) noexcept {
         counted_control_block new_control_block(desired.control_block_);
         desired.clear();
 
         counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
-        return ciel::shared_ptr<T>((ciel::shared_weak_count*)old_control_block.control_block_);
+        return shared_ptr<T>((shared_weak_count*)old_control_block.control_block_);
     }
 
     CIEL_NODISCARD bool
-    compare_exchange_weak(ciel::shared_ptr<T>& expected, ciel::shared_ptr<T> desired) noexcept {
+    compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         counted_control_block expected_control_block(expected.control_block_);
         counted_control_block desired_control_block(desired.control_block_);
 
         if (counted_control_block_.compare_exchange_weak(expected_control_block, desired_control_block)) {
-            if ((ciel::shared_weak_count*)expected_control_block.control_block_ != nullptr) {
-                ((ciel::shared_weak_count*)expected_control_block.control_block_)->shared_count_release();
+            if ((shared_weak_count*)expected_control_block.control_block_ != nullptr) {
+                ((shared_weak_count*)expected_control_block.control_block_)->shared_count_release();
             }
 
             desired.clear();
@@ -181,7 +180,7 @@ public:
     }
 
     CIEL_NODISCARD bool
-    compare_exchange_strong(ciel::shared_ptr<T>& expected, ciel::shared_ptr<T> desired) noexcept {
+    compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         counted_control_block expected_control_block(expected.control_block_);
 
         do {
