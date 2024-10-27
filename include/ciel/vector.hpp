@@ -45,7 +45,7 @@ private:
 
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, value_init};
+    compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
 
     static constexpr bool should_pass_by_value
         = std::is_trivially_copyable<value_type>::value && sizeof(value_type) <= 16;

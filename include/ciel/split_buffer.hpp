@@ -64,7 +64,7 @@ private:
     pointer begin_cap_{nullptr};
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, value_init};
+    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init};
 
     template<class, class>
     friend class split_buffer;
