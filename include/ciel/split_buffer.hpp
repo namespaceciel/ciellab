@@ -7,6 +7,7 @@
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
 #include <ciel/cstring.hpp>
+#include <ciel/do_if_noexcept.hpp>
 #include <ciel/is_range.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 #include <ciel/iterator_category.hpp>
@@ -257,19 +258,11 @@ private:
 
             } else {
                 for (pointer p = pos - 1; p >= begin_; --p) {
-#ifdef CIEL_HAS_EXCEPTIONS
-                    sb.unchecked_emplace_front_aux(std::move_if_noexcept(*p));
-#else
-                    sb.unchecked_emplace_front_aux(std::move(*p));
-#endif
+                    sb.unchecked_emplace_front_aux(ciel::move_if_noexcept(*p));
                 }
 
                 for (pointer p = pos; p < end_; ++p) {
-#ifdef CIEL_HAS_EXCEPTIONS
-                    sb.unchecked_emplace_back_aux(std::move_if_noexcept(*p));
-#else
-                    sb.unchecked_emplace_back_aux(std::move(*p));
-#endif
+                    sb.unchecked_emplace_back_aux(ciel::move_if_noexcept(*p));
                 }
 
                 clear();

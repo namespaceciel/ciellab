@@ -9,6 +9,7 @@ set(SOURCES
     src/atomic_shared_ptr.cpp
     src/can_be_destroyed_from_base.cpp
     src/compressed_pair.cpp
+    src/do_if_noexcept.cpp
     src/exception_safety.cpp
     src/finally.cpp
     src/function.cpp
