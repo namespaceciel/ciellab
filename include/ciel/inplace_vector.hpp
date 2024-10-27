@@ -313,7 +313,7 @@ private:
     reference
     emplace_back_aux(Args&&... args) {
         if (size() == capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
 
         } else {
             return unchecked_emplace_back(std::forward<Args>(args)...);
@@ -337,7 +337,7 @@ private:
     void
     assign(Iter first, Iter last, const size_type count) {
         if (capacity() < count) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         if (size() > count) {
@@ -361,7 +361,7 @@ public:
     inplace_vector(const size_type count, const value_type& value)
         : inplace_vector() {
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         construct_at_end(count, value);
@@ -370,7 +370,7 @@ public:
     explicit inplace_vector(const size_type count)
         : inplace_vector() {
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         construct_at_end(count);
@@ -390,7 +390,7 @@ public:
         : inplace_vector() {
         const size_type count = std::distance(first, last);
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         construct_at_end(first, last);
@@ -417,7 +417,7 @@ public:
         : inplace_vector() {
         const size_type count = rg.size();
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         construct_at_end(rg.begin(), rg.end());
@@ -430,7 +430,7 @@ public:
         : inplace_vector() {
         const size_type count = rg.size();
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
@@ -456,7 +456,7 @@ public:
     void
     assign(const size_type count, const value_type& value) {
         if (capacity() < count) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         if (size() > count) {
@@ -520,7 +520,7 @@ public:
     CIEL_NODISCARD reference
     at(const size_type pos) {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
+            CIEL_THROW_EXCEPTION(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
         }
 
         return begin_()[pos];
@@ -529,7 +529,7 @@ public:
     CIEL_NODISCARD const_reference
     at(const size_type pos) const {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
+            CIEL_THROW_EXCEPTION(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
         }
 
         return begin_()[pos];
@@ -670,7 +670,7 @@ public:
     void
     resize(const size_type count) {
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         if (size() >= count) {
@@ -684,7 +684,7 @@ public:
     void
     resize(const size_type count, const value_type& value) {
         if CIEL_UNLIKELY (count > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
 
         if (size() >= count) {
@@ -698,7 +698,7 @@ public:
     static CIEL_CONSTEXPR_SINCE_CXX14 void
     reserve(const size_type new_cap) {
         if (new_cap > capacity()) {
-            ciel::throw_exception(std::bad_alloc{});
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
     }
 

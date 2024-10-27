@@ -15,6 +15,16 @@
 #define CIEL_HAS_EXCEPTIONS
 #endif
 
+#ifdef CIEL_HAS_EXCEPTIONS
+#define CIEL_THROW_EXCEPTION(e) throw e
+#else
+#define CIEL_THROW_EXCEPTION(e)        \
+    do {                               \
+        std::cerr << e.what() << "\n"; \
+        std::terminate();              \
+    } while (false)
+#endif
+
 // rtti
 #ifdef __cpp_rtti
 #define CIEL_HAS_RTTI
@@ -147,17 +157,6 @@ unreachable() noexcept {
     __assume(false);
 #else                                        // GCC, Clang
     __builtin_unreachable();
-#endif
-}
-
-template<class Exception, typename std::enable_if<std::is_base_of<std::exception, Exception>::value, int>::type = 0>
-[[noreturn]] inline void
-throw_exception(Exception&& e) {
-#ifdef CIEL_HAS_EXCEPTIONS
-    throw e;
-#else
-    std::cerr << e.what() << "\n";
-    std::terminate();
 #endif
 }
 

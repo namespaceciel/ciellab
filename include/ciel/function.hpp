@@ -445,7 +445,7 @@ public:
         const base_type* p = ptr();
 
         if CIEL_UNLIKELY (p == nullptr) {
-            ciel::throw_exception(std::bad_function_call());
+            CIEL_THROW_EXCEPTION(std::bad_function_call());
         }
 
         return (*p)(std::forward<Args>(args)...);

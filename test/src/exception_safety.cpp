@@ -22,7 +22,7 @@ bool can_throw; // set this false to renew state_holder
 void
 may_throw() {
     if (can_throw && g() % 5 == 0) {
-        ciel::throw_exception(std::exception{});
+        CIEL_THROW_EXCEPTION(std::exception{});
     }
 }
 

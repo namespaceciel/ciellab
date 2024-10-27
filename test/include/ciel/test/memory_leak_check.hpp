@@ -77,7 +77,7 @@ operator new(const size_t count) {
 
     void* ptr = std::malloc(count + extra);
     if (ptr == nullptr) {
-        ciel::throw_exception(std::bad_alloc{});
+        CIEL_THROW_EXCEPTION(std::bad_alloc{});
     }
 
     HeapMemoryListNode* node = static_cast<HeapMemoryListNode*>(ptr);

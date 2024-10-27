@@ -458,7 +458,7 @@ public:
           control_block_(r.control_block_ ? (r.control_block_->increment_if_not_zero() ? r.control_block_ : nullptr)
                                           : nullptr) {
         if (control_block_ == nullptr) {
-            ciel::throw_exception(std::bad_weak_ptr());
+            CIEL_THROW_EXCEPTION(std::bad_weak_ptr());
         }
     }
 

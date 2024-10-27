@@ -103,7 +103,7 @@ private:
         const size_type ms = max_size();
 
         if CIEL_UNLIKELY (new_size > ms) {
-            ciel::throw_exception(std::length_error("ciel::split_buffer reserving size is beyond max_size"));
+            CIEL_THROW_EXCEPTION(std::length_error("ciel::split_buffer reserving size is beyond max_size"));
         }
 
         const size_type cap = capacity();
@@ -846,7 +846,7 @@ public:
     CIEL_NODISCARD reference
     at(const size_type pos) {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::split_buffer"));
+            CIEL_THROW_EXCEPTION(std::out_of_range("pos is not within the range of ciel::split_buffer"));
         }
 
         return begin_[pos];
@@ -855,7 +855,7 @@ public:
     CIEL_NODISCARD const_reference
     at(const size_type pos) const {
         if CIEL_UNLIKELY (pos >= size()) {
-            ciel::throw_exception(std::out_of_range("pos is not within the range of ciel::split_buffer"));
+            CIEL_THROW_EXCEPTION(std::out_of_range("pos is not within the range of ciel::split_buffer"));
         }
 
         return begin_[pos];
