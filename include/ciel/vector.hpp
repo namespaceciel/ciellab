@@ -637,12 +637,12 @@ public:
 
     CIEL_NODISCARD T*
     data() noexcept {
-        return begin_;
+        return ciel::to_address(begin_);
     }
 
     CIEL_NODISCARD const T*
     data() const noexcept {
-        return begin_;
+        return ciel::to_address(begin_);
     }
 
     CIEL_NODISCARD iterator
