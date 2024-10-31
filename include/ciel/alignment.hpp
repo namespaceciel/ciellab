@@ -8,12 +8,21 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// is_pow2
+
+CIEL_NODISCARD inline bool
+is_pow2(const size_t x) noexcept {
+    CIEL_PRECONDITION(x != 0);
+
+    return (x & (x - 1)) == 0;
+}
+
 // is_aligned
 
 CIEL_NODISCARD inline bool
 is_aligned(void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
-    CIEL_PRECONDITION(alignment != 0);
+    CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
     return ((uintptr_t)ptr % alignment) == 0;
 }
@@ -22,32 +31,22 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
 
 CIEL_NODISCARD inline uintptr_t
 align_up(uintptr_t sz, const size_t alignment) noexcept {
-    CIEL_PRECONDITION(alignment != 0);
+    CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;
 
-    if CIEL_LIKELY ((alignment & mask) == 0) { // power of two?
-        return (sz + mask) & ~mask;
-
-    } else {
-        return ((sz + mask) / alignment) * alignment;
-    }
+    return (sz + mask) & ~mask;
 }
 
 // align_down
 
 CIEL_NODISCARD inline uintptr_t
 align_down(uintptr_t sz, const size_t alignment) noexcept {
-    CIEL_PRECONDITION(alignment != 0);
+    CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
-    uintptr_t mask = alignment - 1;
+    const uintptr_t mask = alignment - 1;
 
-    if CIEL_LIKELY ((alignment & mask) == 0) { // power of two?
-        return (sz & ~mask);
-
-    } else {
-        return ((sz / alignment) * alignment);
-    }
+    return sz & ~mask;
 }
 
 // max_align
