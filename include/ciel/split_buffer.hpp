@@ -117,12 +117,12 @@ private:
     }
 
     CIEL_NODISCARD bool
-    internal_value(const value_type& value) const noexcept {
+    internal_value(const value_type& value, pointer begin) const noexcept {
         if (should_pass_by_value) {
             return false;
         }
 
-        if CIEL_UNLIKELY (begin_ <= std::addressof(value) && std::addressof(value) < end_) {
+        if CIEL_UNLIKELY (begin <= std::addressof(value) && std::addressof(value) < end_) {
             return true;
         }
 
@@ -745,7 +745,7 @@ public:
     void
     assign(const size_type count, lvalue value) {
         if (back_spare() + size() < count) {
-            if (internal_value(value)) {
+            if (internal_value(value, begin_)) {
                 value_type copy = std::move(*(begin_ + (std::addressof(value) - begin_)));
                 reset(count);
                 construct_at_end(count, copy);

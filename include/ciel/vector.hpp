@@ -93,12 +93,12 @@ private:
     }
 
     CIEL_NODISCARD bool
-    internal_value(const value_type& value) const noexcept {
+    internal_value(const value_type& value, pointer begin) const noexcept {
         if (should_pass_by_value) {
             return false;
         }
 
-        if CIEL_UNLIKELY (begin_ <= std::addressof(value) && std::addressof(value) < end_) {
+        if CIEL_UNLIKELY (begin <= std::addressof(value) && std::addressof(value) < end_) {
             return true;
         }
 
@@ -491,7 +491,7 @@ public:
     void
     assign(const size_type count, lvalue value) {
         if (capacity() < count) {
-            if (internal_value(value)) {
+            if (internal_value(value, begin_)) {
                 value_type copy = std::move(*(begin_ + (std::addressof(value) - begin_)));
                 reset(count);
                 construct_at_end(count, copy);
@@ -854,7 +854,7 @@ public:
     insert(const_iterator p, lvalue value) {
         pointer pos = begin_ + (p - begin());
 
-        if (internal_value(value)) {
+        if (internal_value(value, pos)) {
             value_type copy = value;
             return emplace_impl(emplace_impl_callback{this}, pos, std::move(copy));
 
@@ -868,7 +868,7 @@ public:
     insert(const_iterator p, rvalue value) {
         pointer pos = begin_ + (p - begin());
 
-        if (internal_value(value)) {
+        if (internal_value(value, pos)) {
             value_type copy = std::move(value);
             return emplace_impl(emplace_impl_callback{this}, pos, std::move(copy));
 
@@ -1004,7 +1004,7 @@ public:
             swap_out_buffer(std::move(sb), pos);
 
         } else { // enough back space
-            if (internal_value(value)) {
+            if (internal_value(value, pos)) {
                 value_type copy = value;
                 insert_impl(pos, count, copy, count);
 
