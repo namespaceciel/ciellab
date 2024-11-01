@@ -221,6 +221,7 @@ private:
 
     union {
         value_type data_[Capacity];
+        unsigned char null_state_{};
     };
 
     CIEL_NODISCARD pointer

@@ -9,7 +9,7 @@ template<size_t size, size_t alignment>
 struct aligned_storage {
     union type {
         alignas(alignment) unsigned char buffer_[(size + alignment - 1) / alignment * alignment];
-        unsigned char do_not_use_this_;
+        unsigned char null_state_{};
     };
 
 }; // aligned_storage
