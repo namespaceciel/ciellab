@@ -22,9 +22,9 @@ add_subdirectory(third_party/ciellab)
 
 #### 1. We don't provide a specialization of `vector` for `bool`.
 
-#### 2. We don't perform trivial destructions, that is to say, range destructions for trivial types are effectively a no-op.
+#### 2. We don't support incomplete types, since we need to verify whether T is trivially copyable throughout the entire class.
 
-#### 3. We provide an `is_trivially_relocatable` trait, which defaults to `std::is_trivially_copyable` or `std::is_empty`. You can partially specialize this trait for specific classes. When it comes to operations like expansions, insertions, and deletions, we will use `memcpy` for trivially relocatable objects.
+#### 3. Proposal P1144 supported. We provide an `is_trivially_relocatable` trait, which defaults to `std::is_trivially_move_constructible`. You can partially specialize this trait for specific classes. When it comes to operations like expansions, insertions, and deletions, we will use `memcpy` or `memmove` for trivially relocatable objects.
 
 Most types in C++ are trivially relocatable, except for those that have self references.
 
@@ -45,7 +45,9 @@ template<>
 struct ciel::is_trivially_relocatable<NotRelocatable> : std::false_type {};
 ```
 
-When a type is trivially relocatable, we can use `memcpy` instead of move/copy constructing it at the new location and destructing it at the old location. This approach allows for a "destructible move," eliminating the need for constructions and destructions.
+Sadly, we currently lack any methods to check if a type is trivially relocatable.
+
+Regarding expansions, when a type is trivially relocatable, we can use `memcpy` instead of move/copy constructing it at the new location and destructing it at the old location. This approach allows for a "destructible move," eliminating the need for constructions and destructions.
 
 #### 4. Provide `unchecked_emplace_back`, it serves as an `emplace_back` operation that does not check for available space, under the assumption that the container has sufficient capacity. It's crucial to call `reserve` in advance to allocate the necessary memory.
 
@@ -59,15 +61,7 @@ for (int i = 0; i < 100; ++i) {
 }
 ```
 
-#### 5. You can move construct a `ciel::vector` from an rvalue reference of `std::vector`, then cast it back to `std::vector`, with the exception that this behavior is not applicable when `T` is `bool`.
-
-```cpp
-std::vector<int> v{0, 1, 2, 3, 4};
-ciel::vector<int> c{std::move(v)};
-v = std::move(c);
-```
-
-#### 6. Adding `std::initializer_list` overloads for `emplace` and `emplace_back`.
+#### 5. Adding `std::initializer_list` overloads for `emplace` and `emplace_back`.
 
 ```cpp
 ciel::vector<ciel::vector<int>> v;
@@ -85,9 +79,9 @@ It internally contains a stack buffer whose size is equal to sizeof(void*) * 3 a
 
 As a result, it guarantees that it is nothrow_movable and trivially_relocatable.
 
-However, under the existing framework, determining whether a type is trivially_relocatable is still quite difficult. For example, even though std::vector\<int> is trivially_relocatable in most implementations, and we can make functions aware of it through template specialization, however, for a lambda that captures std::vector\<int>, even though it is also trivially_relocatable, we cannot discover and utilize its properties.
+However, under the existing framework, determining whether a type is trivially_relocatable is still quite difficult. For example, even though `std::vector<int>` is trivially_relocatable in most implementations, and we can make functions aware of it through template specialization, however, for a lambda that captures `std::vector<int>`, even though it is also trivially_relocatable, we cannot discover and utilize its properties.
 
-Therefore, we provide an overloaded version of the constructor that takes the first parameter as ciel::assume_trivially_relocatable tag. This way, when size and alignment permit, we will treat callable objects as trivially_relocatable. Similarly, for assignment, we also provide an overloaded version of assign(ciel::assume_trivially_relocatable_t, F&&).
+Therefore, we provide an overloaded version of the constructor that takes the first parameter as ciel::assume_trivially_relocatable tag. This way, we will treat callable objects as trivially_relocatable. Similarly, for assignment, we also provide an overloaded version of assign(ciel::assume_trivially_relocatable_t, F&&).
 
 ```cpp
 std::vector<int> v{1, 2, 3};
@@ -98,13 +92,17 @@ ciel::function<void()> f1{[v] { (void)v; }};
 ciel::function<void()> f2{ciel::assume_trivially_relocatable, [v] { (void)v; }};
 ```
 
+### can_be_destroyed_from_base.hpp
+
+If T is a derived class of some base B, then `std::unique_ptr<T>` is implicitly convertible to `std::unique_ptr<B>`. The default deleter of the resulting `std::unique_ptr<B>` will use operator delete for B, leading to undefined behavior unless the destructor of B is virtual, or the entire T is trivially destructible. So it's crucial to check for it.
+
 ### TODO: other .hpp
 
 ## Benchmark
 
 You can find the benchmarks in the GitHub workflows section.
 
-Please note that benchmark results may vary between different compilers and compiler options. Compiler optimizations and resulting code generation may coincidentally favor one implementation over another, even when they appear visually identical.
+Note that benchmark results may vary between different compilers and compiler options. Compiler optimizations and resulting code generation may coincidentally favor one implementation over another, even when they appear visually identical.
 
 ## Usage of Third Party Libraries
 
