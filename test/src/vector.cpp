@@ -52,35 +52,6 @@ TEST(vector, at) {
 #endif
 }
 
-TEST(vector, resize) {
-    vector<Int> v1(10, 5);
-    ASSERT_EQ(v1.size(), 10);
-    for (const Int& i : v1) {
-        ASSERT_EQ(i, 5);
-    }
-
-    // shrink
-    v1.resize(1);
-    ASSERT_EQ(v1.size(), 1);
-    ASSERT_EQ(v1.front(), 5);
-
-    // enlarge but not beyond capacity
-    v1.reserve(100);
-    v1.resize(10, 77);
-    {
-        std::initializer_list<Int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77};
-        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
-    }
-
-    // enlarge beyond capacity
-    v1.shrink_to_fit();
-    v1.resize(12, 44);
-    {
-        std::initializer_list<Int> il{5, 77, 77, 77, 77, 77, 77, 77, 77, 77, 44, 44};
-        ASSERT_TRUE(std::equal(il.begin(), il.end(), v1.begin()));
-    }
-}
-
 TEST(vector, insert_and_emplace) {
     vector<Int> v1{0, 1, 2, 3, 4, 5, 6};
 
