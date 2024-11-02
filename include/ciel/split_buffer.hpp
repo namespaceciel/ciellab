@@ -579,6 +579,18 @@ private:
         --begin_;
     }
 
+    void
+    copy_assign_alloc(const split_buffer& other, std::true_type) {
+        if (allocator_() != other.allocator_()) {
+            reset();
+        }
+
+        allocator_() = other.allocator_();
+    }
+
+    void
+    copy_assign_alloc(const split_buffer&, std::false_type) const noexcept {}
+
 public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
 
@@ -704,14 +716,7 @@ public:
             return *this;
         }
 
-        if (alloc_traits::propagate_on_container_copy_assignment::value) {
-            if (allocator_() != other.allocator_()) {
-                reset();
-            }
-
-            allocator_() = other.allocator_();
-        }
-
+        copy_assign_alloc(other, typename alloc_traits::propagate_on_container_copy_assignment{});
         assign(other.begin(), other.end());
 
         return *this;
@@ -724,13 +729,11 @@ public:
             return *this;
         }
 
-        if (alloc_traits::propagate_on_container_move_assignment::value) {
+        if (alloc_traits::propagate_on_container_move_assignment::value || allocator_() == other.allocator_()) {
             swap(other);
-            // other.clear(); // It's not neccessary but...
 
         } else {
-            reset(other.size());
-            construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
+            assign(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
         }
 
         return *this;
@@ -831,7 +834,7 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    CIEL_NODISCARD allocator_type
+    allocator_type
     get_allocator() const noexcept {
         return allocator_();
     }

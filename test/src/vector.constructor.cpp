@@ -79,7 +79,7 @@ TEST(vector, constructor_n_value) {
 }
 
 TEST(vector, constructor_iterator_range) {
-    // input_iterator
+    // InputIterator
     {
         std::array<Int, 5> arr{0, 1, 2, 3, 4};
         vector<Int> v(InputIterator<Int>{arr.data()}, InputIterator<Int>{arr.data() + arr.size()});
@@ -88,7 +88,8 @@ TEST(vector, constructor_iterator_range) {
     }
     {
         std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int, min_allocator<Int>> v(InputIterator<Int>{arr.data()}, InputIterator<Int>{arr.data() + arr.size()});
+        vector<Int, min_allocator<Int>> v(InputIterator<Int>{arr.data()},
+                                          InputIterator<Int>{arr.data() + arr.size()});
 
         ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
     }
@@ -105,7 +106,7 @@ TEST(vector, constructor_iterator_range) {
         ASSERT_TRUE(v.empty());
     }
 
-    // forward_iterator
+    // ForwardIterator
     {
         std::array<Int, 5> arr{0, 1, 2, 3, 4};
         vector<Int> v(ForwardIterator<Int>{arr.data()}, ForwardIterator<Int>{arr.data() + arr.size()});
