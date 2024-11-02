@@ -26,7 +26,7 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-PATHS="${REPO_ROOT_DIR}/include/ciel ${REPO_ROOT_DIR}/test/include/ciel/test ${REPO_ROOT_DIR}/test/src ${REPO_ROOT_DIR}/benchmark/src"
+PATHS="${REPO_ROOT_DIR}/include ${REPO_ROOT_DIR}/test/include ${REPO_ROOT_DIR}/test/src ${REPO_ROOT_DIR}/benchmark/src"
 
 operation="$1"
 
