@@ -45,7 +45,8 @@ public:
     CIEL_GCC_DIAGNOSTIC_IGNORED("-Wunused-but-set-parameter")
 
     template<class... Args, size_t... Ints>
-    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
+
+    compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 
     CIEL_DIAGNOSTIC_POP
@@ -70,6 +71,8 @@ public:
     using value_          = T;
 
 public:
+    compressed_pair_elem() = default;
+
     explicit compressed_pair_elem(default_init_t) {}
 
     explicit compressed_pair_elem(value_init_t)
@@ -82,7 +85,8 @@ public:
         : value_(std::forward<U>(u)) {}
 
     template<class... Args, size_t... Ints>
-    explicit compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
+
+    compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 
     reference
@@ -108,16 +112,15 @@ public:
              typename std::enable_if<
                  std::is_default_constructible<U1>::value && std::is_default_constructible<U2>::value, int>::type
              = 0>
-    explicit compressed_pair()
+    compressed_pair()
         : base1(value_init), base2(value_init) {}
 
     template<class U1, class U2>
-    explicit compressed_pair(U1&& u1, U2&& u2)
+    compressed_pair(U1&& u1, U2&& u2)
         : base1(std::forward<U1>(u1)), base2(std::forward<U2>(u2)) {}
 
     template<class... Args1, class... Args2>
-    explicit compressed_pair(std::piecewise_construct_t pc, std::tuple<Args1...> first_args,
-                             std::tuple<Args2...> second_args)
+    compressed_pair(std::piecewise_construct_t pc, std::tuple<Args1...> first_args, std::tuple<Args2...> second_args)
         : base1(pc, std::move(first_args), index_sequence_for<Args1...>()),
           base2(pc, std::move(second_args), index_sequence_for<Args2...>()) {}
 
