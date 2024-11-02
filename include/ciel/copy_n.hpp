@@ -56,15 +56,7 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
 
     } else {
         for (Size i = 0; i < count; ++i) {
-            if (allocator_has_trivial_construct<Alloc, T*, decltype(*first)>::value) {
-                new (ciel::to_address(result)) T(*first);
-
-            } else {
-                using alloc_traits = std::allocator_traits<Alloc>;
-
-                alloc_traits::construct(alloc, ciel::to_address(result), *first);
-            }
-
+            std::allocator_traits<Alloc>::construct(alloc, ciel::to_address(result), *first);
             ++result;
             ++first;
         }
@@ -88,15 +80,9 @@ uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) 
         }
 
     } else {
-        for (; first != last; ++first, ++result) {
-            if (allocator_has_trivial_construct<Alloc, T*, decltype(*first)>::value) {
-                new (ciel::to_address(result)) T(*first);
-
-            } else {
-                using alloc_traits = std::allocator_traits<Alloc>;
-
-                alloc_traits::construct(alloc, ciel::to_address(result), *first);
-            }
+        for (; first != last; ++first) {
+            std::allocator_traits<Alloc>::construct(alloc, ciel::to_address(result), *first);
+            ++result;
         }
     }
 }

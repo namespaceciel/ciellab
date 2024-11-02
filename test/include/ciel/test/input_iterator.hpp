@@ -34,9 +34,7 @@ public:
     InputIterator() noexcept = default;
 
     InputIterator(const pointer p) noexcept
-        : ptr(p) {
-        CIEL_PRECONDITION(ptr == nullptr || *ptr != invalid());
-    }
+        : ptr(p) {}
 
     void
     go_next() noexcept {

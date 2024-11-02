@@ -25,6 +25,7 @@ set(SOURCES
     src/vector.emplace_back.cpp
     src/vector.exception_safety.cpp
     src/worth_move.cpp
+    src/vector/assign.cpp
     src/vector/capacity.cpp
     src/vector/empty.cpp
     src/vector/max_size.cpp
