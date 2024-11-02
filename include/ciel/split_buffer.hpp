@@ -329,7 +329,7 @@ private:
 
             size_type i = 0;
             for (; i < n; ++i) {
-                alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
+                construct(new_end, std::move(*(begin_ + i)));
                 ++new_end;
                 rd.advance_forward();
             }
@@ -353,7 +353,7 @@ private:
             // clang-format on
 
             for (size_type i = 0; i < old_size; ++i) {
-                alloc_traits::construct(allocator_(), new_end, std::move(*(begin_ + i)));
+                construct(new_end, std::move(*(begin_ + i)));
                 ++new_end;
                 rd.advance_forward();
             }
@@ -402,7 +402,7 @@ private:
 
             size_type i = 1;
             for (; i <= n; ++i) {
-                alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
+                construct(--new_begin, std::move(*(end_ - i)));
                 rd.advance_backward();
             }
 
@@ -425,7 +425,7 @@ private:
             // clang-format on
 
             for (size_type i = 1; i <= old_size; ++i) {
-                alloc_traits::construct(allocator_(), --new_begin, std::move(*(end_ - i)));
+                construct(--new_begin, std::move(*(end_ - i)));
                 rd.advance_backward();
             }
 
