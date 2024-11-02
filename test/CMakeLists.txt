@@ -27,6 +27,7 @@ set(SOURCES
     src/worth_move.cpp
     src/vector/assign.cpp
     src/vector/capacity.cpp
+    src/vector/data.cpp
     src/vector/empty.cpp
     src/vector/max_size.cpp
     src/vector/reserve.cpp
