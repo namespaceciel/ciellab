@@ -717,7 +717,7 @@ public:
 
     CIEL_NODISCARD size_type
     max_size() const noexcept {
-        return alloc_traits::max_size(allocator_());
+        return std::min<size_type>(std::numeric_limits<difference_type>::max(), alloc_traits::max_size(allocator_()));
     }
 
     void
