@@ -28,6 +28,7 @@ set(SOURCES
     src/vector/capacity.cpp
     src/vector/empty.cpp
     src/vector/max_size.cpp
+    src/vector/reserve.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS

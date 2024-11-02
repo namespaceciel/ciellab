@@ -724,6 +724,8 @@ public:
     reserve(const size_type new_cap) {
         if (new_cap <= capacity()) {
             return;
+        } else if CIEL_UNLIKELY (new_cap > max_size()) {
+            CIEL_THROW_EXCEPTION(std::length_error{"ciel::vector reserve capacity beyond max_size"});
         }
 
         split_buffer<value_type, allocator_type&> sb(allocator_());
