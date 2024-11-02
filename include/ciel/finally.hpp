@@ -44,7 +44,7 @@ private:
 
 }; // class finally
 
-template<class F, class DecayF = typename std::decay<F>::type>
+template<class F, class DecayF = decay_t<F>>
 CIEL_NODISCARD finally<DecayF>
 make_finally(F&& f) {
     return finally<DecayF>(std::forward<F>(f));

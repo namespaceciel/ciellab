@@ -65,8 +65,8 @@ public:
     using value_type      = T;
     using pointer         = value_type*;
     using const_pointer   = const value_type*;
-    using reference       = typename std::add_lvalue_reference<value_type>::type;
-    using const_reference = typename std::add_lvalue_reference<const value_type>::type;
+    using reference       = add_lvalue_reference_t<value_type>;
+    using const_reference = add_lvalue_reference_t<const value_type>;
 
     template<class U>
     struct rebind {

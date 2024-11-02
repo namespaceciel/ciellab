@@ -267,7 +267,7 @@ public:
 template<class T>
 class shared_ptr {
 public:
-    using element_type = typename std::remove_extent<T>::type;
+    using element_type = remove_extent_t<T>;
     using pointer      = element_type*;
     using weak_type    = weak_ptr<T>;
 
@@ -309,13 +309,11 @@ private:
     }
 
     // Serves for enable_shared_from_this.
-    template<
-        class Now, class Original,
-        typename std::enable_if<std::is_convertible<Original*, const enable_shared_from_this<Now>*>::value, int>::type
-        = 0>
+    template<class Now, class Original,
+             enable_if_t<std::is_convertible<Original*, const enable_shared_from_this<Now>*>::value, int> = 0>
     void
     enable_weak_this(const enable_shared_from_this<Now>* now_ptr, Original* original_ptr) noexcept {
-        using RawNow = typename std::remove_cv<Now>::type;
+        using RawNow = remove_cv_t<Now>;
 
         // If now_ptr is not initialized, let it points to the right control block.
         if (now_ptr && now_ptr->weak_this_.expired()) {
@@ -344,7 +342,7 @@ public:
     shared_ptr(nullptr_t) noexcept
         : ptr_(nullptr), control_block_(nullptr) {}
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     explicit shared_ptr(Y* ptr)
         : ptr_(ptr) {
         std::unique_ptr<Y> holder(ptr);
@@ -356,7 +354,7 @@ public:
         enable_weak_this(ptr, ptr);
     }
 
-    template<class Y, class Deleter, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, class Deleter, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     shared_ptr(Y* ptr, Deleter d)
         : ptr_(ptr) {
         CIEL_TRY {
@@ -382,8 +380,7 @@ public:
         }
     }
 
-    template<class Y, class Deleter, class Alloc,
-             typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, class Deleter, class Alloc, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     shared_ptr(Y* ptr, Deleter d, Alloc alloc)
         : ptr_(ptr) {
         CIEL_TRY {
@@ -431,7 +428,7 @@ public:
         }
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     shared_ptr(const shared_ptr<Y>& r) noexcept
         : ptr_(r.ptr_), control_block_(r.control_block_) {
         if (control_block_ != nullptr) {
@@ -445,14 +442,14 @@ public:
         r.control_block_ = nullptr;
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     shared_ptr(shared_ptr<Y>&& r) noexcept
         : ptr_(r.ptr_), control_block_(r.control_block_) {
         r.ptr_           = nullptr;
         r.control_block_ = nullptr;
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     explicit shared_ptr(const weak_ptr<Y>& r)
         : ptr_(r.ptr_),
           control_block_(r.control_block_ ? (r.control_block_->increment_if_not_zero() ? r.control_block_ : nullptr)
@@ -462,7 +459,7 @@ public:
         }
     }
 
-    template<class Y, class Deleter, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, class Deleter, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     shared_ptr(std::unique_ptr<Y, Deleter>&& r)
         : ptr_(r.get()) {
         if (ptr_ != nullptr) {
@@ -521,20 +518,19 @@ public:
         shared_ptr().swap(*this);
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     void
     reset(Y* ptr) {
         shared_ptr(ptr).swap(*this);
     }
 
-    template<class Y, class Deleter, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, class Deleter, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     void
     reset(Y* ptr, Deleter d) {
         shared_ptr(ptr, std::move(d)).swap(*this);
     }
 
-    template<class Y, class Deleter, class Alloc,
-             typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, class Deleter, class Alloc, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     void
     reset(Y* ptr, Deleter d, Alloc alloc) {
         shared_ptr(ptr, std::move(d), std::move(alloc)).swap(*this);
@@ -600,8 +596,7 @@ public:
     CIEL_NODISCARD D*
     get_deleter() const noexcept {
 #ifdef CIEL_HAS_RTTI
-        return control_block_ ? static_cast<D*>(control_block_->get_deleter(typeid(typename std::remove_cv<D>::type)))
-                              : nullptr;
+        return control_block_ ? static_cast<D*>(control_block_->get_deleter(typeid(remove_cv_t<D>))) : nullptr;
 #else
         return nullptr;
 #endif
@@ -648,7 +643,7 @@ shared_ptr(std::unique_ptr<T, D>) -> shared_ptr<T>;
 template<class T>
 class weak_ptr {
 public:
-    using element_type = typename std::remove_extent<T>::type;
+    using element_type = remove_extent_t<T>;
     using pointer      = element_type*;
 
 private:
@@ -671,7 +666,7 @@ public:
         }
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     weak_ptr(const weak_ptr<Y>& r) noexcept
         : ptr_(r.ptr_), control_block_(r.control_block_) {
         if (control_block_ != nullptr) {
@@ -679,7 +674,7 @@ public:
         }
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     weak_ptr(const shared_ptr<Y>& r) noexcept
         : ptr_(r.ptr_), control_block_(r.control_block_) {
         if (control_block_ != nullptr) {
@@ -693,7 +688,7 @@ public:
         r.control_block_ = nullptr;
     }
 
-    template<class Y, typename std::enable_if<std::is_convertible<Y*, pointer>::value, int>::type = 0>
+    template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value, int> = 0>
     weak_ptr(weak_ptr<Y>&& r) noexcept
         : ptr_(r.ptr_), control_block_(r.control_block_) {
         r.ptr_           = nullptr;

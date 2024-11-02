@@ -11,9 +11,8 @@ NAMESPACE_CIEL_BEGIN
 
 template<class T>
 #ifdef CIEL_HAS_EXCEPTIONS
-typename std::conditional<
-    conjunction<negation<std::is_nothrow_move_constructible<T>>, std::is_copy_constructible<T>>::value, const T&,
-    T&&>::type
+conditional_t<conjunction<negation<std::is_nothrow_move_constructible<T>>, std::is_copy_constructible<T>>::value,
+              const T&, T&&>
 #else
 T&&
 #endif
@@ -21,11 +20,10 @@ move_if_noexcept(T& x) noexcept {
     return std::move(x);
 }
 
-template<class T, class RT = typename std::remove_reference<T>::type>
+template<class T, class RT = remove_reference_t<T>>
 #ifdef CIEL_HAS_EXCEPTIONS
-typename std::conditional<
-    conjunction<negation<std::is_nothrow_move_constructible<RT>>, std::is_copy_constructible<RT>>::value, const RT&,
-    T&&>::type
+conditional_t<conjunction<negation<std::is_nothrow_move_constructible<RT>>, std::is_copy_constructible<RT>>::value,
+              const RT&, T&&>
 #else
 T&&
 #endif

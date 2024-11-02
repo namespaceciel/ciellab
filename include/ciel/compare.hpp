@@ -9,14 +9,13 @@
 
 NAMESPACE_CIEL_BEGIN
 
-template<class T, class U,
-         typename std::enable_if<is_range_with_size<T>::value && is_range_with_size<U>::value, int>::type = 0>
+template<class T, class U, enable_if_t<is_range_with_size<T>::value && is_range_with_size<U>::value, int> = 0>
 CIEL_NODISCARD bool
 operator==(const T& lhs, const U& rhs) noexcept {
     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-template<class T, class U, typename std::enable_if<is_range<T>::value && is_range<U>::value, int>::type = 0>
+template<class T, class U, enable_if_t<is_range<T>::value && is_range<U>::value, int> = 0>
 CIEL_NODISCARD bool
 operator<(const T& lhs, const U& rhs) noexcept {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());

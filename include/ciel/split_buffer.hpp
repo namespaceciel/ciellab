@@ -45,7 +45,7 @@ class split_buffer {
 
 public:
     using value_type             = T;
-    using allocator_type         = typename std::remove_reference<Allocator>::type;
+    using allocator_type         = remove_reference_t<Allocator>;
     using size_type              = size_t;
     using difference_type        = ptrdiff_t;
     using reference              = value_type&;
@@ -74,8 +74,8 @@ private:
 
     static constexpr bool should_pass_by_value
         = std::is_trivially_copyable<value_type>::value && sizeof(value_type) <= 16;
-    using lvalue = typename std::conditional<should_pass_by_value, value_type, const value_type&>::type;
-    using rvalue = typename std::conditional<should_pass_by_value, value_type, value_type&&>::type;
+    using lvalue = conditional_t<should_pass_by_value, value_type, const value_type&>;
+    using rvalue = conditional_t<should_pass_by_value, value_type, value_type&&>;
 
     CIEL_NODISCARD pointer&
     end_cap_() noexcept {
@@ -164,8 +164,7 @@ private:
         }
     }
 
-    template<class U                                                                            = value_type,
-             typename std::enable_if<std::is_trivially_copy_constructible<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<std::is_trivially_copy_constructible<U>::value, int> = 0>
     void
     construct(pointer p, value_type value) {
         if (allocator_has_trivial_copy_construct<allocator_type>::value) {
@@ -176,8 +175,7 @@ private:
         }
     }
 
-    template<class U                                                                             = value_type,
-             typename std::enable_if<!std::is_trivially_copy_constructible<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<!std::is_trivially_copy_constructible<U>::value, int> = 0>
     void
     construct(pointer p, const value_type& value) {
         if (allocator_has_trivial_copy_construct<allocator_type>::value) {
@@ -294,7 +292,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
     void
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
@@ -305,7 +303,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
     void
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
@@ -367,7 +365,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
     void
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
@@ -378,7 +376,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
     void
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
@@ -616,7 +614,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         for (; first != last; ++first) {
@@ -624,7 +622,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = std::distance(first, last);
@@ -669,20 +667,15 @@ public:
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
-             = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(rg.begin(), rg.end(), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = rg.size();
@@ -693,9 +686,7 @@ public:
         }
     }
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = rg.size();
@@ -803,7 +794,7 @@ private:
     }
 
 public:
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -811,7 +802,7 @@ public:
         assign(first, last, count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
     void
     assign(Iter first, Iter last) {
         pointer p = begin_;
@@ -1060,7 +1051,7 @@ public:
         emplace_back(value);
     }
 
-    template<bool Valid = !should_pass_by_value, typename std::enable_if<Valid, int>::type = 0>
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid, int> = 0>
     void
     push_back(rvalue value) {
         emplace_back(std::move(value));
@@ -1095,7 +1086,7 @@ public:
         emplace_front(value);
     }
 
-    template<bool Valid = !should_pass_by_value, typename std::enable_if<Valid, int>::type = 0>
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid, int> = 0>
     void
     push_front(rvalue value) {
         emplace_front(std::move(value));
@@ -1199,7 +1190,7 @@ public:
         return front();
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, enable_if_t<is_range<R>::value, int> = 0>
     void
     assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {

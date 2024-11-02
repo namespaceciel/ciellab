@@ -47,11 +47,10 @@ struct has_non_trivial_copy_constructor {
 
 // clang-format off
 template<class T, class D>
-using maybe_has_trivial_copy_constructor =
-    typename std::conditional<std::is_trivially_copy_constructible<T>::value,
-                              has_trivial_copy_constructor,
-                              has_non_trivial_copy_constructor<T, D>
-    >::type;
+using maybe_has_trivial_copy_constructor
+    = conditional_t<std::is_trivially_copy_constructible<T>::value,
+                    has_trivial_copy_constructor,
+                    has_non_trivial_copy_constructor<T, D>>;
 // clang-format on
 
 // maybe_has_trivial_move_constructor
@@ -78,14 +77,12 @@ struct has_trivially_relocatable_move_constructor {
 
 // clang-format off
 template<class T, class D>
-using maybe_has_trivial_move_constructor =
-    typename std::conditional<std::is_trivially_move_constructible<T>::value,
-                              has_trivial_move_constructor,
-                              typename std::conditional<is_trivially_relocatable<T>::value,
-                                                        has_trivially_relocatable_move_constructor<D>,
-                                                        has_non_trivial_move_constructor<T, D>
-                              >::type
-    >::type;
+using maybe_has_trivial_move_constructor
+    = conditional_t<std::is_trivially_move_constructible<T>::value,
+                    has_trivial_move_constructor,
+                    conditional_t<is_trivially_relocatable<T>::value,
+                                  has_trivially_relocatable_move_constructor<D>,
+                                  has_non_trivial_move_constructor<T, D>>>;
 // clang-format on
 
 // maybe_has_trivial_copy_assignment
@@ -109,13 +106,12 @@ struct has_non_trivial_copy_assignment {
 
 // clang-format off
 template<class T, class D>
-using maybe_has_trivial_copy_assignment =
-    typename std::conditional<std::is_trivially_copy_constructible<T>::value
-                                  && std::is_trivially_copy_assignable<T>::value
-                                  && std::is_trivially_destructible<T>::value,
-                              has_trivial_copy_assignment,
-                              has_non_trivial_copy_assignment<T, D>
-    >::type;
+using maybe_has_trivial_copy_assignment
+    = conditional_t<std::is_trivially_copy_constructible<T>::value
+                        && std::is_trivially_copy_assignable<T>::value
+                        && std::is_trivially_destructible<T>::value,
+                    has_trivial_copy_assignment,
+                    has_non_trivial_copy_assignment<T, D>>;
 // clang-format on
 
 // maybe_has_trivial_move_assignment
@@ -154,16 +150,14 @@ struct has_trivially_relocatable_move_assignment {
 
 // clang-format off
 template<class T, class D>
-using maybe_has_trivial_move_assignment =
-    typename std::conditional<std::is_trivially_move_constructible<T>::value
-                                  && std::is_trivially_move_assignable<T>::value
-                                  && std::is_trivially_destructible<T>::value,
-                              has_trivial_move_assignment,
-                              typename std::conditional<is_trivially_relocatable<T>::value,
-                                                        has_trivially_relocatable_move_assignment<D>,
-                                                        has_non_trivial_move_assignment<T, D>
-                              >::type
-    >::type;
+using maybe_has_trivial_move_assignment
+    = conditional_t<std::is_trivially_move_constructible<T>::value
+                        && std::is_trivially_move_assignable<T>::value
+                        && std::is_trivially_destructible<T>::value,
+                    has_trivial_move_assignment,
+                    conditional_t<is_trivially_relocatable<T>::value,
+                                  has_trivially_relocatable_move_assignment<D>,
+                                  has_non_trivial_move_assignment<T, D>>>;
 // clang-format on
 
 // maybe_has_trivial_destructor
@@ -179,11 +173,10 @@ struct has_non_trivial_destructor {
 
 // clang-format off
 template<class T, class D>
-using maybe_has_trivial_destructor =
-    typename std::conditional<std::is_trivially_destructible<T>::value,
-                              has_trivial_destructor,
-                              has_non_trivial_destructor<D>
-    >::type;
+using maybe_has_trivial_destructor
+    = conditional_t<std::is_trivially_destructible<T>::value,
+                    has_trivial_destructor,
+                    has_non_trivial_destructor<D>>;
 // clang-format on
 
 } // namespace detail
@@ -198,9 +191,9 @@ class inplace_vector : detail::maybe_has_trivial_copy_constructor<T, inplace_vec
 
     // clang-format off
     using inplace_vector_size_type =
-        typename std::conditional<Capacity <= std::numeric_limits<uint8_t>::max(), uint8_t,
-        typename std::conditional<Capacity <= std::numeric_limits<uint16_t>::max(), uint16_t,
-        typename std::conditional<Capacity <= std::numeric_limits<uint32_t>::max(), uint32_t, uint64_t>::type>::type>::type;
+        conditional_t<Capacity <= std::numeric_limits<uint8_t>::max(), uint8_t,
+        conditional_t<Capacity <= std::numeric_limits<uint16_t>::max(), uint16_t,
+        conditional_t<Capacity <= std::numeric_limits<uint32_t>::max(), uint32_t, uint64_t>>>;
     // clang-format on
 
 public:
@@ -274,7 +267,7 @@ private:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
     void
     construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(size() + std::distance(first, last) <= capacity());
@@ -286,7 +279,7 @@ private:
         }
     }
 
-    template<class U = value_type, typename std::enable_if<std::is_trivially_destructible<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<std::is_trivially_destructible<U>::value, int> = 0>
     void
     range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
@@ -296,7 +289,7 @@ private:
         size_ -= std::distance(begin, end);
     }
 
-    template<class U = value_type, typename std::enable_if<!std::is_trivially_destructible<U>::value, int>::type = 0>
+    template<class U = value_type, enable_if_t<!std::is_trivially_destructible<U>::value, int> = 0>
     void
     range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
@@ -377,7 +370,7 @@ public:
         construct_at_end(count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
     inplace_vector(Iter first, Iter last)
         : inplace_vector() {
         while (first != last) {
@@ -386,7 +379,7 @@ public:
         }
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
     inplace_vector(Iter first, Iter last)
         : inplace_vector() {
         const size_type count = std::distance(first, last);
@@ -400,20 +393,15 @@ public:
     inplace_vector(const inplace_vector& other) noexcept(std::is_nothrow_copy_constructible<T>::value) = default;
     inplace_vector(inplace_vector&& other) noexcept(std::is_nothrow_move_constructible<T>::value)      = default;
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int>::type
-             = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector(rg.begin(), rg.end()) {}
 
-    template<class R,
-             typename std::enable_if<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end())) {}
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int>::type = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector() {
         const size_type count = rg.size();
@@ -424,9 +412,7 @@ public:
         construct_at_end(rg.begin(), rg.end());
     }
 
-    template<class R,
-             typename std::enable_if<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int>::type
-             = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector() {
         const size_type count = rg.size();
@@ -473,7 +459,7 @@ public:
         CIEL_POSTCONDITION(size() == count);
     }
 
-    template<class Iter, typename std::enable_if<is_forward_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -481,7 +467,7 @@ public:
         assign(first, last, count);
     }
 
-    template<class Iter, typename std::enable_if<is_exactly_input_iterator<Iter>::value, int>::type = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
     void
     assign(Iter first, Iter last) {
         clear();
@@ -497,7 +483,7 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    template<class R, typename std::enable_if<is_range<R>::value, int>::type = 0>
+    template<class R, enable_if_t<is_range<R>::value, int> = 0>
     void
     assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
@@ -786,13 +772,13 @@ public:
 
     // TODO: erase
 
-    template<class U = inplace_vector, typename std::enable_if<is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = inplace_vector, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
     void
     swap(inplace_vector& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
-    template<class U = inplace_vector, typename std::enable_if<!is_trivially_relocatable<U>::value, int>::type = 0>
+    template<class U = inplace_vector, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
     void
     swap(inplace_vector& other) noexcept(std::is_nothrow_move_constructible<T>::value
                                          && std::is_nothrow_move_assignable<T>::value) {

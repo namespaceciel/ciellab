@@ -211,4 +211,46 @@ initializer_list(initializer_list<T>) -> initializer_list<T>;
 } // namespace std
 #endif
 
+NAMESPACE_CIEL_BEGIN
+
+// alias for type_traits
+
+template<bool B, class T, class F>
+using conditional_t = typename std::conditional<B, T, F>::type;
+
+template<bool B, class T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;
+
+template<class T>
+using decay_t = typename std::decay<T>::type;
+
+template<class T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+
+template<class T>
+using add_lvalue_reference_t = typename std::add_lvalue_reference<T>::type;
+
+template<class T>
+using add_rvalue_reference_t = typename std::add_rvalue_reference<T>::type;
+
+template<class... T>
+using common_type_t = typename std::common_type<T...>::type;
+
+template<class T>
+using remove_extent_t = typename std::remove_extent<T>::type;
+
+template<class T>
+using remove_cv_t = typename std::remove_cv<T>::type;
+
+template<class T>
+using remove_const_t = typename std::remove_const<T>::type;
+
+template<class T>
+using remove_volatile_t = typename std::remove_volatile<T>::type;
+
+template<class T>
+using remove_cvref_t = remove_cv_t<remove_reference_t<T>>;
+
+NAMESPACE_CIEL_END
+
 #endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_

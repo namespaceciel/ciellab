@@ -7,7 +7,7 @@
 
 NAMESPACE_CIEL_BEGIN
 
-template<class Pointer, typename std::enable_if<std::is_pointer<Pointer>::value, int>::type = 0>
+template<class Pointer, enable_if_t<std::is_pointer<Pointer>::value, int> = 0>
 CIEL_NODISCARD Pointer
 buffer_cast(const void* ptr) noexcept {
     return static_cast<Pointer>(const_cast<void*>(ptr));

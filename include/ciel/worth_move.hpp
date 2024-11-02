@@ -13,7 +13,7 @@ struct worth_move {
     static_assert(!std::is_const<T>::value, "");
 
 private:
-    using U = typename std::decay<T>::type;
+    using U = decay_t<T>;
 
     struct helper {
         operator const U&() noexcept;

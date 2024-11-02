@@ -34,9 +34,7 @@ public:
     explicit compressed_pair_elem(value_init_t)
         : value_() {}
 
-    template<class U, typename std::enable_if<!std::is_same<compressed_pair_elem, typename std::decay<U>::type>::value,
-                                              int>::type
-                      = 0>
+    template<class U, enable_if_t<!std::is_same<compressed_pair_elem, decay_t<U>>::value, int> = 0>
     explicit compressed_pair_elem(U&& u)
         : value_(std::forward<U>(u)) {}
 
@@ -78,9 +76,7 @@ public:
     explicit compressed_pair_elem(value_init_t)
         : value_() {}
 
-    template<class U, typename std::enable_if<!std::is_same<compressed_pair_elem, typename std::decay<U>::type>::value,
-                                              int>::type
-                      = 0>
+    template<class U, enable_if_t<!std::is_same<compressed_pair_elem, decay_t<U>>::value, int> = 0>
     explicit compressed_pair_elem(U&& u)
         : value_(std::forward<U>(u)) {}
 
@@ -109,9 +105,7 @@ class compressed_pair : private compressed_pair_elem<T1, 0>,
 
 public:
     template<class U1 = T1, class U2 = T2,
-             typename std::enable_if<
-                 std::is_default_constructible<U1>::value && std::is_default_constructible<U2>::value, int>::type
-             = 0>
+             enable_if_t<std::is_default_constructible<U1>::value && std::is_default_constructible<U2>::value, int> = 0>
     compressed_pair()
         : base1(value_init), base2(value_init) {}
 

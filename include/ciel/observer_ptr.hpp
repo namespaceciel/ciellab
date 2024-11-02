@@ -31,7 +31,7 @@ public:
     explicit observer_ptr(element_type* p) noexcept
         : ptr_{p} {}
 
-    template<class W2, typename std::enable_if<std::is_convertible<W*, element_type*>::value, int>::type = 0>
+    template<class W2, enable_if_t<std::is_convertible<W*, element_type*>::value, int> = 0>
     observer_ptr(observer_ptr<W2> other) noexcept
         : ptr_{other.ptr_} {}
 
@@ -62,7 +62,7 @@ public:
         return get() != nullptr;
     }
 
-    CIEL_NODISCARD typename std::add_lvalue_reference<element_type>::type
+    CIEL_NODISCARD add_lvalue_reference_t<element_type>
     operator*() const noexcept {
         CIEL_PRECONDITION(*this);
 
@@ -113,7 +113,7 @@ operator==(nullptr_t, const observer_ptr<W>& p) noexcept {
 template<class W1, class W2>
 CIEL_NODISCARD bool
 operator<(const observer_ptr<W1>& p1, const observer_ptr<W2>& p2) {
-    using W3 = typename std::common_type<W1, W2>::type;
+    using W3 = common_type_t<W1, W2>;
     return std::less<W3>()(p1.get(), p2.get());
 }
 

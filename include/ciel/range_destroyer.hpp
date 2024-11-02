@@ -18,7 +18,7 @@ class range_destroyer {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
 private:
-    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using allocator_type = remove_reference_t<Allocator>;
     using pointer        = typename std::allocator_traits<allocator_type>::pointer;
     using alloc_traits   = std::allocator_traits<allocator_type>;
 
@@ -89,7 +89,7 @@ class range_destroyer<T, Allocator, true> {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
 private:
-    using allocator_type = typename std::remove_reference<Allocator>::type;
+    using allocator_type = remove_reference_t<Allocator>;
     using pointer        = typename std::allocator_traits<allocator_type>::pointer;
 
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
