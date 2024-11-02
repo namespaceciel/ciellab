@@ -30,6 +30,7 @@ set(SOURCES
     src/vector/max_size.cpp
     src/vector/reserve.cpp
     src/vector/resize.cpp
+    src/vector/shrink_to_fit.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
