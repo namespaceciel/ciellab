@@ -1067,10 +1067,10 @@ private:
             end_ -= count;
 
             if (count >= back_count) {
-                ciel::memcpy(first, last, sizeof(value_type) * back_count);
+                ciel::memcpy(ciel::to_address(first), ciel::to_address(last), sizeof(value_type) * back_count);
 
             } else {
-                ciel::memmove(first, last, sizeof(value_type) * back_count);
+                ciel::memmove(ciel::to_address(first), ciel::to_address(last), sizeof(value_type) * back_count);
             }
 
         } else {
@@ -1084,19 +1084,19 @@ private:
 public:
     iterator
     erase(const_iterator p) {
-        const iterator pos = begin() + (p - begin());
-        CIEL_PRECONDITION(begin() <= pos);
-        CIEL_PRECONDITION(pos < end());
+        const pointer pos = begin_ + (p - begin());
+        CIEL_PRECONDITION(begin_ <= pos);
+        CIEL_PRECONDITION(pos < end_);
 
-        return erase_impl(ciel::to_address(pos), ciel::to_address(pos + 1), 1);
+        return erase_impl(pos, pos + 1, 1);
     }
 
     iterator
     erase(const_iterator f, const_iterator l) {
-        const iterator first = begin() + (f - begin());
-        const iterator last  = begin() + (l - begin());
-        CIEL_PRECONDITION(begin() <= first);
-        CIEL_PRECONDITION(last <= end());
+        const pointer first = begin_ + (f - begin());
+        const pointer last  = begin_ + (l - begin());
+        CIEL_PRECONDITION(begin_ <= first);
+        CIEL_PRECONDITION(last <= end_);
 
         const auto count = last - first;
 
@@ -1104,7 +1104,7 @@ public:
             return last;
         }
 
-        return erase_impl(ciel::to_address(first), ciel::to_address(last), count);
+        return erase_impl(first, last, count);
     }
 
 private:
