@@ -26,6 +26,8 @@ set(SOURCES
     src/vector.exception_safety.cpp
     src/worth_move.cpp
     src/vector/capacity.cpp
+    src/vector/empty.cpp
+    src/vector/max_size.cpp
 )
 
 set(CMAKE_CXX_STANDARD_OPTIONS
