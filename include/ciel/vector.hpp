@@ -98,7 +98,8 @@ private:
             return false;
         }
 
-        if CIEL_UNLIKELY (begin <= std::addressof(value) && std::addressof(value) < end_) {
+        if CIEL_UNLIKELY (ciel::to_address(begin) <= std::addressof(value)
+                          && std::addressof(value) < ciel::to_address(end_)) {
             return true;
         }
 
@@ -333,6 +334,15 @@ private:
     void
     copy_assign_alloc(const vector&, std::false_type) noexcept {}
 
+    void
+    swap_alloc(vector& other, std::true_type) noexcept {
+        using std::swap;
+        swap(allocator_(), other.allocator_());
+    }
+
+    void
+    swap_alloc(vector&, std::false_type) noexcept {}
+
 public:
     vector() noexcept(noexcept(allocator_type())) = default;
 
@@ -374,14 +384,9 @@ public:
         }
     }
 
-    CIEL_DIAGNOSTIC_PUSH
-    CIEL_GCC_DIAGNOSTIC_IGNORED("-Wunused-result")
-
     vector(const vector& other)
         : vector(other.begin(), other.end(),
                  alloc_traits::select_on_container_copy_construction(other.get_allocator())) {}
-
-    CIEL_DIAGNOSTIC_POP
 
     vector(const vector& other, const allocator_type& alloc)
         : vector(other.begin(), other.end(), alloc) {}
@@ -486,7 +491,7 @@ public:
     assign(const size_type count, lvalue value) {
         if (capacity() < count) {
             if (internal_value(value, begin_)) {
-                value_type copy = std::move(*(begin_ + (std::addressof(value) - begin_)));
+                value_type copy = std::move(*(begin_ + (std::addressof(value) - ciel::to_address(begin_))));
                 reset(count);
                 construct_at_end(count, copy);
 
@@ -1202,17 +1207,14 @@ public:
     }
 
     void
-    swap(vector& other) noexcept(alloc_traits::propagate_on_container_swap::value
-                                 || alloc_traits::is_always_equal::value) {
+    swap(vector& other) noexcept {
         using std::swap;
 
         swap(begin_, other.begin_);
         swap(end_, other.end_);
         swap(end_cap_(), other.end_cap_());
 
-        if (alloc_traits::propagate_on_container_swap::value) {
-            swap(allocator_(), other.allocator_());
-        }
+        swap_alloc(other, typename alloc_traits::propagate_on_container_swap{});
     }
 
     // non-standard extension

@@ -587,7 +587,16 @@ private:
     }
 
     void
-    copy_assign_alloc(const split_buffer&, std::false_type) const noexcept {}
+    copy_assign_alloc(const split_buffer&, std::false_type) noexcept {}
+
+    void
+    swap_alloc(split_buffer& other, std::true_type) noexcept {
+        using std::swap;
+        swap(allocator_(), other.allocator_());
+    }
+
+    void
+    swap_alloc(split_buffer&, std::false_type) noexcept {}
 
 public:
     split_buffer() noexcept(noexcept(allocator_type())) = default;
@@ -1144,8 +1153,7 @@ public:
     }
 
     void
-    swap(split_buffer& other) noexcept(alloc_traits::propagate_on_container_swap::value
-                                       || alloc_traits::is_always_equal::value) {
+    swap(split_buffer& other) noexcept {
         using std::swap;
 
         swap(begin_cap_, other.begin_cap_);
@@ -1153,9 +1161,7 @@ public:
         swap(end_, other.end_);
         swap(end_cap_(), other.end_cap_());
 
-        if (alloc_traits::propagate_on_container_swap::value) {
-            swap(allocator_(), other.allocator_());
-        }
+        swap_alloc(other, typename alloc_traits::propagate_on_container_swap{});
     }
 
     template<class... Args>

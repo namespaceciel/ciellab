@@ -22,14 +22,14 @@ public:
     CIEL_NODISCARD T*
     allocate(const size_t n) {
         T* memory = std::allocator<T>().allocate(n);
-        std::memset(memory, 0, sizeof(T) * n);
+        std::memset((void*)memory, 0, sizeof(T) * n);
 
         return memory;
     }
 
     void
     deallocate(T* p, const size_t n) noexcept {
-        std::memset(p, 0, sizeof(T) * n);
+        std::memset((void*)p, 0, sizeof(T) * n);
         std::allocator<T>().deallocate(p, n);
     }
 

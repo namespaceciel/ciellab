@@ -43,7 +43,6 @@ public:
     CIEL_GCC_DIAGNOSTIC_IGNORED("-Wunused-but-set-parameter")
 
     template<class... Args, size_t... Ints>
-
     compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 

@@ -32,6 +32,10 @@ NAMESPACE_CIEL_BEGIN
             return *this;                                        \
         }                                                        \
                                                                  \
+        ~TypeName() {                                            \
+            i_ = -2;                                             \
+        }                                                        \
+                                                                 \
         TypeName&                                                \
         operator++() noexcept {                                  \
             ++i_;                                                \
