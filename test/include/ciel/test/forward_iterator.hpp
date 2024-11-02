@@ -59,6 +59,9 @@ public:
         return lhs.base() == rhs.base();
     }
 
+    template<class U>
+    void operator,(const U&) = delete;
+
 }; // class ForwardIterator
 
 #if CIEL_STD_VER >= 20

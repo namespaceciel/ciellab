@@ -550,8 +550,9 @@ public:
     void
     assign(Iter first, Iter last) {
         pointer p = begin_;
-        for (; first != last && p != end_; ++first, ++p) {
+        for (; first != last && p != end_; ++first) {
             *p = *first;
+            ++p;
         }
 
         if (p != end_) {

@@ -68,6 +68,9 @@ public:
         return lhs.base() == rhs.base();
     }
 
+    template<class U>
+    void operator,(const U&) = delete;
+
 }; // class InputIterator
 
 #if CIEL_STD_VER >= 20
