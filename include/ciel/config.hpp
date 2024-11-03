@@ -147,6 +147,12 @@ using std::size_t;
 
 NAMESPACE_CIEL_BEGIN
 
+struct useless_tag {
+    template<class... Args>
+    useless_tag(Args&&...) noexcept {}
+
+}; // struct useless_tag
+
 template<class... Args>
 void
 void_cast(Args&&...) noexcept {}

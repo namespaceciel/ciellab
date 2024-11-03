@@ -435,75 +435,95 @@ public:
     }
 
 private:
-    struct emplace_impl_callback {
-        vector* const this_;
-
-        emplace_impl_callback(vector* const t) noexcept
-            : this_{t} {}
-
-        template<class... Args, class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
-        void
-        operator()(pointer pos, Args&&... args) const {
-            ciel::memmove(pos + 1, pos, sizeof(value_type) * (this_->end_ - pos));
-
-            range_destroyer<value_type, allocator_type&> rd{pos + 1, this_->end_ + 1, this_->allocator_()};
-            const pointer old_end = this_->end_;
-            this_->end_           = pos;
-
-            this_->unchecked_emplace_back_aux(std::forward<Args>(args)...);
-
-            this_->end_ = old_end + 1;
-            rd.release();
-        }
-
-        template<class... Args, class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
-        void
-        operator()(pointer pos, Args&&... args) const {
-            this_->move_range(pos, this_->end_, pos + 1);
-            *pos = value_type{std::forward<Args>(args)...};
-        }
-
-        template<class U, class URaw = decay_t<U>,
-                 enable_if_t<std::is_same<value_type, URaw>::value && !is_trivially_relocatable<URaw>::value, int> = 0>
-        void
-        operator()(pointer pos, U&& value) const {
-            this_->move_range(pos, this_->end_, pos + 1);
-            *pos = std::forward<U>(value);
-        }
-
-    }; // struct emplace_impl_callback
-
-    template<class... Args>
+    template<class ExpansionCallback, class AppendCallback, class InsertCallback, class IsInternalValueCallback>
     iterator
-    emplace_impl(pointer pos, Args&&... args) {
+    insert_impl(pointer pos, const size_type count, ExpansionCallback&& expansion_callback,
+                AppendCallback&& append_callback, InsertCallback&& insert_callback,
+                IsInternalValueCallback&& is_internal_value_callback) {
         CIEL_PRECONDITION(begin_ <= pos);
         CIEL_PRECONDITION(pos <= end_);
+        CIEL_PRECONDITION(count != 0);
 
         const size_type pos_index = pos - begin_;
 
-        if (end_ == end_cap_()) { // expansion
+        if (size() + count > capacity()) { // expansion
             split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), pos_index);
-            sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            sb.reserve_cap_and_offset_to(recommend_cap(size() + count), pos_index);
+            expansion_callback(sb);
             swap_out_buffer(std::move(sb), pos);
 
         } else if (pos == end_) { // equal to emplace_back
-            unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            append_callback();
 
         } else {
-            emplace_impl_callback{this}(pos, std::forward<Args>(args)...);
+            const bool is_internal_value = is_internal_value_callback();
+            const pointer old_end        = end_;
+
+            range_destroyer<value_type, allocator_type&> rd{end_ + count, end_ + count, allocator_()};
+            // ------------------------------------
+            // begin                  pos       end
+            //                       ----------
+            //                       first last
+            //                       |  count |
+            // relocate [pos, end) count units later
+            // ----------------------          --------------
+            // begin             new_end       pos    |   end
+            //                       ----------       |
+            //                       first last      range_destroyer in case of exceptions
+            //                       |  count |
+            if (is_trivially_relocatable<value_type>::value) {
+                const size_type pos_end_dis = end_ - pos;
+                ciel::memmove(pos + count, pos, sizeof(value_type) * pos_end_dis);
+                end_ = pos;
+                rd.advance_backward(pos_end_dis);
+
+            } else {
+                for (pointer p = end_ - 1; p >= pos; --p) {
+                    construct(p + count, std::move(*p));
+                    destroy(p);
+                    --end_;
+                    rd.advance_backward();
+                }
+            }
+            // ----------------------------------------------
+            // begin             first        last        end
+            //                                 pos
+            //                               new_end
+            if (is_internal_value) {
+                insert_callback();
+
+            } else {
+                append_callback();
+            }
+            // new_end
+            end_ = old_end + count;
+            rd.release();
         }
 
         return begin() + pos_index;
     }
 
 public:
+    // TODO: internal_value
     template<class... Args>
     iterator
     emplace(const_iterator p, Args&&... args) {
         pointer pos = begin_ + (p - begin());
 
-        return emplace_impl(pos, std::forward<Args>(args)...);
+        return insert_impl(
+            pos, 1,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            },
+            [&] {
+                unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
     }
 
     template<class U, class... Args>
@@ -511,20 +531,40 @@ public:
     emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
         pointer pos = begin_ + (p - begin());
 
-        return emplace_impl(pos, il, std::forward<Args>(args)...);
+        return insert_impl(
+            pos, 1,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+            },
+            [&] {
+                unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
     }
 
     iterator
     insert(const_iterator p, lvalue value) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
-        if (internal_value(value, pos)) {
-            value_type copy = value;
-            return emplace_impl(pos, std::move(copy));
-
-        } else {
-            return emplace_impl(pos, value);
-        }
+        return insert_impl(
+            pos, 1,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.unchecked_emplace_back_aux(value);
+            },
+            [&] {
+                unchecked_emplace_back_aux(value);
+            },
+            [&] {
+                unchecked_emplace_back_aux(*(std::addressof(value) + 1));
+            },
+            [&] {
+                return internal_value(value, pos);
+            });
     }
 
     template<bool Valid = !should_pass_by_value, enable_if_t<Valid, int> = 0>
@@ -532,138 +572,82 @@ public:
     insert(const_iterator p, rvalue value) {
         pointer pos = begin_ + (p - begin());
 
-        if (internal_value(value, pos)) {
-            value_type copy = std::move(value);
-            return emplace_impl(pos, std::move(copy));
+        return insert_impl(
+            pos, 1,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.unchecked_emplace_back_aux(std::move(value));
+            },
+            [&] {
+                unchecked_emplace_back_aux(std::move(value));
+            },
+            [&] {
+                unchecked_emplace_back_aux(std::move(*(std::addressof(value) + 1)));
+            },
+            [&] {
+                return internal_value(value, pos);
+            });
+    }
 
-        } else {
-            return emplace_impl(pos, std::move(value));
+    iterator
+    insert(const_iterator p, size_type count, lvalue value) {
+        pointer pos = begin_ + (p - begin());
+
+        if CIEL_UNLIKELY (count == 0) {
+            return iterator(pos);
         }
+
+        return insert_impl(
+            pos, count,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.construct_at_end(count, value);
+            },
+            [&] {
+                construct_at_end(count, value);
+            },
+            [&] {
+                construct_at_end(count, *(std::addressof(value) + count));
+            },
+            [&] {
+                return internal_value(value, pos);
+            });
     }
 
 private:
-    template<class T1, class T2, class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
-    void
-    insert_impl(pointer pos, T1&& t1, T2&& t2, const size_type count) {
-        // ------------------------------------
-        // begin                  pos       end
-        //                       ----------
-        //                       first last
-        //                       |  count |
-        // relocate [pos, end) count units later
-        ciel::memmove(pos + count, pos, sizeof(value_type) * (end_ - pos));
-        // ----------------------          --------------
-        // begin             new_end       pos    |   end
-        //                       ----------       |
-        //                       first last      range_destroyer in case of exceptions
-        //                       |  count |
-        range_destroyer<value_type, allocator_type&> rd{pos + count, end_ + count, allocator_()};
-        const pointer old_end = end_;
-        end_                  = pos;
-        // ----------------------------------------------
-        // begin             first        last        end
-        //                                 pos
-        //                               new_end
-        construct_at_end(std::forward<T1>(t1), std::forward<T2>(t2));
-        // new_end
-        end_ = old_end + count;
-        rd.release();
-    }
-
-    template<class Iter, class U = value_type,
-             enable_if_t<is_forward_iterator<Iter>::value && !is_trivially_relocatable<U>::value, int> = 0>
-    void
-    insert_impl(pointer pos, Iter first, Iter last, size_type count) {
-        CIEL_PRECONDITION(count != 0);
-
-        const size_type old_count  = count;
-        pointer old_end            = end_;
-        auto mid                   = std::next(first, count);
-        const size_type back_count = end_ - pos;
-
-        if (count > back_count) {
-            mid = std::next(first, back_count);
-            construct_at_end(mid, last);
-            count = back_count;
-        }
-
-        if (count > 0) {
-            move_range(pos, old_end, pos + old_count);
-            std::copy(first, mid, pos);
-        }
-    }
-
-    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
-    void
-    insert_impl(pointer pos, size_type count, const value_type& value, const size_type old_count) {
-        pointer old_end = end_;
-
-        const size_type back_count = end_ - pos;
-
-        if (count > back_count) {
-            const size_type n = count - back_count;
-            construct_at_end(n, value);
-            count = back_count;
-        }
-
-        if (count > 0) {
-            move_range(pos, old_end, pos + old_count);
-            std::fill_n(pos, count, value);
-        }
-    }
-
     template<class Iter>
     iterator
     insert(const_iterator p, Iter first, Iter last, size_type count) {
         pointer pos = begin_ + (p - begin());
-        CIEL_PRECONDITION(begin() <= pos);
-        CIEL_PRECONDITION(pos <= end());
 
         if CIEL_UNLIKELY (count == 0) {
-            return pos;
+            return iterator(pos);
         }
 
-        const size_type pos_index = pos - begin();
-
-        if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(count + size()), pos_index);
-            sb.construct_at_end(first, last);
-            swap_out_buffer(std::move(sb), pos);
-
-        } else { // enough back space
-            insert_impl(pos, first, last, count);
-        }
-
-        return begin() + pos_index;
+        return insert_impl(
+            pos, count,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.construct_at_end(first, last);
+            },
+            [&] {
+                construct_at_end(first, last);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
     }
 
 public:
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
     iterator
-    insert(const_iterator p, size_type count, lvalue value) {
-        pointer pos = begin_ + (p - begin());
-        CIEL_PRECONDITION(begin() <= pos);
-        CIEL_PRECONDITION(pos <= end());
+    insert(const_iterator pos, Iter first, Iter last) {
+        return insert(pos, first, last, std::distance(first, last));
+    }
 
-        const size_type pos_index = pos - begin();
-
-        if (count + size() > capacity()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + count), pos_index);
-            sb.construct_at_end(count, value);
-            swap_out_buffer(std::move(sb), pos);
-
-        } else { // enough back space
-            if (internal_value(value, pos)) {
-                value_type copy = value;
-                insert_impl(pos, count, copy, count);
-
-            } else {
-                insert_impl(pos, count, value, count);
-            }
-        }
-
-        return begin() + pos_index;
+    iterator
+    insert(const_iterator pos, std::initializer_list<value_type> ilist) {
+        return insert(pos, ilist.begin(), ilist.end(), ilist.size());
     }
 
     // Construct them all at the end at first, then rotate them to the right place.
@@ -671,7 +655,7 @@ public:
     iterator
     insert(const_iterator p, Iter first, Iter last) {
         pointer pos = begin_ + (p - begin());
-        // record these index because it may reallocate
+
         const auto pos_index     = pos - begin();
         const size_type old_size = size();
 
@@ -681,19 +665,6 @@ public:
 
         std::rotate(begin() + pos_index, begin() + old_size, end());
         return begin() + pos_index;
-    }
-
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
-    iterator
-    insert(const_iterator pos, Iter first, Iter last) {
-        const size_type count = std::distance(first, last);
-
-        return insert(pos, first, last, count);
-    }
-
-    iterator
-    insert(const_iterator pos, std::initializer_list<value_type> ilist) {
-        return insert(pos, ilist.begin(), ilist.end());
     }
 
 private:
