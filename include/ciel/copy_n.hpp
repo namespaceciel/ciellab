@@ -1,7 +1,6 @@
 #ifndef CIELLAB_INCLUDE_CIEL_COPY_N_HPP_
 #define CIELLAB_INCLUDE_CIEL_COPY_N_HPP_
 
-#include <ciel/allocator_traits.hpp>
 #include <ciel/config.hpp>
 #include <ciel/cstring.hpp>
 #include <ciel/iterator_category.hpp>

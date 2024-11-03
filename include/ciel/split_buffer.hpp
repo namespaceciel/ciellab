@@ -22,18 +22,6 @@
 
 NAMESPACE_CIEL_BEGIN
 
-// This class is used in std::vector implementation and it's like a double-ended vector.
-// When std::vector inserts beyond its capacity, it defines a temp split_buffer to store insertions
-// and push vector's elements into two sides, and swap out at last,
-// so that it can keep basic exception safety.
-// We complete its functionality so that it can be used as a normal container.
-// When pushing elements and there is no space this side, we try to shift to other side if there is plenty of space,
-// or just expand.
-// When it comes to expansion, we try to move old elements to the middle of new space
-// and leave some free space at both sides.
-
-// TODO: insert and erase
-
 template<class, class>
 class vector;
 
@@ -156,34 +144,7 @@ private:
     template<class... Args>
     void
     construct(pointer p, Args&&... args) {
-        if (allocator_has_trivial_construct<allocator_type, pointer, Args...>::value) {
-            new (ciel::to_address(p)) value_type(std::forward<Args>(args)...);
-
-        } else {
-            alloc_traits::construct(allocator_(), ciel::to_address(p), std::forward<Args>(args)...);
-        }
-    }
-
-    template<class U = value_type, enable_if_t<std::is_trivially_copy_constructible<U>::value, int> = 0>
-    void
-    construct(pointer p, value_type value) {
-        if (allocator_has_trivial_copy_construct<allocator_type>::value) {
-            *p = value;
-
-        } else {
-            alloc_traits::construct(allocator_(), ciel::to_address(p), value);
-        }
-    }
-
-    template<class U = value_type, enable_if_t<!std::is_trivially_copy_constructible<U>::value, int> = 0>
-    void
-    construct(pointer p, const value_type& value) {
-        if (allocator_has_trivial_copy_construct<allocator_type>::value) {
-            new (ciel::to_address(p)) value_type(value);
-
-        } else {
-            alloc_traits::construct(allocator_(), ciel::to_address(p), value);
-        }
+        alloc_traits::construct(allocator_(), ciel::to_address(p), std::forward<Args>(args)...);
     }
 
     pointer
@@ -194,24 +155,8 @@ private:
 
         const pointer res = first;
 
-        if (allocator_has_trivial_destroy<allocator_type>::value) {
-            if (!std::is_trivially_destructible<value_type>::value) {
-                for (; last - first >= 4; first += 4) {
-                    (ciel::to_address(first + 0))->~value_type();
-                    (ciel::to_address(first + 1))->~value_type();
-                    (ciel::to_address(first + 2))->~value_type();
-                    (ciel::to_address(first + 3))->~value_type();
-                }
-
-                for (; first != last; ++first) {
-                    ciel::to_address(first)->~value_type();
-                }
-            }
-
-        } else {
-            for (; first != last; ++first) {
-                alloc_traits::destroy(allocator_(), ciel::to_address(first));
-            }
+        for (; first != last; ++first) {
+            alloc_traits::destroy(allocator_(), ciel::to_address(first));
         }
 
         return res;
@@ -220,16 +165,9 @@ private:
     void
     destroy(pointer p) noexcept {
         CIEL_PRECONDITION(begin_ <= p);
-        CIEL_PRECONDITION(p <= end_); // called by pop_back
+        CIEL_PRECONDITION(p < end_);
 
-        if (allocator_has_trivial_destroy<allocator_type>::value) {
-            if (!std::is_trivially_destructible<value_type>::value) {
-                p->~value_type();
-            }
-
-        } else {
-            alloc_traits::destroy(allocator_(), p);
-        }
+        alloc_traits::destroy(allocator_(), p);
     }
 
     void
@@ -1086,8 +1024,8 @@ public:
     pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
+        destroy(end_ - 1);
         --end_;
-        destroy(end_);
     }
 
     void

@@ -1,6 +1,8 @@
 Checks: '-*,
 cppcoreguidelines-*,
 -cppcoreguidelines-avoid-magic-numbers,
+-cppcoreguidelines-avoid-do-while,
+-cppcoreguidelines-pro-type-cstyle-cast,
 llvm-include-order,
 llvm-namespace-comment,
 misc-const-correctness,

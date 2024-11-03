@@ -30,7 +30,7 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
 // align_up
 
 CIEL_NODISCARD inline uintptr_t
-align_up(uintptr_t sz, const size_t alignment) noexcept {
+align_up(const uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;
@@ -41,7 +41,7 @@ align_up(uintptr_t sz, const size_t alignment) noexcept {
 // align_down
 
 CIEL_NODISCARD inline uintptr_t
-align_down(uintptr_t sz, const size_t alignment) noexcept {
+align_down(const uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;

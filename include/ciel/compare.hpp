@@ -5,7 +5,6 @@
 #include <ciel/is_range.hpp>
 
 #include <algorithm>
-#include <type_traits>
 
 NAMESPACE_CIEL_BEGIN
 

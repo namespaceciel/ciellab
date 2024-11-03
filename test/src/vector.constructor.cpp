@@ -12,7 +12,7 @@
 
 using namespace ciel;
 
-TEST(vector, default_constructor) {
+TEST(vector, default_constructor_2) {
     {
         vector<Int> v;
 

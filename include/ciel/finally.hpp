@@ -4,7 +4,6 @@
 #include <ciel/config.hpp>
 #include <ciel/exchange.hpp>
 
-#include <type_traits>
 #include <utility>
 
 NAMESPACE_CIEL_BEGIN
