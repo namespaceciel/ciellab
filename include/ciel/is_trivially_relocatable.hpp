@@ -4,6 +4,7 @@
 #include <ciel/config.hpp>
 #include <ciel/logical.hpp>
 
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -26,6 +27,9 @@ struct is_trivially_relocatable<std::pair<First, Second>>
 
 template<class... Types>
 struct is_trivially_relocatable<std::tuple<Types...>> : conjunction<is_trivially_relocatable<Types>...> {};
+
+template<class T>
+struct is_trivially_relocatable<std::allocator<T>> : std::true_type {};
 
 NAMESPACE_CIEL_END
 

@@ -770,7 +770,9 @@ public:
 }; // class split_buffer
 
 template<class T, class Allocator>
-struct is_trivially_relocatable<split_buffer<T, Allocator>> : is_trivially_relocatable<Allocator> {};
+struct is_trivially_relocatable<split_buffer<T, Allocator>>
+    : conjunction<is_trivially_relocatable<Allocator>,
+                  is_trivially_relocatable<typename std::allocator_traits<remove_reference_t<Allocator>>::pointer>> {};
 
 #if CIEL_STD_VER >= 17
 

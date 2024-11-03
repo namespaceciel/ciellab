@@ -824,11 +824,10 @@ public:
 
 }; // class vector
 
-template<class T>
-struct is_trivially_relocatable<std::allocator<T>> : std::true_type {};
-
 template<class T, class Allocator>
-struct is_trivially_relocatable<vector<T, Allocator>> : is_trivially_relocatable<Allocator> {};
+struct is_trivially_relocatable<vector<T, Allocator>>
+    : conjunction<is_trivially_relocatable<Allocator>,
+                  is_trivially_relocatable<typename std::allocator_traits<remove_reference_t<Allocator>>::pointer>> {};
 
 template<class T, class Alloc, class U>
 typename vector<T, Alloc>::size_type
