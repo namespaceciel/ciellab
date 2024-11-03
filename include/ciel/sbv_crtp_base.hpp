@@ -213,6 +213,73 @@ struct sbv_crtp_base {
         std::move_backward(from_s, from_s + n, old_end);
     }
 
+    Derived&
+    operator=(const Derived& other) {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
+            return *(this_());
+        }
+
+        copy_assign_alloc(other, typename alloc_traits::propagate_on_container_copy_assignment{});
+        assign(other.begin(), other.end());
+
+        return *(this_());
+    }
+
+    Derived&
+    operator=(Derived&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
+                                        || alloc_traits::is_always_equal::value) {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
+            return *(this_());
+        }
+
+        if (alloc_traits::propagate_on_container_move_assignment::value || allocator_() == other.allocator_()) {
+            this_()->swap(other);
+
+        } else {
+            assign(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
+        }
+
+        return *(this_());
+    }
+
+    Derived&
+    operator=(std::initializer_list<value_type> ilist) {
+        assign(ilist.begin(), ilist.end());
+        return *(this_());
+    }
+
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    void
+    assign(Iter first, Iter last) {
+        const size_type count = std::distance(first, last);
+
+        this_()->assign(first, last, count);
+    }
+
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    void
+    assign(Iter first, Iter last) {
+        pointer p = this_()->begin_;
+        for (; first != last && p != this_()->end_; ++first) {
+            *p = *first;
+            ++p;
+        }
+
+        if (p != this_()->end_) {
+            this_()->end_ = destroy(p, this_()->end_);
+
+        } else {
+            for (; first != last; ++first) {
+                this_()->emplace_back_aux(*first);
+            }
+        }
+    }
+
+    void
+    assign(std::initializer_list<value_type> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
+
     template<class R, enable_if_t<is_range<R>::value, int> = 0>
     void
     assign_range(R&& rg) {

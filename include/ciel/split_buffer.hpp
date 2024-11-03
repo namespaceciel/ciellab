@@ -86,7 +86,9 @@ public: // public functions
     // constructor
     // destructor
     // operator=
+    using base_type::operator=;
     // assign
+    using base_type::assign;
     using base_type::assign_range;
     using base_type::at;
     using base_type::get_allocator;
@@ -542,37 +544,13 @@ public:
 
     split_buffer&
     operator=(const split_buffer& other) {
-        if CIEL_UNLIKELY (this == std::addressof(other)) {
-            return *this;
-        }
-
-        copy_assign_alloc(other, typename alloc_traits::propagate_on_container_copy_assignment{});
-        assign(other.begin(), other.end());
-
-        return *this;
+        return static_cast<base_type&>(*this) = other;
     }
 
     split_buffer&
     operator=(split_buffer&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
                                              || alloc_traits::is_always_equal::value) {
-        if CIEL_UNLIKELY (this == std::addressof(other)) {
-            return *this;
-        }
-
-        if (alloc_traits::propagate_on_container_move_assignment::value || allocator_() == other.allocator_()) {
-            swap(other);
-
-        } else {
-            assign(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
-        }
-
-        return *this;
-    }
-
-    split_buffer&
-    operator=(std::initializer_list<value_type> ilist) {
-        assign(ilist.begin(), ilist.end());
-        return *this;
+        return static_cast<base_type&>(*this) = std::move(other);
     }
 
     void
@@ -633,37 +611,6 @@ private:
     }
 
 public:
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
-    void
-    assign(Iter first, Iter last) {
-        const size_type count = std::distance(first, last);
-
-        assign(first, last, count);
-    }
-
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
-    void
-    assign(Iter first, Iter last) {
-        pointer p = begin_;
-        for (; first != last && p != end_; ++first, ++p) {
-            *p = *first;
-        }
-
-        if (p != end_) {
-            end_ = destroy(p, end_);
-
-        } else {
-            for (; first != last; ++first) {
-                emplace_back_aux(*first);
-            }
-        }
-    }
-
-    void
-    assign(std::initializer_list<value_type> ilist) {
-        assign(ilist.begin(), ilist.end());
-    }
-
     void
     reserve_front_spare(const size_type new_spare) {
         if (new_spare <= front_spare()) {
