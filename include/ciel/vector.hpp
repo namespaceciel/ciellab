@@ -398,6 +398,7 @@ public:
     reserve(const size_type new_cap) {
         if (new_cap <= capacity()) {
             return;
+
         } else if CIEL_UNLIKELY (new_cap > max_size()) {
             CIEL_THROW_EXCEPTION(std::length_error{"ciel::vector reserve capacity beyond max_size"});
         }
@@ -434,27 +435,24 @@ public:
     }
 
 private:
-    class emplace_impl_callback {
-    private:
+    struct emplace_impl_callback {
         vector* const this_;
 
-    public:
         emplace_impl_callback(vector* const t) noexcept
             : this_{t} {}
 
         template<class... Args, class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
         void
         operator()(pointer pos, Args&&... args) const {
-            constexpr size_type count = 1;
-            ciel::memmove(pos + count, pos, sizeof(value_type) * (this_->end_ - pos));
+            ciel::memmove(pos + 1, pos, sizeof(value_type) * (this_->end_ - pos));
 
-            range_destroyer<value_type, allocator_type&> rd{pos + count, this_->end_ + count, this_->allocator_()};
+            range_destroyer<value_type, allocator_type&> rd{pos + 1, this_->end_ + 1, this_->allocator_()};
             const pointer old_end = this_->end_;
             this_->end_           = pos;
 
             this_->unchecked_emplace_back_aux(std::forward<Args>(args)...);
 
-            this_->end_ = old_end + count;
+            this_->end_ = old_end + 1;
             rd.release();
         }
 
@@ -472,11 +470,12 @@ private:
             this_->move_range(pos, this_->end_, pos + 1);
             *pos = std::forward<U>(value);
         }
-    };
+
+    }; // struct emplace_impl_callback
 
     template<class... Args>
     iterator
-    emplace_impl(const emplace_impl_callback cb, pointer pos, Args&&... args) {
+    emplace_impl(pointer pos, Args&&... args) {
         CIEL_PRECONDITION(begin_ <= pos);
         CIEL_PRECONDITION(pos <= end_);
 
@@ -492,20 +491,19 @@ private:
             unchecked_emplace_back_aux(std::forward<Args>(args)...);
 
         } else {
-            cb(pos, std::forward<Args>(args)...);
+            emplace_impl_callback{this}(pos, std::forward<Args>(args)...);
         }
 
         return begin() + pos_index;
     }
 
 public:
-    // Note that emplace is not a superset of insert when pos is not at the end.
     template<class... Args>
     iterator
     emplace(const_iterator p, Args&&... args) {
         pointer pos = begin_ + (p - begin());
 
-        return emplace_impl(emplace_impl_callback{this}, pos, std::forward<Args>(args)...);
+        return emplace_impl(pos, std::forward<Args>(args)...);
     }
 
     template<class U, class... Args>
@@ -513,7 +511,7 @@ public:
     emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
         pointer pos = begin_ + (p - begin());
 
-        return emplace_impl(emplace_impl_callback{this}, pos, il, std::forward<Args>(args)...);
+        return emplace_impl(pos, il, std::forward<Args>(args)...);
     }
 
     iterator
@@ -522,10 +520,10 @@ public:
 
         if (internal_value(value, pos)) {
             value_type copy = value;
-            return emplace_impl(emplace_impl_callback{this}, pos, std::move(copy));
+            return emplace_impl(pos, std::move(copy));
 
         } else {
-            return emplace_impl(emplace_impl_callback{this}, pos, value);
+            return emplace_impl(pos, value);
         }
     }
 
@@ -536,10 +534,10 @@ public:
 
         if (internal_value(value, pos)) {
             value_type copy = std::move(value);
-            return emplace_impl(emplace_impl_callback{this}, pos, std::move(copy));
+            return emplace_impl(pos, std::move(copy));
 
         } else {
-            return emplace_impl(emplace_impl_callback{this}, pos, std::move(value));
+            return emplace_impl(pos, std::move(value));
         }
     }
 
