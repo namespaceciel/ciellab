@@ -4,6 +4,7 @@
 #include <benchmark/benchmark.h>
 
 #include <ciel/config.hpp>
+#include <ciel/exchange.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
 
 #include <algorithm>
@@ -27,9 +28,7 @@ struct TriviallyRelocatable {
         : ptr(other.ptr ? new int{*other.ptr} : nullptr) {}
 
     TriviallyRelocatable(TriviallyRelocatable&& other) noexcept
-        : ptr(other.ptr) {
-        other.ptr = nullptr;
-    }
+        : ptr(ciel::exchange(other.ptr, nullptr)) {}
 
     TriviallyRelocatable&
     operator=(TriviallyRelocatable other) noexcept {

@@ -291,7 +291,7 @@ public:
 
         } else if (other.size() > 0) {
             init(other.size());
-            construct_at_end(other.begin(), other.end());
+            construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
         }
     }
 
