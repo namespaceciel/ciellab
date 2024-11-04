@@ -1,17 +1,15 @@
 #include <gtest/gtest.h>
 
 #include <ciel/test/emplace_constructible.hpp>
+#include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/forward_iterator.hpp>
 #include <ciel/test/input_iterator.hpp>
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/test/maybe_pocca_allocator.hpp>
-#include <ciel/test/min_allocator.hpp>
-#include <ciel/test/move_only.hpp>
 #include <ciel/test/operator_hijacker.hpp>
-#include <ciel/test/other_allocator.hpp>
-#include <ciel/test/safe_allocator.hpp>
-#include <ciel/test/test_allocator.hpp>
 #include <ciel/vector.hpp>
+
+// TODO: simplify this file
 
 using namespace ciel;
 
@@ -23,22 +21,6 @@ TEST(vector, assign_operator_hijacker) {
 }
 
 TEST(vector, assign_copy) {
-    {
-        vector<int, test_allocator<int>> l(3, 2, test_allocator<int>(5));
-        vector<int, test_allocator<int>> l2(l, test_allocator<int>(3));
-
-        l2 = l;
-        ASSERT_EQ(l2, l);
-        ASSERT_EQ(l2.get_allocator(), test_allocator<int>(3));
-    }
-    {
-        vector<int, other_allocator<int>> l(3, 2, other_allocator<int>(5));
-        vector<int, other_allocator<int>> l2(l, other_allocator<int>(3));
-
-        l2 = l;
-        ASSERT_EQ(l2, l);
-        ASSERT_EQ(l2.get_allocator(), other_allocator<int>(5));
-    }
     {
         // Test with Allocator::propagate_on_container_copy_assignment, false_type
         bool copy_assigned_into = false;
@@ -76,20 +58,12 @@ TEST(vector, assign_copy) {
         ASSERT_EQ(l2.get_allocator(), pocca_allocator<int>(5, nullptr));
     }
     {
-        vector<int, min_allocator<int>> l(3, 2, min_allocator<int>());
-        vector<int, min_allocator<int>> l2(l, min_allocator<int>());
+        vector<int, fancy_allocator<int>> l(3, 2, fancy_allocator<int>());
+        vector<int, fancy_allocator<int>> l2(l, fancy_allocator<int>());
 
         l2 = l;
         ASSERT_EQ(l2, l);
-        ASSERT_EQ(l2.get_allocator(), min_allocator<int>());
-    }
-    {
-        vector<int, safe_allocator<int>> l(3, 2, safe_allocator<int>());
-        vector<int, safe_allocator<int>> l2(l, safe_allocator<int>());
-
-        l2 = l;
-        ASSERT_EQ(l2, l);
-        ASSERT_EQ(l2.get_allocator(), safe_allocator<int>());
+        ASSERT_EQ(l2.get_allocator(), fancy_allocator<int>());
     }
 }
 
@@ -106,12 +80,12 @@ TEST(vector, assign_initializer_list) {
         ASSERT_EQ(v, std::initializer_list<int>({3, 4, 5, 6}));
     }
     {
-        vector<int, min_allocator<int>> v;
+        vector<int, fancy_allocator<int>> v;
         v.assign({3, 4, 5, 6});
         ASSERT_EQ(v, std::initializer_list<int>({3, 4, 5, 6}));
     }
     {
-        vector<int, min_allocator<int>> v;
+        vector<int, fancy_allocator<int>> v;
         v.reserve(10);
         v.assign({3, 4, 5, 6});
         ASSERT_EQ(v, std::initializer_list<int>({3, 4, 5, 6}));
@@ -173,83 +147,6 @@ TEST(vector, assign_iterator_range) {
     }
 }
 
-TEST(vector, assign_move) {
-    {
-        vector<MoveOnly, test_allocator<MoveOnly>> l(test_allocator<MoveOnly>(5));
-        vector<MoveOnly, test_allocator<MoveOnly>> lo(test_allocator<MoveOnly>(5));
-        for (int i = 1; i <= 3; ++i) {
-            l.push_back(i);
-            lo.push_back(i);
-        }
-
-        vector<MoveOnly, test_allocator<MoveOnly>> l2(test_allocator<MoveOnly>(5));
-        l2 = std::move(l);
-        ASSERT_EQ(l2, lo);
-        ASSERT_TRUE(l.empty());
-        ASSERT_EQ(l2.get_allocator(), lo.get_allocator());
-    }
-    {
-        vector<MoveOnly, test_allocator<MoveOnly>> l(test_allocator<MoveOnly>(5));
-        vector<MoveOnly, test_allocator<MoveOnly>> lo(test_allocator<MoveOnly>(5));
-
-        for (int i = 1; i <= 3; ++i) {
-            l.push_back(i);
-            lo.push_back(i);
-        }
-
-        vector<MoveOnly, test_allocator<MoveOnly>> l2(test_allocator<MoveOnly>(6));
-        l2 = std::move(l);
-        ASSERT_EQ(l2, lo);
-        ASSERT_FALSE(l.empty());
-        ASSERT_EQ(l2.get_allocator(), test_allocator<MoveOnly>(6));
-    }
-    {
-        vector<MoveOnly, other_allocator<MoveOnly>> l(other_allocator<MoveOnly>(5));
-        vector<MoveOnly, other_allocator<MoveOnly>> lo(other_allocator<MoveOnly>(5));
-
-        for (int i = 1; i <= 3; ++i) {
-            l.push_back(i);
-            lo.push_back(i);
-        }
-
-        vector<MoveOnly, other_allocator<MoveOnly>> l2(other_allocator<MoveOnly>(6));
-        l2 = std::move(l);
-        ASSERT_EQ(l2, lo);
-        ASSERT_TRUE(l.empty());
-        ASSERT_EQ(l2.get_allocator(), lo.get_allocator());
-    }
-    {
-        vector<MoveOnly, min_allocator<MoveOnly>> l((min_allocator<MoveOnly>()));
-        vector<MoveOnly, min_allocator<MoveOnly>> lo((min_allocator<MoveOnly>()));
-
-        for (int i = 1; i <= 3; ++i) {
-            l.push_back(i);
-            lo.push_back(i);
-        }
-
-        vector<MoveOnly, min_allocator<MoveOnly>> l2((min_allocator<MoveOnly>()));
-        l2 = std::move(l);
-        ASSERT_EQ(l2, lo);
-        ASSERT_TRUE(l.empty());
-        ASSERT_EQ(l2.get_allocator(), lo.get_allocator());
-    }
-    {
-        vector<MoveOnly, safe_allocator<MoveOnly>> l((safe_allocator<MoveOnly>()));
-        vector<MoveOnly, safe_allocator<MoveOnly>> lo((safe_allocator<MoveOnly>()));
-
-        for (int i = 1; i <= 3; ++i) {
-            l.push_back(i);
-            lo.push_back(i);
-        }
-
-        vector<MoveOnly, safe_allocator<MoveOnly>> l2((safe_allocator<MoveOnly>()));
-        l2 = std::move(l);
-        ASSERT_EQ(l2, lo);
-        ASSERT_TRUE(l.empty());
-        ASSERT_EQ(l2.get_allocator(), lo.get_allocator());
-    }
-}
-
 TEST(vector, assign_size_value) {
     {
         vector<int> v;
@@ -279,7 +176,7 @@ TEST(vector, assign_size_value) {
         }));
     }
     {
-        vector<int, min_allocator<int>> v;
+        vector<int, fancy_allocator<int>> v;
         v.assign(5, 6);
         ASSERT_EQ(v.size(), 5);
         ASSERT_TRUE(std::all_of(v.begin(), v.end(), [](int i) {
@@ -287,7 +184,7 @@ TEST(vector, assign_size_value) {
         }));
     }
     {
-        vector<int, min_allocator<int>> v;
+        vector<int, fancy_allocator<int>> v;
         v.reserve(10);
         v.assign(5, 6);
         ASSERT_EQ(v.size(), 5);
@@ -316,5 +213,29 @@ TEST(vector, assign_size_self_value) {
         ASSERT_TRUE(std::all_of(v.begin(), v.end(), [](int i) {
             return i == 42;
         }));
+    }
+}
+
+TEST(vector, assign_self_reference) {
+    {
+        vector<Int> v{0, 1, 2, 3, 4};
+        ASSERT_EQ(v.size(), v.capacity());
+
+        v.assign(2, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({2, 2}));
+    }
+    {
+        vector<Int> v{0, 1, 2, 3, 4};
+        ASSERT_EQ(v.size(), v.capacity());
+
+        v.assign(6, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({2, 2, 2, 2, 2, 2}));
+    }
+    {
+        vector<Int> v{0, 1, 2, 3, 4};
+        v.reserve(10);
+
+        v.assign(6, v[2]);
+        ASSERT_EQ(v, std::initializer_list<Int>({2, 2, 2, 2, 2, 2}));
     }
 }

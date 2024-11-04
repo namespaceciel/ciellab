@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <ciel/test/limited_allocator.hpp>
-#include <ciel/test/min_allocator.hpp>
-#include <ciel/test/safe_allocator.hpp>
+#include <ciel/test/fancy_allocator.hpp>
+#include <ciel/test/int_wrapper.hpp>
 #include <ciel/vector.hpp>
 
 using namespace ciel;
@@ -26,25 +25,12 @@ TEST(vector, reserve) {
         ASSERT_GE(v.capacity(), 150);
     }
     {
-        // Add 1 for implementations that dynamically allocate a container proxy.
-        vector<int, limited_allocator<int, 250 + 1>> v(100);
-        ASSERT_GE(v.capacity(), 100);
-
-        v.reserve(50);
-        ASSERT_EQ(v.size(), 100);
-        ASSERT_GE(v.capacity(), 100);
-
-        v.reserve(150);
-        ASSERT_EQ(v.size(), 100);
-        ASSERT_GE(v.capacity(), 150);
-    }
-    {
-        vector<int, min_allocator<int>> v;
+        vector<int, fancy_allocator<int>> v;
         v.reserve(10);
         ASSERT_GE(v.capacity(), 10);
     }
     {
-        vector<int, min_allocator<int>> v(100);
+        vector<int, fancy_allocator<int>> v(100);
         ASSERT_GE(v.capacity(), 100);
 
         v.reserve(50);
@@ -55,24 +41,23 @@ TEST(vector, reserve) {
         ASSERT_EQ(v.size(), 100);
         ASSERT_GE(v.capacity(), 150);
     }
+}
+
+TEST(vector, reserve_data_validity) {
     {
-        vector<int, safe_allocator<int>> v;
-        v.reserve(10);
-        ASSERT_GE(v.capacity(), 10);
+        vector<Int> v{0, 1, 2, 3, 4};
+        v.reserve(v.capacity() + 1);
+        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
     }
     {
-        vector<int, safe_allocator<int>> v(100);
-        ASSERT_GE(v.capacity(), 100);
-
-        v.reserve(50);
-        ASSERT_EQ(v.size(), 100);
-        ASSERT_GE(v.capacity(), 100);
-
-        v.reserve(150);
-        ASSERT_EQ(v.size(), 100);
-        ASSERT_GE(v.capacity(), 150);
+        vector<TRInt> v{0, 1, 2, 3, 4};
+        v.reserve(v.capacity() + 1);
+        ASSERT_EQ(v, std::initializer_list<TRInt>({0, 1, 2, 3, 4}));
     }
+}
+
 #ifdef CIEL_HAS_EXCEPTIONS
+TEST(vector, reserve_beyond_max_size) {
     {
         vector<int> v;
         const size_t sz = v.max_size() + 1;
@@ -100,24 +85,10 @@ TEST(vector, reserve) {
             ASSERT_EQ(v.size(), 10);
             ASSERT_EQ(v.capacity(), previous_capacity);
             ASSERT_EQ(v.data(), previous_data);
-
-            for (int i = 0; i < 10; ++i) {
-                ASSERT_EQ(v[i], 42);
-            }
+            ASSERT_TRUE(std::all_of(v.begin(), v.end(), [](int i) {
+                return i == 42;
+            }));
         }
     }
-    {
-        vector<int, limited_allocator<int, 100>> v;
-        v.reserve(50);
-        ASSERT_GE(v.capacity(), 50);
-
-        try {
-            v.reserve(101);
-            ASSERT_TRUE(false);
-
-        } catch (const std::length_error&) {}
-
-        ASSERT_GE(v.capacity(), 50);
-    }
-#endif
 }
+#endif

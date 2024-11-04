@@ -1,10 +1,11 @@
-#ifndef CIELLAB_INCLUDE_CIEL_MIN_ALLOCATOR_HPP_
-#define CIELLAB_INCLUDE_CIEL_MIN_ALLOCATOR_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_FANCY_ALLOCATOR_HPP_
+#define CIELLAB_INCLUDE_CIEL_FANCY_ALLOCATOR_HPP_
 
 #include <ciel/compare.hpp>
 #include <ciel/config.hpp>
 
 #include <cstddef>
+#include <cstring>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -20,7 +21,7 @@ class min_pointer<void>;
 template<>
 class min_pointer<const void>;
 template<class>
-class min_allocator;
+class fancy_allocator;
 
 template<>
 class min_pointer<void> {
@@ -90,7 +91,7 @@ class min_pointer {
     template<class>
     friend class min_pointer;
     template<class>
-    friend class min_allocator;
+    friend class fancy_allocator;
 
 public:
     using value_type        = T;
@@ -344,33 +345,37 @@ public:
 }; // class min_pointer<const T>
 
 template<class T>
-class min_allocator {
+class fancy_allocator {
 public:
     using value_type = T;
     using pointer    = min_pointer<T>;
 
-    min_allocator() noexcept = default;
+    explicit fancy_allocator() noexcept = default;
 
     template<class U>
-    min_allocator(min_allocator<U>) noexcept {}
+    explicit fancy_allocator(fancy_allocator<U>) noexcept {}
 
     CIEL_NODISCARD pointer
     allocate(ptrdiff_t n) {
-        return pointer(std::allocator<T>().allocate(n));
+        T* memory = std::allocator<T>().allocate(n);
+        std::memset((void*)memory, 0, sizeof(T) * n);
+
+        return pointer(memory);
     }
 
     void
     deallocate(pointer p, ptrdiff_t n) noexcept {
+        std::memset((void*)p.ptr_, 0, sizeof(T) * n);
         std::allocator<T>().deallocate(p.ptr_, n);
     }
 
     CIEL_NODISCARD friend bool
-    operator==(min_allocator, min_allocator) noexcept {
+    operator==(fancy_allocator, fancy_allocator) noexcept {
         return true;
     }
 
-}; // class min_allocator
+}; // class fancy_allocator
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_MIN_ALLOCATOR_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_FANCY_ALLOCATOR_HPP_

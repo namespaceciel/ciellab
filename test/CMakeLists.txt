@@ -19,17 +19,17 @@ set(SOURCES
     src/observer_ptr.cpp
     src/shared_ptr.cpp
     src/split_buffer.cpp
-    src/vector.cpp
-    src/vector.constructor.cpp
-    src/vector.compare.cpp
-    src/vector.emplace_back.cpp
-    src/vector.exception_safety.cpp
     src/worth_move.cpp
     src/vector/assign.cpp
     src/vector/capacity.cpp
+    src/vector/compare.cpp
     src/vector/constructor.cpp
     src/vector/data.cpp
+    src/vector/emplace_back.cpp
     src/vector/empty.cpp
+    src/vector/erase.cpp
+    src/vector/exception_safety.cpp
+    src/vector/insert.cpp
     src/vector/max_size.cpp
     src/vector/reserve.cpp
     src/vector/resize.cpp

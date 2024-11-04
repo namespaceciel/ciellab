@@ -9,97 +9,98 @@
 
 NAMESPACE_CIEL_BEGIN
 
-#define IntWrapperDefinition(TypeName, IsNothrowMovable)         \
-    struct TypeName {                                            \
-    private:                                                     \
-        int i_;                                                  \
-                                                                 \
-    public:                                                      \
-        TypeName(const int i = 0) noexcept                       \
-            : i_(i) {}                                           \
-                                                                 \
-        TypeName(const TypeName&) noexcept = default;            \
-        TypeName&                                                \
-        operator=(const TypeName&) noexcept                      \
-            = default;                                           \
-                                                                 \
-        TypeName(TypeName&& other) noexcept(IsNothrowMovable)    \
-            : i_(ciel::exchange(other.i_, -1)) {}                \
-                                                                 \
-        TypeName&                                                \
-        operator=(TypeName&& other) noexcept(IsNothrowMovable) { \
-            i_ = ciel::exchange(other.i_, -1);                   \
-            return *this;                                        \
-        }                                                        \
-                                                                 \
-        ~TypeName() {                                            \
-            i_ = -2;                                             \
-        }                                                        \
-                                                                 \
-        TypeName&                                                \
-        operator++() noexcept {                                  \
-            ++i_;                                                \
-            return *this;                                        \
-        }                                                        \
-                                                                 \
-        CIEL_NODISCARD TypeName                                  \
-        operator++(int) noexcept {                               \
-            auto res = *this;                                    \
-            ++(*this);                                           \
-            return res;                                          \
-        }                                                        \
-                                                                 \
-        TypeName&                                                \
-        operator--() noexcept {                                  \
-            --i_;                                                \
-            return *this;                                        \
-        }                                                        \
-                                                                 \
-        CIEL_NODISCARD TypeName                                  \
-        operator--(int) noexcept {                               \
-            auto res = *this;                                    \
-            --(*this);                                           \
-            return res;                                          \
-        }                                                        \
-                                                                 \
-        TypeName&                                                \
-        operator+=(const TypeName other) noexcept {              \
-            i_ += other.i_;                                      \
-            return *this;                                        \
-        }                                                        \
-                                                                 \
-        TypeName&                                                \
-        operator-=(const TypeName other) noexcept {              \
-            return (*this) += (-other);                          \
-        }                                                        \
-                                                                 \
-        CIEL_NODISCARD TypeName                                  \
-        operator-() noexcept {                                   \
-            TypeName res(-i_);                                   \
-            return res;                                          \
-        }                                                        \
-                                                                 \
-        CIEL_NODISCARD                                           \
-        operator int() const noexcept {                          \
-            return i_;                                           \
-        }                                                        \
-                                                                 \
-        CIEL_NODISCARD friend TypeName                           \
-        operator+(TypeName lhs, const TypeName rhs) noexcept {   \
-            lhs.i_ += rhs.i_;                                    \
-            return lhs;                                          \
-        }                                                        \
-                                                                 \
-        CIEL_NODISCARD friend TypeName                           \
-        operator-(TypeName lhs, const TypeName rhs) noexcept {   \
-            lhs.i_ -= rhs.i_;                                    \
-            return lhs;                                          \
-        }                                                        \
+template<bool IsTriviallyRelocatable, bool IsNothrowMovable>
+struct int_wrapper {
+private:
+    int i_;
+
+public:
+    int_wrapper(const int i = 0) noexcept
+        : i_(i) {}
+
+    int_wrapper(const int_wrapper&) noexcept = default;
+    int_wrapper&
+    operator=(const int_wrapper&) noexcept
+        = default;
+
+    int_wrapper(int_wrapper&& other) noexcept(IsNothrowMovable)
+        : i_(ciel::exchange(other.i_, -1)) {}
+
+    int_wrapper&
+    operator=(int_wrapper&& other) noexcept(IsNothrowMovable) {
+        i_ = ciel::exchange(other.i_, -1);
+        return *this;
     }
 
-IntWrapperDefinition(Int, true);
-IntWrapperDefinition(TRInt, true);
-IntWrapperDefinition(TMInt, false);
+    ~int_wrapper() {
+        i_ = -2;
+    }
+
+    int_wrapper&
+    operator++() noexcept {
+        ++i_;
+        return *this;
+    }
+
+    CIEL_NODISCARD int_wrapper
+    operator++(int) noexcept {
+        auto res = *this;
+        ++(*this);
+        return res;
+    }
+
+    int_wrapper&
+    operator--() noexcept {
+        --i_;
+        return *this;
+    }
+
+    CIEL_NODISCARD int_wrapper
+    operator--(int) noexcept {
+        auto res = *this;
+        --(*this);
+        return res;
+    }
+
+    int_wrapper&
+    operator+=(const int_wrapper other) noexcept {
+        i_ += other.i_;
+        return *this;
+    }
+
+    int_wrapper&
+    operator-=(const int_wrapper other) noexcept {
+        return (*this) += (-other);
+    }
+
+    CIEL_NODISCARD int_wrapper
+    operator-() noexcept {
+        int_wrapper res(-i_);
+        return res;
+    }
+
+    CIEL_NODISCARD
+    operator int() const noexcept {
+        return i_;
+    }
+
+    CIEL_NODISCARD friend int_wrapper
+    operator+(int_wrapper lhs, const int_wrapper rhs) noexcept {
+        lhs.i_ += rhs.i_;
+        return lhs;
+    }
+
+    CIEL_NODISCARD friend int_wrapper
+    operator-(int_wrapper lhs, const int_wrapper rhs) noexcept {
+        lhs.i_ -= rhs.i_;
+        return lhs;
+    }
+
+}; // struct int_wrapper
+
+using Int   = int_wrapper<false, true>;
+using TRInt = int_wrapper<true, true>;
+using TMInt = int_wrapper<false, false>;
 
 template<>
 struct is_trivially_relocatable<Int> : std::false_type {};

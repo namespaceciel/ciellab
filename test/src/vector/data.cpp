@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <ciel/test/min_allocator.hpp>
+#include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/operator_hijacker.hpp>
-#include <ciel/test/safe_allocator.hpp>
 #include <ciel/vector.hpp>
 
 using namespace ciel;
@@ -21,27 +20,15 @@ TEST(vector, data) {
         ASSERT_EQ(v.data(), std::addressof(v.front()));
     }
     {
-        vector<int, min_allocator<int>> v;
+        vector<int, fancy_allocator<int>> v;
         ASSERT_EQ(v.data(), nullptr);
     }
     {
-        vector<int, min_allocator<int>> v(100);
+        vector<int, fancy_allocator<int>> v(100);
         ASSERT_EQ(v.data(), &v.front());
     }
     {
-        vector<operator_hijacker, min_allocator<operator_hijacker>> v(100);
-        ASSERT_EQ(v.data(), std::addressof(v.front()));
-    }
-    {
-        vector<int, safe_allocator<int>> v;
-        ASSERT_EQ(v.data(), nullptr);
-    }
-    {
-        vector<int, safe_allocator<int>> v(100);
-        ASSERT_EQ(v.data(), &v.front());
-    }
-    {
-        vector<operator_hijacker, safe_allocator<operator_hijacker>> v(100);
+        vector<operator_hijacker, fancy_allocator<operator_hijacker>> v(100);
         ASSERT_EQ(v.data(), std::addressof(v.front()));
     }
 }
@@ -60,27 +47,15 @@ TEST(vector, data_const) {
         ASSERT_EQ(v.data(), std::addressof(v.front()));
     }
     {
-        const vector<int, min_allocator<int>> v;
+        const vector<int, fancy_allocator<int>> v;
         ASSERT_EQ(v.data(), nullptr);
     }
     {
-        const vector<int, min_allocator<int>> v(100);
+        const vector<int, fancy_allocator<int>> v(100);
         ASSERT_EQ(v.data(), &v.front());
     }
     {
-        const vector<operator_hijacker, min_allocator<operator_hijacker>> v(100);
-        ASSERT_EQ(v.data(), std::addressof(v.front()));
-    }
-    {
-        const vector<int, safe_allocator<int>> v;
-        ASSERT_EQ(v.data(), nullptr);
-    }
-    {
-        const vector<int, safe_allocator<int>> v(100);
-        ASSERT_EQ(v.data(), &v.front());
-    }
-    {
-        const vector<operator_hijacker, safe_allocator<operator_hijacker>> v(100);
+        const vector<operator_hijacker, fancy_allocator<operator_hijacker>> v(100);
         ASSERT_EQ(v.data(), std::addressof(v.front()));
     }
 }
