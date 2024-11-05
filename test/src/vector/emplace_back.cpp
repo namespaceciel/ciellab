@@ -6,46 +6,64 @@
 
 using namespace ciel;
 
-TEST(vector, emplace_back) {
-    {
-        vector<Int, fancy_allocator<Int>> v;
+namespace {
 
-        for (int i = 0; i < 64; ++i) {
-            v.emplace_back(i);
-        }
+template<class C>
+void
+test_emplace_back_impl(::testing::Test*) {
+    constexpr int N = 64;
 
-        for (int i = 0; i < 64; ++i) {
-            ASSERT_EQ(v[i], Int(i));
-        }
+    C v;
+
+    for (int i = 0; i < N; ++i) {
+        v.emplace_back(i);
+    }
+
+    ASSERT_EQ(v.size(), N);
+    for (int i = 0; i < N; ++i) {
+        ASSERT_EQ(v[i], Int(i));
     }
 }
 
+template<class C>
+void
+test_emplace_back_self_reference_impl(::testing::Test*) {
+    C v{0, 1, 2, 3, 4};
+
+    v.resize(v.capacity(), 123);
+    v.emplace_back(v[0]);
+    ASSERT_EQ(v.back(), v[0]);
+
+    v.resize(v.capacity(), 234);
+    v.emplace_back(v[1]);
+    ASSERT_EQ(v.back(), v[1]);
+}
+
+} // namespace
+
+TEST(vector, emplace_back) {
+    test_emplace_back_impl<vector<Int>>(this);
+    test_emplace_back_impl<vector<TRInt>>(this);
+    test_emplace_back_impl<vector<TMInt>>(this);
+    test_emplace_back_impl<vector<Int, fancy_allocator<Int>>>(this);
+    test_emplace_back_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
+    test_emplace_back_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
+}
+
 TEST(vector, emplace_back_self_reference) {
-    {
-        vector<Int, fancy_allocator<Int>> v{0, 1, 2, 3, 4};
-
-        while (v.size() < v.capacity()) {
-            v.emplace_back(123);
-        }
-        v.emplace_back(v[0]);
-
-        ASSERT_EQ(v.back(), v[0]);
-
-        while (v.size() < v.capacity()) {
-            v.emplace_back(123);
-        }
-        v.emplace_back(v[1]);
-
-        ASSERT_EQ(v.back(), v[1]);
-    }
+    test_emplace_back_self_reference_impl<vector<Int>>(this);
+    test_emplace_back_self_reference_impl<vector<TRInt>>(this);
+    test_emplace_back_self_reference_impl<vector<TMInt>>(this);
+    test_emplace_back_self_reference_impl<vector<Int, fancy_allocator<Int>>>(this);
+    test_emplace_back_self_reference_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
+    test_emplace_back_self_reference_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, emplace_back_initializer_list) {
     {
-        vector<vector<Int, fancy_allocator<Int>>, fancy_allocator<vector<Int, fancy_allocator<Int>>>> v1;
-        v1.emplace_back({Int{0}, Int{1}, Int{2}, Int{3}, Int{4}});
-
-        ASSERT_EQ(v1, std::initializer_list<std::initializer_list<Int>>({
+        vector<vector<int>> v1;
+        v1.emplace_back({0, 1, 2, 3, 4});
+        ASSERT_EQ(v1, std::initializer_list<std::initializer_list<int>>({
                           {0, 1, 2, 3, 4}
         }));
     }

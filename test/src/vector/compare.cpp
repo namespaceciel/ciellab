@@ -3,8 +3,6 @@
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/vector.hpp>
 
-#include <memory>
-
 using namespace ciel;
 
 TEST(vector, equal) {

@@ -52,8 +52,8 @@ public:
     ~range_destroyer() {
         CIEL_PRECONDITION(begin_ <= end_());
 
-        while (end_() != begin_) {
-            alloc_traits::destroy(allocator_(), --end_());
+        for (; begin_ != end_(); ++begin_) {
+            alloc_traits::destroy(allocator_(), ciel::to_address(begin_));
         }
     }
 

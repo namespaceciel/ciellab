@@ -10,8 +10,8 @@ NAMESPACE_CIEL_BEGIN
 
 template<class T, bool POCCAValue>
 class maybe_pocca_allocator {
-    int id_                   = 0;
-    bool* copy_assigned_into_ = nullptr;
+private:
+    int id_ = 0;
 
     template<class, bool>
     friend class maybe_pocca_allocator;
@@ -27,33 +27,29 @@ public:
 
     maybe_pocca_allocator() noexcept = default;
 
-    maybe_pocca_allocator(int id, bool* copy_assigned_into) noexcept
-        : id_(id), copy_assigned_into_(copy_assigned_into) {}
+    maybe_pocca_allocator(const int id) noexcept
+        : id_(id) {}
+
+    maybe_pocca_allocator(const maybe_pocca_allocator&) noexcept = default;
 
     template<class U>
     maybe_pocca_allocator(const maybe_pocca_allocator<U, POCCAValue>& that) noexcept
-        : id_(that.id_), copy_assigned_into_(that.copy_assigned_into_) {}
-
-    maybe_pocca_allocator(const maybe_pocca_allocator&) noexcept = default;
+        : id_(that.id_) {}
 
     maybe_pocca_allocator&
     operator=(const maybe_pocca_allocator& a) noexcept {
         id_ = a.id();
 
-        if (copy_assigned_into_) {
-            *copy_assigned_into_ = true;
-        }
-
         return *this;
     }
 
     CIEL_NODISCARD T*
-    allocate(std::size_t n) {
+    allocate(const size_t n) {
         return std::allocator<T>().allocate(n);
     }
 
     void
-    deallocate(T* ptr, std::size_t n) noexcept {
+    deallocate(T* ptr, const size_t n) noexcept {
         std::allocator<T>().deallocate(ptr, n);
     }
 
@@ -65,7 +61,7 @@ public:
     template<class U>
     CIEL_NODISCARD friend bool
     operator==(const maybe_pocca_allocator& lhs, const maybe_pocca_allocator<U, POCCAValue>& rhs) noexcept {
-        return lhs.id() == rhs.id();
+        return !POCCAValue || lhs.id() == rhs.id();
     }
 
 }; // class maybe_pocca_allocator

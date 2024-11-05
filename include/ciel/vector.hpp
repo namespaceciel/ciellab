@@ -473,7 +473,7 @@ private:
             //                       |  count |
             if (is_trivially_relocatable<value_type>::value) {
                 const size_type pos_end_dis = end_ - pos;
-                ciel::memmove(pos + count, pos, sizeof(value_type) * pos_end_dis);
+                ciel::memmove(ciel::to_address(pos + count), ciel::to_address(pos), sizeof(value_type) * pos_end_dis);
                 end_ = pos;
                 rd.advance_backward(pos_end_dis);
 

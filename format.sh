@@ -2,7 +2,7 @@
 
 required_version=19
 
-echo "Checking if clang-format is installed and exactly at version ${required_version}."
+echo "Checking if clang-format is installed and exactly at version ${required_version}..."
 
 clang-format --version || (echo "clang-format is not installed." && exit 1)
 

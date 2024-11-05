@@ -114,7 +114,7 @@ struct sbv_crtp_base {
         CIEL_PRECONDITION(this_()->begin_ <= p);
         CIEL_PRECONDITION(p < this_()->end_);
 
-        alloc_traits::destroy(allocator_(), p);
+        alloc_traits::destroy(allocator_(), ciel::to_address(p));
     }
 
     pointer
@@ -244,7 +244,7 @@ struct sbv_crtp_base {
 
     Derived&
     operator=(std::initializer_list<value_type> ilist) {
-        assign(ilist.begin(), ilist.end());
+        this_()->assign(ilist.begin(), ilist.end(), ilist.size());
         return *(this_());
     }
 
@@ -277,7 +277,7 @@ struct sbv_crtp_base {
 
     void
     assign(std::initializer_list<value_type> ilist) {
-        assign(ilist.begin(), ilist.end());
+        this_()->assign(ilist.begin(), ilist.end(), ilist.size());
     }
 
     template<class R, enable_if_t<is_range<R>::value, int> = 0>
@@ -285,10 +285,10 @@ struct sbv_crtp_base {
     assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                assign(rg.begin(), rg.end(), rg.size());
+                this_()->assign(rg.begin(), rg.end(), rg.size());
 
             } else {
-                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+                this_()->assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
             }
 
         } else {

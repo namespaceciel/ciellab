@@ -5,60 +5,56 @@
 
 using namespace ciel;
 
-TEST(vector, erase) {
-    {
-        vector<Int> v{0, 1, 2, 3, 4};
+namespace {
 
+template<class T>
+void
+test_erase_impl(::testing::Test*) {
+    // erase single
+    {
+        vector<T> v{0, 1, 2, 3, 4};
         {
             auto it = v.erase(v.begin());
             ASSERT_EQ(it, v.begin());
-            ASSERT_EQ(v, std::initializer_list<Int>({1, 2, 3, 4}));
+            ASSERT_EQ(v, std::initializer_list<T>({1, 2, 3, 4}));
+        }
+        {
+            auto it = v.erase(v.end() - 2);
+            ASSERT_EQ(it, v.end() - 1);
+            ASSERT_EQ(v, std::initializer_list<T>({1, 2, 4}));
         }
         {
             auto it = v.erase(v.end() - 1);
             ASSERT_EQ(it, v.end());
-            ASSERT_EQ(v, std::initializer_list<Int>({1, 2, 3}));
+            ASSERT_EQ(v, std::initializer_list<T>({1, 2}));
         }
     }
+    // erase count < pos_end_dis
     {
-        vector<Int> v{0, 1, 2, 3, 4};
+        vector<T> v{0, 1, 2, 3, 4};
         auto it = v.erase(v.begin(), v.begin() + 2);
         ASSERT_EQ(it, v.begin());
-        ASSERT_EQ(v, std::initializer_list<Int>({2, 3, 4}));
+        ASSERT_EQ(v, std::initializer_list<T>({2, 3, 4}));
     }
+    // erase count > pos_end_dis
     {
-        vector<Int> v{0, 1, 2, 3, 4};
+        vector<T> v{0, 1, 2, 3, 4};
+        auto it = v.erase(v.begin(), v.begin() + 3);
+        ASSERT_EQ(it, v.begin());
+        ASSERT_EQ(v, std::initializer_list<T>({3, 4}));
+    }
+    // erase at end
+    {
+        vector<T> v{0, 1, 2, 3, 4};
         auto it = v.erase(v.begin(), v.end());
         ASSERT_EQ(it, v.end());
         ASSERT_TRUE(v.empty());
     }
 }
 
-TEST(vector, erase_tr) {
-    {
-        vector<TRInt> v{0, 1, 2, 3, 4};
+} // namespace
 
-        {
-            auto it = v.erase(v.begin());
-            ASSERT_EQ(it, v.begin());
-            ASSERT_EQ(v, std::initializer_list<TRInt>({1, 2, 3, 4}));
-        }
-        {
-            auto it = v.erase(v.end() - 1);
-            ASSERT_EQ(it, v.end());
-            ASSERT_EQ(v, std::initializer_list<TRInt>({1, 2, 3}));
-        }
-    }
-    {
-        vector<TRInt> v{0, 1, 2, 3, 4};
-        auto it = v.erase(v.begin(), v.begin() + 2);
-        ASSERT_EQ(it, v.begin());
-        ASSERT_EQ(v, std::initializer_list<TRInt>({2, 3, 4}));
-    }
-    {
-        vector<TRInt> v{0, 1, 2, 3, 4};
-        auto it = v.erase(v.begin(), v.end());
-        ASSERT_EQ(it, v.end());
-        ASSERT_TRUE(v.empty());
-    }
+TEST(vector, erase) {
+    test_erase_impl<Int>(this);
+    test_erase_impl<TRInt>(this);
 }

@@ -19,9 +19,9 @@ public:
         : i_(i) {}
 
     int_wrapper(const int_wrapper&) noexcept = default;
-    int_wrapper&
-    operator=(const int_wrapper&) noexcept
-        = default;
+    // clang-format off
+    int_wrapper& operator=(const int_wrapper&) noexcept = default;
+    // clang-format on
 
     int_wrapper(int_wrapper&& other) noexcept(IsNothrowMovable)
         : i_(ciel::exchange(other.i_, -1)) {}

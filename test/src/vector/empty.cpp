@@ -5,25 +5,24 @@
 
 using namespace ciel;
 
+namespace {
+
+template<class C>
+void
+test_empty_impl(::testing::Test*) {
+    C c;
+    ASSERT_TRUE(c.empty());
+
+    c.push_back(1);
+    ASSERT_FALSE(c.empty());
+
+    c.clear();
+    ASSERT_TRUE(c.empty());
+}
+
+} // namespace
+
 TEST(vector, empty) {
-    {
-        vector<int> c;
-        ASSERT_TRUE(c.empty());
-
-        c.push_back(1);
-        ASSERT_FALSE(c.empty());
-
-        c.clear();
-        ASSERT_TRUE(c.empty());
-    }
-    {
-        vector<int, fancy_allocator<int>> c;
-        ASSERT_TRUE(c.empty());
-
-        c.push_back(1);
-        ASSERT_FALSE(c.empty());
-
-        c.clear();
-        ASSERT_TRUE(c.empty());
-    }
+    test_empty_impl<vector<int>>(this);
+    test_empty_impl<vector<int, fancy_allocator<int>>>(this);
 }

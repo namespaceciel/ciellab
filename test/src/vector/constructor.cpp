@@ -9,66 +9,174 @@
 #include <ciel/vector.hpp>
 
 #include <array>
-#include <memory>
-#include <type_traits>
 
 using namespace ciel;
 
+namespace {
+
+template<class C>
+void
+test_default_constructor_impl(::testing::Test*) {
+    using Alloc = typename C::allocator_type;
+    {
+        C c;
+        ASSERT_TRUE(c.empty());
+        ASSERT_EQ(c.capacity(), 0);
+        ASSERT_EQ(c.get_allocator(), Alloc());
+    }
+    {
+        C c = {};
+        ASSERT_TRUE(c.empty());
+        ASSERT_EQ(c.capacity(), 0);
+        ASSERT_EQ(c.get_allocator(), Alloc());
+    }
+}
+
+template<class C>
+void
+test_default_constructor_with_allocator_impl(::testing::Test*) {
+    using Alloc = typename C::allocator_type;
+
+    C v(Alloc{});
+    ASSERT_TRUE(v.empty());
+    ASSERT_EQ(v.capacity(), 0);
+}
+
+template<class C>
+void
+test_constructor_size_value_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    C v(3, T{1});
+    ASSERT_EQ(v, std::initializer_list<T>({1, 1, 1}));
+}
+
+template<class C>
+void
+test_constructor_size_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    C v(3);
+    ASSERT_EQ(v, std::initializer_list<T>({0, 0, 0}));
+}
+
+template<class C>
+void
+test_constructor_iterator_range_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    // InputIterator
+    {
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        C v(InputIterator<T>{arr.data()}, InputIterator<T>{arr.data() + arr.size()});
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
+    }
+    {
+        // empty range
+        C v(InputIterator<T>{nullptr}, InputIterator<T>{nullptr});
+        ASSERT_TRUE(v.empty());
+    }
+    // ForwardIterator
+    {
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        C v(ForwardIterator<T>{arr.data()}, ForwardIterator<T>{arr.data() + arr.size()});
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
+    }
+    {
+        // empty range
+        C v(ForwardIterator<T>{nullptr}, ForwardIterator<T>{nullptr});
+        ASSERT_TRUE(v.empty());
+    }
+    // random_access_iterator
+    {
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        C v(RandomAccessIterator<T>{arr.data()}, RandomAccessIterator<T>{arr.data() + arr.size()});
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
+    }
+    {
+        // empty range
+        C v(RandomAccessIterator<T>{nullptr}, RandomAccessIterator<T>{nullptr});
+        ASSERT_TRUE(v.empty());
+    }
+    // contiguous_iterator
+    {
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        C v(arr.data(), arr.data() + arr.size());
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
+    }
+    {
+        // empty range
+        C v(static_cast<T*>(nullptr), static_cast<T*>(nullptr));
+        ASSERT_TRUE(v.empty());
+    }
+}
+
+template<class C>
+void
+test_copy_constructor_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    C v1({0, 1, 2, 3, 4});
+    C v2(v1);
+    ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
+}
+
+template<class C>
+void
+test_copy_constructor_with_allocator_impl(::testing::Test*) {
+    using T     = typename C::value_type;
+    using Alloc = typename C::allocator_type;
+
+    C v1({0, 1, 2, 3, 4});
+    C v2(v1, Alloc{});
+    ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
+}
+
+template<class C>
+void
+test_move_constructor_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    C v1({0, 1, 2, 3, 4});
+    C v2(std::move(v1));
+    ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
+}
+
+template<class C>
+void
+test_move_constructor_with_allocator_impl(::testing::Test*) {
+    using T     = typename C::value_type;
+    using Alloc = typename C::allocator_type;
+
+    C v1({0, 1, 2, 3, 4});
+    C v2(std::move(v1), Alloc{});
+    ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
+}
+
+template<class C>
+void
+test_constructor_initializer_list_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    C v({0, 1, 2, 3, 4});
+    ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
+}
+
+} // namespace
+
 TEST(vector, default_constructor) {
-    {
-        using C = vector<Int>;
-        {
-            C c;
-            ASSERT_TRUE(c.empty());
-            ASSERT_EQ(c.capacity(), 0);
-            ASSERT_EQ(c.get_allocator(), C::allocator_type());
-        }
-        {
-            C c = {};
-            ASSERT_TRUE(c.empty());
-            ASSERT_EQ(c.capacity(), 0);
-            ASSERT_EQ(c.get_allocator(), C::allocator_type());
-        }
-    }
-    {
-        using C = vector<Int, fancy_allocator<Int>>;
-        {
-            C c;
-            ASSERT_TRUE(c.empty());
-            ASSERT_EQ(c.capacity(), 0);
-            ASSERT_EQ(c.get_allocator(), C::allocator_type());
-        }
-        {
-            C c = {};
-            ASSERT_TRUE(c.empty());
-            ASSERT_EQ(c.capacity(), 0);
-            ASSERT_EQ(c.get_allocator(), C::allocator_type());
-        }
-    }
+    test_default_constructor_impl<vector<Int>>(this);
+    test_default_constructor_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
 
 TEST(vector, default_constructor_with_allocator) {
-    {
-        vector<Int> v(std::allocator<Int>{});
-        ASSERT_TRUE(v.empty());
-        ASSERT_EQ(v.capacity(), 0);
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v(fancy_allocator<Int>{});
-        ASSERT_TRUE(v.empty());
-        ASSERT_EQ(v.capacity(), 0);
-    }
+    test_default_constructor_with_allocator_impl<vector<Int>>(this);
+    test_default_constructor_with_allocator_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
 
-TEST(vector, constructor_size) {
-    {
-        vector<Int> v(3, Int{1});
-        ASSERT_EQ(v, std::initializer_list<Int>({1, 1, 1}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v(4, Int{1});
-        ASSERT_EQ(v, std::initializer_list<Int>({1, 1, 1, 1}));
-    }
+TEST(vector, constructor_size_value) {
+    test_constructor_size_value_impl<vector<Int>>(this);
+    test_constructor_size_value_impl<vector<Int, fancy_allocator<Int>>>(this);
     {
         // distinguish from iterator range constructor
         vector<size_t> v(size_t{5}, size_t{5});
@@ -76,180 +184,49 @@ TEST(vector, constructor_size) {
     }
 }
 
-TEST(vector, constructor_size_value) {
-    {
-        vector<Int> v(3);
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 0, 0}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v(4);
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 0, 0, 0}));
-    }
+TEST(vector, constructor_size) {
+    test_constructor_size_impl<vector<Int>>(this);
+    test_constructor_size_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
 
 TEST(vector, constructor_iterator_range) {
-    // InputIterator
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int> v(InputIterator<Int>{arr.data()}, InputIterator<Int>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int, fancy_allocator<Int>> v(InputIterator<Int>{arr.data()},
-                                            InputIterator<Int>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        // empty range
-        vector<Int> v(InputIterator<Int>{nullptr}, InputIterator<Int>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-    {
-        // empty range
-        vector<Int, fancy_allocator<Int>> v(InputIterator<Int>{nullptr}, InputIterator<Int>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-
-    // ForwardIterator
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int> v(ForwardIterator<Int>{arr.data()}, ForwardIterator<Int>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int, fancy_allocator<Int>> v(ForwardIterator<Int>{arr.data()},
-                                            ForwardIterator<Int>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        // empty range
-        vector<Int> v(ForwardIterator<Int>{nullptr}, ForwardIterator<Int>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-    {
-        // empty range
-        vector<Int, fancy_allocator<Int>> v(ForwardIterator<Int>{nullptr}, ForwardIterator<Int>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-
-    // random_access_iterator
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int> v(RandomAccessIterator<Int>{arr.data()}, RandomAccessIterator<Int>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int, fancy_allocator<Int>> v(RandomAccessIterator<Int>{arr.data()},
-                                            RandomAccessIterator<Int>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        // empty range
-        vector<Int> v(RandomAccessIterator<Int>{nullptr}, RandomAccessIterator<Int>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-    {
-        // empty range
-        vector<Int, fancy_allocator<Int>> v(RandomAccessIterator<Int>{nullptr}, RandomAccessIterator<Int>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-
-    // contiguous_iterator
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int> v(arr.data(), arr.data() + arr.size());
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        std::array<Int, 5> arr{0, 1, 2, 3, 4};
-        vector<Int, fancy_allocator<Int>> v(arr.data(), arr.data() + arr.size());
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        // empty range
-        vector<Int> v(static_cast<Int*>(nullptr), static_cast<Int*>(nullptr));
-        ASSERT_TRUE(v.empty());
-    }
-    {
-        // empty range
-        vector<Int, fancy_allocator<Int>> v(static_cast<Int*>(nullptr), static_cast<Int*>(nullptr));
-        ASSERT_TRUE(v.empty());
-    }
+    test_constructor_iterator_range_impl<vector<Int>>(this);
+    test_constructor_iterator_range_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
 
 TEST(vector, copy_constructor) {
-    {
-        vector<Int> v1({0, 1, 2, 3, 4});
-        vector<Int> v2(v1);
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v1({0, 1, 2, 3, 4});
-        vector<Int, fancy_allocator<Int>> v2(v1);
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
+    test_copy_constructor_impl<vector<Int>>(this);
+    test_copy_constructor_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
 
 TEST(vector, copy_constructor_with_allocator) {
-    {
-        vector<Int> v1({0, 1, 2, 3, 4});
-        vector<Int> v2(v1, std::allocator<Int>{});
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v1({0, 1, 2, 3, 4});
-        vector<Int, fancy_allocator<Int>> v2(v1, fancy_allocator<Int>{});
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, different_allocator<Int>> v1({0, 1, 2, 3, 4});
-        vector<Int, different_allocator<Int>> v2(v1, different_allocator<Int>{});
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
+    test_copy_constructor_with_allocator_impl<vector<Int>>(this);
+    test_copy_constructor_with_allocator_impl<vector<Int, fancy_allocator<Int>>>(this);
+    test_copy_constructor_with_allocator_impl<vector<Int, different_allocator<Int>>>(this);
 }
 
 TEST(vector, move_constructor) {
-    {
-        vector<Int> v1({0, 1, 2, 3, 4});
-        vector<Int> v2(std::move(v1));
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v1({0, 1, 2, 3, 4});
-        vector<Int, fancy_allocator<Int>> v2(std::move(v1));
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
+    test_move_constructor_impl<vector<Int>>(this);
+    test_move_constructor_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
 
 TEST(vector, move_constructor_with_allocator) {
+    test_move_constructor_with_allocator_impl<vector<Int>>(this);
+    test_move_constructor_with_allocator_impl<vector<Int, fancy_allocator<Int>>>(this);
     {
-        vector<Int> v1({0, 1, 2, 3, 4});
-        vector<Int> v2(std::move(v1), std::allocator<Int>{});
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v1({0, 1, 2, 3, 4});
-        vector<Int, fancy_allocator<Int>> v2(std::move(v1), fancy_allocator<Int>{});
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, different_allocator<Int>> v1({0, 1, 2, 3, 4});
-        vector<Int, different_allocator<Int>> v2(std::move(v1), different_allocator<Int>{});
-        ASSERT_EQ(v2, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-        ASSERT_EQ(v1, std::initializer_list<Int>({-1, -1, -1, -1, -1}));
+        // Check if source objects are properly moved.
+        using C     = vector<Int, different_allocator<Int>>;
+        using T     = typename C::value_type;
+        using Alloc = typename C::allocator_type;
+
+        C v1({0, 1, 2, 3, 4});
+        C v2(std::move(v1), Alloc{});
+        ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
+        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1}));
     }
 }
 
 TEST(vector, constructor_initializer_list) {
-    {
-        vector<Int> v({0, 1, 2, 3, 4});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<Int, fancy_allocator<Int>> v({0, 1, 2, 3, 4});
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
+    test_constructor_initializer_list_impl<vector<Int>>(this);
+    test_constructor_initializer_list_impl<vector<Int, fancy_allocator<Int>>>(this);
 }
