@@ -4,9 +4,8 @@
 #include <ciel/test/forward_iterator.hpp>
 #include <ciel/test/input_iterator.hpp>
 #include <ciel/test/int_wrapper.hpp>
-#include <ciel/test/maybe_pocca_allocator.hpp>
-#include <ciel/test/maybe_pocma_allocator.hpp>
 #include <ciel/test/operator_hijacker.hpp>
+#include <ciel/test/propagate_allocator.hpp>
 #include <ciel/test/random_access_iterator.hpp>
 #include <ciel/vector.hpp>
 
@@ -30,10 +29,7 @@ test_operator_move_impl(::testing::Test*, C& lhs, C& rhs) {
     const auto temp = lhs;
     rhs             = std::move(lhs);
     ASSERT_EQ(temp, rhs);
-    constexpr bool POCMA_value
-        = std::allocator_traits<typename C::allocator_type>::propagate_on_container_move_assignment::value;
-    const bool res = (!POCMA_value || temp.get_allocator() == rhs.get_allocator());
-    ASSERT_TRUE(res);
+    ASSERT_EQ(temp.get_allocator(), rhs.get_allocator());
 }
 
 template<class C>
