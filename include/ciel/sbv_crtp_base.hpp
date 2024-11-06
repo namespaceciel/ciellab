@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>

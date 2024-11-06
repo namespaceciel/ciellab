@@ -5,3 +5,4 @@ cmake-build-*
 build
 .vscode
 portable_headers
+.cache

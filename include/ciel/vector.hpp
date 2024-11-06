@@ -17,7 +17,6 @@
 #include <ciel/to_address.hpp>
 
 #include <algorithm>
-#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -223,7 +222,7 @@ private:
             swap_out_buffer(std::move(sb));
 
         } else {
-            return unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            unchecked_emplace_back_aux(std::forward<Args>(args)...);
         }
     }
 

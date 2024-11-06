@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL__HPP_
-#define CIELLAB_INCLUDE_CIEL__HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_SWAP_HPP_
+#define CIELLAB_INCLUDE_CIEL_SWAP_HPP_
 
 #include <ciel/config.hpp>
 #include <ciel/cstring.hpp>
@@ -107,4 +107,4 @@ swap_ranges(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2) noexcept {
 
 } // namespace std
 
-#endif // CIELLAB_INCLUDE_CIEL__HPP_
+#endif // CIELLAB_INCLUDE_CIEL_SWAP_HPP_

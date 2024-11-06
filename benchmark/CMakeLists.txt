@@ -13,4 +13,4 @@ target_link_libraries(ciellab_benchmark ciellab benchmark::benchmark)
 
 add_subdirectory(benchmark)
 
-target_compile_options(ciellab_benchmark PUBLIC -O3 -Wall -Wextra -Werror -fexceptions -frtti)
+target_compile_options(ciellab_benchmark PUBLIC -O3 -Wall -Wextra -fexceptions -frtti)
