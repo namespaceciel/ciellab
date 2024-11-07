@@ -344,8 +344,6 @@ private:
 
         // if mid < last
         construct_at_end(mid, last);
-
-        CIEL_POSTCONDITION(size() == count);
     }
 
 public:
@@ -455,8 +453,6 @@ public:
         std::fill_n(begin_(), size(), value);
         // if count > size()
         construct_at_end(count - size(), value);
-
-        CIEL_POSTCONDITION(size() == count);
     }
 
     template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>

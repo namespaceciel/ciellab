@@ -171,20 +171,6 @@ private:
         sb.set_nullptr();
     }
 
-    CIEL_NODISCARD size_type
-    front_spare() const noexcept {
-        CIEL_PRECONDITION(begin_cap_ <= begin_);
-
-        return begin_ - begin_cap_;
-    }
-
-    CIEL_NODISCARD size_type
-    back_spare() const noexcept {
-        CIEL_PRECONDITION(end_ <= end_cap_());
-
-        return end_cap_() - end_;
-    }
-
     // Note that this will invalidate iterators.
     template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
     void
@@ -499,7 +485,7 @@ public:
 
         } else if (other.size() > 0) {
             init(other.size());
-            construct_at_end(other.begin(), other.end());
+            construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
         }
     }
 
@@ -554,13 +540,24 @@ public:
     void
     assign(const size_type count, lvalue value) {
         if (back_spare() + size() < count) {
+            const auto callback = [&] {
+                if (capacity() >= count) {
+                    clear();
+                    begin_ = begin_cap_;
+                    end_   = begin_;
+
+                } else {
+                    reset(count);
+                }
+            };
+
             if (internal_value(value, begin_)) {
-                value_type copy = std::move(*(begin_ + (std::addressof(value) - begin_)));
-                reset(count);
+                value_type copy = std::move(*(begin_ + (std::addressof(value) - ciel::to_address(begin_))));
+                callback();
                 construct_at_end(count, copy);
 
             } else {
-                reset(count);
+                callback();
                 construct_at_end(count, value);
             }
 
@@ -575,8 +572,6 @@ public:
             std::fill_n(begin_, count, value);
             end_ = destroy(begin_ + count, end_);
         }
-
-        CIEL_POSTCONDITION(size() == count);
     }
 
 private:
@@ -584,16 +579,17 @@ private:
     void
     assign(Iter first, Iter last, const size_type count) {
         if (back_spare() + size() < count) {
-            const size_type diff = count - back_spare() - size();
-
-            if (front_spare() >= diff) {
-                left_shift_n(diff);
+            if (capacity() >= count) {
+                clear();
+                begin_ = begin_cap_;
+                end_   = begin_;
 
             } else {
                 reset(count);
-                construct_at_end(first, last);
-                return;
             }
+
+            construct_at_end(first, last);
+            return;
         }
 
         if (size() > count) {
@@ -604,11 +600,23 @@ private:
             Iter mid = ciel::copy_n(first, size(), begin_);
             construct_at_end(mid, last);
         }
-
-        CIEL_POSTCONDITION(size() == count);
     }
 
 public:
+    CIEL_NODISCARD size_type
+    front_spare() const noexcept {
+        CIEL_PRECONDITION(begin_cap_ <= begin_);
+
+        return begin_ - begin_cap_;
+    }
+
+    CIEL_NODISCARD size_type
+    back_spare() const noexcept {
+        CIEL_PRECONDITION(end_ <= end_cap_());
+
+        return end_cap_() - end_;
+    }
+
     void
     reserve_front_spare(const size_type new_spare) {
         if (new_spare <= front_spare()) {

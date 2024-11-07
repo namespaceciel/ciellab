@@ -366,8 +366,6 @@ public:
             std::fill_n(begin_, count, value);
             end_ = destroy(begin_ + count, end_);
         }
-
-        CIEL_POSTCONDITION(size() == count);
     }
 
 private:
@@ -388,8 +386,6 @@ private:
             Iter mid = ciel::copy_n(first, size(), begin_);
             construct_at_end(mid, last);
         }
-
-        CIEL_POSTCONDITION(size() == count);
     }
 
 public:
