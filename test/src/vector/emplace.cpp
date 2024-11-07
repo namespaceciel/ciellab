@@ -128,7 +128,9 @@ test_emplace_self_rvalue_impl(::testing::Test*) {
 
         v.emplace(v.begin() + 2, std::move(v[1]));
         v.resize(6);
-        ASSERT_EQ(v, std::initializer_list<T>({0, -1, 1, 2, 3, 4}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({0, -1, 1, 2, 3, 4}));
+        }
     }
     // emplace not at end()
     {
@@ -136,14 +138,18 @@ test_emplace_self_rvalue_impl(::testing::Test*) {
         v.reserve(10);
 
         v.emplace(v.begin() + 1, std::move(v.front()));
-        ASSERT_EQ(v, std::initializer_list<T>({-1, 0, 1, 2, 3, 4}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({-1, 0, 1, 2, 3, 4}));
+        }
     }
     {
         C v{0, 1, 2, 3, 4};
         v.reserve(10);
 
         v.emplace(v.begin() + 1, std::move(v.back()));
-        ASSERT_EQ(v, std::initializer_list<T>({0, 4, 1, 2, 3, -1}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({0, 4, 1, 2, 3, -1}));
+        }
     }
     // emplace at end()
     {
@@ -151,43 +157,57 @@ test_emplace_self_rvalue_impl(::testing::Test*) {
         v.reserve(10);
 
         v.emplace(v.end(), std::move(v[1]));
-        ASSERT_EQ(v, std::initializer_list<T>({0, -1, 2, 3, 4, 1}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({0, -1, 2, 3, 4, 1}));
+        }
     }
 }
 
 } // namespace
 
 TEST(vector, emplace_lvalue) {
+    test_emplace_lvalue_impl<vector<int>>(this);
     test_emplace_lvalue_impl<vector<Int>>(this);
     test_emplace_lvalue_impl<vector<TRInt>>(this);
     test_emplace_lvalue_impl<vector<TMInt>>(this);
+
+    test_emplace_lvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_emplace_lvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_emplace_lvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_emplace_lvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, emplace_self_lvalue) {
+    test_emplace_self_lvalue_impl<vector<int>>(this);
     test_emplace_self_lvalue_impl<vector<Int>>(this);
     test_emplace_self_lvalue_impl<vector<TRInt>>(this);
     test_emplace_self_lvalue_impl<vector<TMInt>>(this);
+
+    test_emplace_self_lvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_emplace_self_lvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_emplace_self_lvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_emplace_self_lvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, emplace_rvalue) {
+    test_emplace_rvalue_impl<vector<int>>(this);
     test_emplace_rvalue_impl<vector<Int>>(this);
     test_emplace_rvalue_impl<vector<TRInt>>(this);
     test_emplace_rvalue_impl<vector<TMInt>>(this);
+
+    test_emplace_rvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_emplace_rvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_emplace_rvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_emplace_rvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, emplace_self_rvalue) {
+    test_emplace_self_rvalue_impl<vector<int>>(this);
     test_emplace_self_rvalue_impl<vector<Int>>(this);
     test_emplace_self_rvalue_impl<vector<TRInt>>(this);
     test_emplace_self_rvalue_impl<vector<TMInt>>(this);
+
+    test_emplace_self_rvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_emplace_self_rvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_emplace_self_rvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_emplace_self_rvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);

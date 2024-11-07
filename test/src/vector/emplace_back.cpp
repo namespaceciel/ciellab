@@ -42,18 +42,24 @@ test_emplace_back_self_reference_impl(::testing::Test*) {
 } // namespace
 
 TEST(vector, emplace_back) {
+    test_emplace_back_impl<vector<int>>(this);
     test_emplace_back_impl<vector<Int>>(this);
     test_emplace_back_impl<vector<TRInt>>(this);
     test_emplace_back_impl<vector<TMInt>>(this);
+
+    test_emplace_back_impl<vector<int, fancy_allocator<int>>>(this);
     test_emplace_back_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_emplace_back_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_emplace_back_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, emplace_back_self_reference) {
+    test_emplace_back_self_reference_impl<vector<int>>(this);
     test_emplace_back_self_reference_impl<vector<Int>>(this);
     test_emplace_back_self_reference_impl<vector<TRInt>>(this);
     test_emplace_back_self_reference_impl<vector<TMInt>>(this);
+
+    test_emplace_back_self_reference_impl<vector<int, fancy_allocator<int>>>(this);
     test_emplace_back_self_reference_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_emplace_back_self_reference_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_emplace_back_self_reference_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);

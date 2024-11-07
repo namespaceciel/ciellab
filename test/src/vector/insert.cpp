@@ -229,7 +229,9 @@ test_insert_self_rvalue_impl(::testing::Test*) {
 
         v.insert(v.begin() + 2, std::move(v[1]));
         v.resize(6);
-        ASSERT_EQ(v, std::initializer_list<T>({0, -1, 1, 2, 3, 4}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({0, -1, 1, 2, 3, 4}));
+        }
     }
     // emplace not at end()
     {
@@ -237,14 +239,18 @@ test_insert_self_rvalue_impl(::testing::Test*) {
         v.reserve(10);
 
         v.insert(v.begin() + 1, std::move(v.front()));
-        ASSERT_EQ(v, std::initializer_list<T>({-1, 0, 1, 2, 3, 4}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({-1, 0, 1, 2, 3, 4}));
+        }
     }
     {
         C v{0, 1, 2, 3, 4};
         v.reserve(10);
 
         v.insert(v.begin() + 1, std::move(v.back()));
-        ASSERT_EQ(v, std::initializer_list<T>({0, 4, 1, 2, 3, -1}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({0, 4, 1, 2, 3, -1}));
+        }
     }
     // emplace at end()
     {
@@ -252,7 +258,9 @@ test_insert_self_rvalue_impl(::testing::Test*) {
         v.reserve(10);
 
         v.insert(v.end(), std::move(v[1]));
-        ASSERT_EQ(v, std::initializer_list<T>({0, -1, 2, 3, 4, 1}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_EQ(v, std::initializer_list<T>({0, -1, 2, 3, 4, 1}));
+        }
     }
 }
 
@@ -293,84 +301,114 @@ test_insert_iterator_range_impl(::testing::Test*) {
 } // namespace
 
 TEST(vector, insert_size_value) {
+    test_insert_size_value_impl<vector<int>>(this);
     test_insert_size_value_impl<vector<Int>>(this);
     test_insert_size_value_impl<vector<TRInt>>(this);
     test_insert_size_value_impl<vector<TMInt>>(this);
+
+    test_insert_size_value_impl<vector<int, fancy_allocator<int>>>(this);
     test_insert_size_value_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_insert_size_value_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_insert_size_value_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, insert_size_self_value) {
+    test_insert_size_self_value_impl<vector<int>>(this);
     test_insert_size_self_value_impl<vector<Int>>(this);
     test_insert_size_self_value_impl<vector<TRInt>>(this);
     test_insert_size_self_value_impl<vector<TMInt>>(this);
+
+    test_insert_size_self_value_impl<vector<int, fancy_allocator<int>>>(this);
     test_insert_size_self_value_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_insert_size_self_value_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_insert_size_self_value_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, insert_lvalue) {
+    test_insert_lvalue_impl<vector<int>>(this);
     test_insert_lvalue_impl<vector<Int>>(this);
     test_insert_lvalue_impl<vector<TRInt>>(this);
     test_insert_lvalue_impl<vector<TMInt>>(this);
+
+    test_insert_lvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_insert_lvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_insert_lvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_insert_lvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, insert_self_lvalue) {
+    test_insert_self_lvalue_impl<vector<int>>(this);
     test_insert_self_lvalue_impl<vector<Int>>(this);
     test_insert_self_lvalue_impl<vector<TRInt>>(this);
     test_insert_self_lvalue_impl<vector<TMInt>>(this);
+
+    test_insert_self_lvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_insert_self_lvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_insert_self_lvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_insert_self_lvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, insert_rvalue) {
+    test_insert_rvalue_impl<vector<int>>(this);
     test_insert_rvalue_impl<vector<Int>>(this);
     test_insert_rvalue_impl<vector<TRInt>>(this);
     test_insert_rvalue_impl<vector<TMInt>>(this);
+
+    test_insert_rvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_insert_rvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_insert_rvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_insert_rvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, insert_self_rvalue) {
+    test_insert_self_rvalue_impl<vector<int>>(this);
     test_insert_self_rvalue_impl<vector<Int>>(this);
     test_insert_self_rvalue_impl<vector<TRInt>>(this);
     test_insert_self_rvalue_impl<vector<TMInt>>(this);
+
+    test_insert_self_rvalue_impl<vector<int, fancy_allocator<int>>>(this);
     test_insert_self_rvalue_impl<vector<Int, fancy_allocator<Int>>>(this);
     test_insert_self_rvalue_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
     test_insert_self_rvalue_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 TEST(vector, insert_iterator_range) {
+    test_insert_iterator_range_impl<vector<int>, InputIterator<int>>(this);
     test_insert_iterator_range_impl<vector<Int>, InputIterator<Int>>(this);
     test_insert_iterator_range_impl<vector<TRInt>, InputIterator<TRInt>>(this);
     test_insert_iterator_range_impl<vector<TMInt>, InputIterator<TMInt>>(this);
+
+    test_insert_iterator_range_impl<vector<int, fancy_allocator<int>>, InputIterator<int>>(this);
     test_insert_iterator_range_impl<vector<Int, fancy_allocator<Int>>, InputIterator<Int>>(this);
     test_insert_iterator_range_impl<vector<TRInt, fancy_allocator<TRInt>>, InputIterator<TRInt>>(this);
     test_insert_iterator_range_impl<vector<TMInt, fancy_allocator<TMInt>>, InputIterator<TMInt>>(this);
 
+    test_insert_iterator_range_impl<vector<int>, ForwardIterator<int>>(this);
     test_insert_iterator_range_impl<vector<Int>, ForwardIterator<Int>>(this);
     test_insert_iterator_range_impl<vector<TRInt>, ForwardIterator<TRInt>>(this);
     test_insert_iterator_range_impl<vector<TMInt>, ForwardIterator<TMInt>>(this);
+
+    test_insert_iterator_range_impl<vector<int, fancy_allocator<int>>, ForwardIterator<int>>(this);
     test_insert_iterator_range_impl<vector<Int, fancy_allocator<Int>>, ForwardIterator<Int>>(this);
     test_insert_iterator_range_impl<vector<TRInt, fancy_allocator<TRInt>>, ForwardIterator<TRInt>>(this);
     test_insert_iterator_range_impl<vector<TMInt, fancy_allocator<TMInt>>, ForwardIterator<TMInt>>(this);
 
+    test_insert_iterator_range_impl<vector<int>, RandomAccessIterator<int>>(this);
     test_insert_iterator_range_impl<vector<Int>, RandomAccessIterator<Int>>(this);
     test_insert_iterator_range_impl<vector<TRInt>, RandomAccessIterator<TRInt>>(this);
     test_insert_iterator_range_impl<vector<TMInt>, RandomAccessIterator<TMInt>>(this);
+
+    test_insert_iterator_range_impl<vector<int, fancy_allocator<int>>, RandomAccessIterator<int>>(this);
     test_insert_iterator_range_impl<vector<Int, fancy_allocator<Int>>, RandomAccessIterator<Int>>(this);
     test_insert_iterator_range_impl<vector<TRInt, fancy_allocator<TRInt>>, RandomAccessIterator<TRInt>>(this);
     test_insert_iterator_range_impl<vector<TMInt, fancy_allocator<TMInt>>, RandomAccessIterator<TMInt>>(this);
 
+    test_insert_iterator_range_impl<vector<int>, int*>(this);
     test_insert_iterator_range_impl<vector<Int>, Int*>(this);
     test_insert_iterator_range_impl<vector<TRInt>, TRInt*>(this);
     test_insert_iterator_range_impl<vector<TMInt>, TMInt*>(this);
+
+    test_insert_iterator_range_impl<vector<int, fancy_allocator<int>>, int*>(this);
     test_insert_iterator_range_impl<vector<Int, fancy_allocator<Int>>, Int*>(this);
     test_insert_iterator_range_impl<vector<TRInt, fancy_allocator<TRInt>>, TRInt*>(this);
     test_insert_iterator_range_impl<vector<TMInt, fancy_allocator<TMInt>>, TMInt*>(this);

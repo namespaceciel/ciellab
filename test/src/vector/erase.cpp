@@ -55,6 +55,8 @@ test_erase_impl(::testing::Test*) {
 } // namespace
 
 TEST(vector, erase) {
+    test_erase_impl<int>(this);
     test_erase_impl<Int>(this);
     test_erase_impl<TRInt>(this);
+    test_erase_impl<TMInt>(this);
 }

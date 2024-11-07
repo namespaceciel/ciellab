@@ -6,31 +6,18 @@
 
 using namespace ciel;
 
-TEST(vector, reserve) {
+namespace {
+
+template<class C>
+void
+test_reserve_impl(::testing::Test*) {
     {
-        vector<int> v;
+        C v;
         v.reserve(10);
         ASSERT_GE(v.capacity(), 10);
     }
     {
-        vector<int> v(100);
-        ASSERT_GE(v.capacity(), 100);
-
-        v.reserve(50);
-        ASSERT_EQ(v.size(), 100);
-        ASSERT_GE(v.capacity(), 100);
-
-        v.reserve(150);
-        ASSERT_EQ(v.size(), 100);
-        ASSERT_GE(v.capacity(), 150);
-    }
-    {
-        vector<int, fancy_allocator<int>> v;
-        v.reserve(10);
-        ASSERT_GE(v.capacity(), 10);
-    }
-    {
-        vector<int, fancy_allocator<int>> v(100);
+        C v(100);
         ASSERT_GE(v.capacity(), 100);
 
         v.reserve(50);
@@ -43,17 +30,33 @@ TEST(vector, reserve) {
     }
 }
 
+template<class C>
+void
+test_reserve_data_validity_impl(::testing::Test*) {
+    using T = typename C::value_type;
+
+    vector<T> v{0, 1, 2, 3, 4};
+    v.reserve(v.capacity() + 1);
+    ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
+}
+
+} // namespace
+
+TEST(vector, reserve) {
+    test_reserve_impl<vector<int>>(this);
+    test_reserve_impl<vector<int, fancy_allocator<int>>>(this);
+}
+
 TEST(vector, reserve_data_validity) {
-    {
-        vector<Int> v{0, 1, 2, 3, 4};
-        v.reserve(v.capacity() + 1);
-        ASSERT_EQ(v, std::initializer_list<Int>({0, 1, 2, 3, 4}));
-    }
-    {
-        vector<TRInt> v{0, 1, 2, 3, 4};
-        v.reserve(v.capacity() + 1);
-        ASSERT_EQ(v, std::initializer_list<TRInt>({0, 1, 2, 3, 4}));
-    }
+    test_reserve_data_validity_impl<vector<int>>(this);
+    test_reserve_data_validity_impl<vector<Int>>(this);
+    test_reserve_data_validity_impl<vector<TRInt>>(this);
+    test_reserve_data_validity_impl<vector<TMInt>>(this);
+
+    test_reserve_data_validity_impl<vector<int, fancy_allocator<int>>>(this);
+    test_reserve_data_validity_impl<vector<Int, fancy_allocator<Int>>>(this);
+    test_reserve_data_validity_impl<vector<TRInt, fancy_allocator<TRInt>>>(this);
+    test_reserve_data_validity_impl<vector<TMInt, fancy_allocator<TMInt>>>(this);
 }
 
 #ifdef CIEL_HAS_EXCEPTIONS
