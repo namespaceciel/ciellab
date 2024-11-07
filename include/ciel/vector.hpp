@@ -503,7 +503,6 @@ private:
     }
 
 public:
-    // TODO: internal_value
     template<class... Args>
     iterator
     emplace(const_iterator p, Args&&... args) {
@@ -544,6 +543,12 @@ public:
             [&] {
                 return false;
             });
+    }
+
+    template<class U, enable_if_t<std::is_same<remove_cvref_t<U>, value_type>::value, int> = 0>
+    iterator
+    emplace(const_iterator p, U&& value) {
+        return insert(p, std::forward<U>(value));
     }
 
     iterator

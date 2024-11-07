@@ -26,6 +26,7 @@ set(SOURCES
     src/vector/constructor.cpp
     src/vector/data.cpp
     src/vector/emplace_back.cpp
+    src/vector/emplace.cpp
     src/vector/empty.cpp
     src/vector/erase.cpp
     src/vector/exception_safety.cpp

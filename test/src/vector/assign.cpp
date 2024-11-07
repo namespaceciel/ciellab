@@ -32,61 +32,21 @@ test_operator_move_impl(::testing::Test*, C& lhs, C& rhs) {
     ASSERT_EQ(temp.get_allocator(), rhs.get_allocator());
 }
 
-template<class C>
+template<class Iter, class C>
 void
 test_assign_iterator_range_impl(::testing::Test*, const C& c) {
     using T = typename C::value_type;
 
-    // InputIterator
     {
         auto v = c;
         std::array<T, 5> arr{0, 1, 2, 3, 4};
-        v.assign(InputIterator<T>{arr.data()}, InputIterator<T>{arr.data() + arr.size()});
+        v.assign(Iter{arr.data()}, Iter{arr.data() + arr.size()});
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
     }
     {
-        auto v = c;
         // empty range
-        v.assign(InputIterator<T>{nullptr}, InputIterator<T>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-    // ForwardIterator
-    {
         auto v = c;
-        std::array<T, 5> arr{0, 1, 2, 3, 4};
-        v.assign(ForwardIterator<T>{arr.data()}, ForwardIterator<T>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
-    }
-    {
-        auto v = c;
-        // empty range
-        v.assign(ForwardIterator<T>{nullptr}, ForwardIterator<T>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-    // random_access_iterator
-    {
-        auto v = c;
-        std::array<T, 5> arr{0, 1, 2, 3, 4};
-        v.assign(RandomAccessIterator<T>{arr.data()}, RandomAccessIterator<T>{arr.data() + arr.size()});
-        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
-    }
-    {
-        auto v = c;
-        // empty range
-        v.assign(RandomAccessIterator<T>{nullptr}, RandomAccessIterator<T>{nullptr});
-        ASSERT_TRUE(v.empty());
-    }
-    // contiguous_iterator
-    {
-        auto v = c;
-        std::array<T, 5> arr{0, 1, 2, 3, 4};
-        v.assign(arr.data(), arr.data() + arr.size());
-        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
-    }
-    {
-        auto v = c;
-        // empty range
-        v.assign(static_cast<T*>(nullptr), static_cast<T*>(nullptr));
+        v.assign(Iter{nullptr}, Iter{nullptr});
         ASSERT_TRUE(v.empty());
     }
 }
@@ -170,32 +130,50 @@ TEST(vector, assign_iterator_range) {
 
     // capacity < 5
     {
-        vector<Int> v(1, 1);
-        test_assign_iterator_range_impl(this, v);
+        const vector<Int> v(1, 1);
+        test_assign_iterator_range_impl<InputIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<ForwardIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<RandomAccessIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<Int*>(this, v);
     }
     {
-        vector<Int, fancy_allocator<Int>> v(1, 1);
-        test_assign_iterator_range_impl(this, v);
+        const vector<Int, fancy_allocator<Int>> v(1, 1);
+        test_assign_iterator_range_impl<InputIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<ForwardIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<RandomAccessIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<Int*>(this, v);
     }
     // capacity >= 5, size < 5
     {
         vector<Int> v(1, 1);
         v.reserve(6);
-        test_assign_iterator_range_impl(this, v);
+        test_assign_iterator_range_impl<InputIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<ForwardIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<RandomAccessIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<Int*>(this, v);
     }
     {
         vector<Int, fancy_allocator<Int>> v(1, 1);
         v.reserve(6);
-        test_assign_iterator_range_impl(this, v);
+        test_assign_iterator_range_impl<InputIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<ForwardIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<RandomAccessIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<Int*>(this, v);
     }
     // size >= 5
     {
-        vector<Int> v(6, 1);
-        test_assign_iterator_range_impl(this, v);
+        const vector<Int> v(6, 1);
+        test_assign_iterator_range_impl<InputIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<ForwardIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<RandomAccessIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<Int*>(this, v);
     }
     {
-        vector<Int, fancy_allocator<Int>> v(6, 1);
-        test_assign_iterator_range_impl(this, v);
+        const vector<Int, fancy_allocator<Int>> v(6, 1);
+        test_assign_iterator_range_impl<InputIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<ForwardIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<RandomAccessIterator<Int>>(this, v);
+        test_assign_iterator_range_impl<Int*>(this, v);
     }
 }
 

@@ -71,6 +71,24 @@ v.emplace(v.end(), {3, 4});
 
 Since `{...}` has no type and can't be deduced to `std::initializer_list` by the compiler, the default `emplace` and `emplace_back` in `std::vector` do not support this functionality directly without providing these overloads.
 
+#### 6. LWG 526 fully supported.
+
+For the following functions, it is safe when the element is from the same vector.
+
+```cpp
+v.assign(5, v[0]);
+v.insert(v.begin(), 2, v[0]);
+v.insert(v.begin(), v[0]);
+v.insert(v.begin(), std::move(v[0]));
+v.emplace(v.begin(), v[0]);
+v.emplace(v.begin(), std::move(v[0]));
+v.emplace_back(v[0]);
+v.emplace_back(std::move(v[0]));
+v.push_back(v[0]);
+v.push_back(std::move(v[0]));
+v.resize(5, v[0]);
+```
+
 ### function.hpp
 
 `ciel::function` is an enhancement of `std::function` that adds optimization for trivially relocatable objects.
