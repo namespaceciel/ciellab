@@ -41,6 +41,7 @@ set(SOURCES
     src/vector/exception_safety.cpp
     src/vector/insert.cpp
     src/vector/max_size.cpp
+    src/vector/print.cpp
     src/vector/reserve.cpp
     src/vector/resize.cpp
     src/vector/shrink_to_fit.cpp

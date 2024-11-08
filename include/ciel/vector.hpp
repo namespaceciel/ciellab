@@ -17,6 +17,7 @@
 #include <ciel/to_address.hpp>
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -767,6 +768,19 @@ public:
     }
 
 }; // class vector
+
+template<class T, class Allocator>
+std::ostream&
+operator<<(std::ostream& out, const vector<T, Allocator>& v) {
+    out << "[ ";
+
+    for (auto it = v.begin(); it != v.end(); ++it) {
+        out << *it << ", ";
+    }
+
+    out << "__" << v.capacity() - v.size() << "__ ]";
+    return out;
+}
 
 template<class T, class Allocator>
 struct is_trivially_relocatable<vector<T, Allocator>>
