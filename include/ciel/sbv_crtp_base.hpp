@@ -457,6 +457,31 @@ struct sbv_crtp_base {
         this_()->end_ = destroy(this_()->begin_, this_()->end_);
     }
 
+    iterator
+    erase(const_iterator p) {
+        const pointer pos = this_()->begin_ + (p - begin());
+        CIEL_PRECONDITION(this_()->begin_ <= pos);
+        CIEL_PRECONDITION(pos < this_()->end_);
+
+        return this_()->erase_impl(pos, pos + 1, 1);
+    }
+
+    iterator
+    erase(const_iterator f, const_iterator l) {
+        const pointer first = this_()->begin_ + (f - begin());
+        const pointer last  = this_()->begin_ + (l - begin());
+        CIEL_PRECONDITION(this_()->begin_ <= first);
+        CIEL_PRECONDITION(last <= this_()->end_);
+
+        const auto count = last - first;
+
+        if CIEL_UNLIKELY (count <= 0) {
+            return last;
+        }
+
+        return this_()->erase_impl(first, last, count);
+    }
+
     void
     push_back(lvalue value) {
         this_()->emplace_back_aux(value);

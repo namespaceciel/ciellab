@@ -104,8 +104,8 @@ public: // public functions
     // insert
     // insert_range
     // emplace
-    // erase
     using base_type::emplace_back;
+    using base_type::erase;
     using base_type::push_back;
     using base_type::unchecked_emplace_back;
     // append_range
@@ -701,31 +701,6 @@ private:
     }
 
 public:
-    iterator
-    erase(const_iterator p) {
-        const pointer pos = begin_ + (p - begin());
-        CIEL_PRECONDITION(begin_ <= pos);
-        CIEL_PRECONDITION(pos < end_);
-
-        return erase_impl(pos, pos + 1, 1);
-    }
-
-    iterator
-    erase(const_iterator f, const_iterator l) {
-        const pointer first = begin_ + (f - begin());
-        const pointer last  = begin_ + (l - begin());
-        CIEL_PRECONDITION(begin_ <= first);
-        CIEL_PRECONDITION(last <= end_);
-
-        const auto count = last - first;
-
-        if CIEL_UNLIKELY (count <= 0) {
-            return last;
-        }
-
-        return erase_impl(first, last, count);
-    }
-
     void
     resize(const size_type count) {
         if (size() >= count) {

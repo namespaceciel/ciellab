@@ -112,8 +112,8 @@ public: // public functions
     // insert
     // insert_range
     // emplace
-    // erase
     using base_type::emplace_back;
+    using base_type::erase;
     using base_type::push_back;
     using base_type::unchecked_emplace_back;
     // emplace_front
@@ -683,6 +683,67 @@ public:
         }
     }
 
+private:
+    iterator
+    erase_impl(pointer first, pointer last,
+               const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
+                                                     || std::is_nothrow_move_assignable<value_type>::value) {
+        CIEL_PRECONDITION(last - first == count);
+        CIEL_PRECONDITION(count != 0);
+
+        const auto index      = first - begin_;
+        const auto back_count = end_ - last;
+
+        if (back_count == 0) {
+            end_ = destroy(first, end_);
+
+        } else if (index == 0) {
+            destroy(begin_, last);
+            begin_ = last;
+
+        } else if (back_count < index) { // move backward last half
+            if (is_trivially_relocatable<value_type>::value) {
+                destroy(first, last);
+                end_ -= count;
+
+                if (count >= back_count) {
+                    ciel::memcpy(ciel::to_address(first), ciel::to_address(last), sizeof(value_type) * back_count);
+
+                } else {
+                    ciel::memmove(ciel::to_address(first), ciel::to_address(last), sizeof(value_type) * back_count);
+                }
+
+            } else {
+                pointer new_end = std::move(last, end_, first);
+                end_            = destroy(new_end, end_);
+            }
+
+        } else { // move forward first half
+            if (is_trivially_relocatable<value_type>::value) {
+                destroy(first, last);
+
+                if (count >= index) {
+                    ciel::memcpy(ciel::to_address(begin_ + count), ciel::to_address(begin_),
+                                 sizeof(value_type) * index);
+
+                } else {
+                    ciel::memmove(ciel::to_address(begin_ + count), ciel::to_address(begin_),
+                                  sizeof(value_type) * index);
+                }
+
+                begin_ += count;
+
+            } else {
+                pointer new_begin = std::move_backward(begin_, first, last);
+                destroy(begin_, new_begin);
+                begin_ = new_begin;
+            }
+        }
+
+        return begin() + index;
+    }
+
+public:
     template<class... Args>
     reference
     emplace_front(Args&&... args) {
