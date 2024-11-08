@@ -4,7 +4,7 @@
 
 using namespace ciel;
 
-TEST(split_buffer, constructors) {
+TEST(split_buffer, constructors_old) {
     const split_buffer<int> v1;
     ASSERT_TRUE(v1.empty());
     ASSERT_EQ(v1.size(), 0);
@@ -38,7 +38,7 @@ TEST(split_buffer, constructors) {
     ASSERT_TRUE(v10.empty());
 }
 
-TEST(split_buffer, assignments) {
+TEST(split_buffer, assignments_old) {
     split_buffer<int> v1({1, 2, 3, 4, 5});
     split_buffer<int> v2{};
 
@@ -92,7 +92,7 @@ TEST(split_buffer, assignments) {
     }
 }
 
-TEST(split_buffer, at) {
+TEST(split_buffer, at_old) {
     const split_buffer<size_t> v1({0, 1, 2, 3, 4, 5});
     for (size_t i = 0; i < v1.size(); ++i) {
         ASSERT_EQ(v1[i], i);
@@ -106,7 +106,7 @@ TEST(split_buffer, at) {
 #endif
 }
 
-TEST(split_buffer, push_and_pop) {
+TEST(split_buffer, push_and_pop_old) {
     // empty
     split_buffer<int> v1;
     ASSERT_EQ(v1.emplace_back(0), 0);
@@ -150,7 +150,7 @@ TEST(split_buffer, push_and_pop) {
     ASSERT_EQ(v2.front(), 1);
 }
 
-TEST(split_buffer, resize) {
+TEST(split_buffer, resize_old) {
     split_buffer<int> v1(10, 5);
     ASSERT_EQ(v1.size(), 10);
     for (const int i : v1) {

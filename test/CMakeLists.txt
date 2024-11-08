@@ -21,7 +21,13 @@ set(SOURCES
     src/split_buffer.cpp
     src/worth_move.cpp
     src/split_buffer/assign.cpp
+    src/split_buffer/compare.cpp
     src/split_buffer/constructor.cpp
+    src/split_buffer/data.cpp
+    src/split_buffer/emplace_back.cpp
+    src/split_buffer/empty.cpp
+    src/split_buffer/resize.cpp
+    src/split_buffer/swap.cpp
     src/vector/assign.cpp
     src/vector/capacity.cpp
     src/vector/compare.cpp

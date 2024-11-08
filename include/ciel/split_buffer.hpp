@@ -177,7 +177,7 @@ private:
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
 
-        ciel::memmove(begin_ - n, begin_, sizeof(value_type) * size());
+        ciel::memmove(ciel::to_address(begin_ - n), ciel::to_address(begin_), sizeof(value_type) * size());
         begin_ -= n;
         end_ -= n;
     }
@@ -250,7 +250,7 @@ private:
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
 
-        ciel::memmove(begin_ + n, begin_, sizeof(value_type) * size());
+        ciel::memmove(ciel::to_address(begin_ + n), ciel::to_address(begin_), sizeof(value_type) * size());
         begin_ += n;
         end_ += n;
     }
@@ -664,7 +664,7 @@ public:
 
     void
     shrink_to_fit() {
-        if CIEL_UNLIKELY (front_spare() == 0 && back_spare() == 0) {
+        if CIEL_UNLIKELY (size() == capacity()) {
             return;
         }
 
@@ -677,7 +677,7 @@ public:
             }
             CIEL_CATCH (...) {}
 
-        } else if (begin_cap_) {
+        } else {
             alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
             set_nullptr();
         }
