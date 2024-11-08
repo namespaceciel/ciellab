@@ -36,7 +36,7 @@ public:
     min_pointer(nullptr_t) noexcept
         : ptr_(nullptr) {}
 
-    template<class T, enable_if_t<!std::is_const<T>::value, int> = 0>
+    template<class T, enable_if_t<!std::is_const<T>::value> = 0>
     min_pointer(min_pointer<T> p) noexcept
         : ptr_(p.ptr_) {}
 

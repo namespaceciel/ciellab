@@ -267,7 +267,7 @@ private:
         }
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     void
     construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(size() + std::distance(first, last) <= capacity());
@@ -279,7 +279,7 @@ private:
         }
     }
 
-    template<class U = value_type, enable_if_t<std::is_trivially_destructible<U>::value, int> = 0>
+    template<class U = value_type, enable_if_t<std::is_trivially_destructible<U>::value> = 0>
     void
     range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
@@ -289,7 +289,7 @@ private:
         size_ -= std::distance(begin, end);
     }
 
-    template<class U = value_type, enable_if_t<!std::is_trivially_destructible<U>::value, int> = 0>
+    template<class U = value_type, enable_if_t<!std::is_trivially_destructible<U>::value> = 0>
     void
     range_destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
@@ -368,7 +368,7 @@ public:
         construct_at_end(count);
     }
 
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     inplace_vector(Iter first, Iter last)
         : inplace_vector() {
         while (first != last) {
@@ -377,7 +377,7 @@ public:
         }
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     inplace_vector(Iter first, Iter last)
         : inplace_vector() {
         const size_type count = std::distance(first, last);
@@ -391,15 +391,15 @@ public:
     inplace_vector(const inplace_vector& other) noexcept(std::is_nothrow_copy_constructible<T>::value) = default;
     inplace_vector(inplace_vector&& other) noexcept(std::is_nothrow_move_constructible<T>::value)      = default;
 
-    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector(rg.begin(), rg.end()) {}
 
-    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end())) {}
 
-    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector() {
         const size_type count = rg.size();
@@ -410,7 +410,7 @@ public:
         construct_at_end(rg.begin(), rg.end());
     }
 
-    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
     inplace_vector(from_range_t, R&& rg)
         : inplace_vector() {
         const size_type count = rg.size();
@@ -455,7 +455,7 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -463,7 +463,7 @@ public:
         assign(first, last, count);
     }
 
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     void
     assign(Iter first, Iter last) {
         clear();
@@ -479,7 +479,7 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    template<class R, enable_if_t<is_range<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range<R>::value> = 0>
     void
     assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
@@ -768,13 +768,13 @@ public:
 
     // TODO: erase
 
-    template<class U = inplace_vector, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
+    template<class U = inplace_vector, enable_if_t<is_trivially_relocatable<U>::value> = 0>
     void
     swap(inplace_vector& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
-    template<class U = inplace_vector, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
+    template<class U = inplace_vector, enable_if_t<!is_trivially_relocatable<U>::value> = 0>
     void
     swap(inplace_vector& other) noexcept(std::is_nothrow_move_constructible<T>::value
                                          && std::is_nothrow_move_assignable<T>::value) {

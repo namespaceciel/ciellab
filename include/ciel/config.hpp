@@ -224,7 +224,7 @@ NAMESPACE_CIEL_BEGIN
 template<bool B, class T, class F>
 using conditional_t = typename std::conditional<B, T, F>::type;
 
-template<bool B, class T = void>
+template<bool B, class T = int>
 using enable_if_t = typename std::enable_if<B, T>::type;
 
 template<class T>

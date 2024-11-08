@@ -65,7 +65,7 @@ NAMESPACE_CIEL_END
 namespace std {
 
 #if CIEL_STD_VER < 20
-template<class T, ciel::enable_if_t<ciel::is_trivially_relocatable<T>::value, int> = 0>
+template<class T, ciel::enable_if_t<ciel::is_trivially_relocatable<T>::value> = 0>
 T*
 swap_ranges(T* first1, T* last1, T* first2) noexcept {
     const size_t N          = last1 - first1;

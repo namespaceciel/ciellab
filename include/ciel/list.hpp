@@ -273,7 +273,7 @@ private:
         }
     }
 
-    template<class Iter, enable_if_t<is_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
     iterator
     alloc_range_construct(iterator begin, Iter first, Iter last) {
         iterator before_begin          = begin.prev();
@@ -323,7 +323,7 @@ public:
         alloc_range_construct_n(end(), count);
     }
 
-    template<class Iter, enable_if_t<is_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
     list(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : list(alloc) {
         alloc_range_construct(end(), first, last);
@@ -450,7 +450,7 @@ public:
         }
     }
 
-    template<class Iter, enable_if_t<is_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
     void
     assign(Iter first, Iter last) {
         iterator it = begin();
@@ -601,7 +601,7 @@ public:
         return alloc_range_construct_n(pos, count, value);
     }
 
-    template<class Iter, enable_if_t<is_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
     iterator
     insert(iterator pos, Iter first, Iter last) {
         return alloc_range_construct(pos, first, last);

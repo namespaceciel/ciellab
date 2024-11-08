@@ -172,7 +172,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
+    template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value> = 0>
     void
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
@@ -183,7 +183,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
+    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value> = 0>
     void
     left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
@@ -245,7 +245,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value, int> = 0>
+    template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value> = 0>
     void
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
@@ -256,7 +256,7 @@ private:
     }
 
     // Note that this will invalidate iterators.
-    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value, int> = 0>
+    template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value> = 0>
     void
     right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
@@ -439,7 +439,7 @@ public:
         }
     }
 
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         for (; first != last; ++first) {
@@ -447,7 +447,7 @@ public:
         }
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     split_buffer(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = std::distance(first, last);
@@ -492,15 +492,15 @@ public:
     split_buffer(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : split_buffer(init.begin(), init.end(), alloc) {}
 
-    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(rg.begin(), rg.end(), alloc) {}
 
-    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
-    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = rg.size();
@@ -511,7 +511,7 @@ public:
         }
     }
 
-    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
     split_buffer(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : split_buffer(alloc) {
         const auto count = rg.size();
@@ -704,7 +704,7 @@ public:
         emplace_front(value);
     }
 
-    template<bool Valid = !should_pass_by_value, enable_if_t<Valid, int> = 0>
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
     void
     push_front(rvalue value) {
         emplace_front(std::move(value));

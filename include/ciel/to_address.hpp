@@ -53,7 +53,7 @@ struct is_fancy_pointer {
 // to_address
 
 // enable_if is needed here to avoid instantiating checks for fancy pointers on raw pointers.
-template<class Pointer, enable_if_t<conjunction<std::is_class<Pointer>, is_fancy_pointer<Pointer>>::value, int> = 0>
+template<class Pointer, enable_if_t<conjunction<std::is_class<Pointer>, is_fancy_pointer<Pointer>>::value> = 0>
 decay_t<decltype(to_address_helper<Pointer>::call(std::declval<const Pointer&>()))>
 to_address(const Pointer& p) noexcept {
     return to_address_helper<Pointer>::call(p);

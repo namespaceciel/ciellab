@@ -249,7 +249,7 @@ struct sbv_crtp_base {
         return *(this_());
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     void
     assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
@@ -257,7 +257,7 @@ struct sbv_crtp_base {
         this_()->assign(first, last, count);
     }
 
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     void
     assign(Iter first, Iter last) {
         pointer p = this_()->begin_;
@@ -281,7 +281,7 @@ struct sbv_crtp_base {
         this_()->assign(ilist.begin(), ilist.end(), ilist.size());
     }
 
-    template<class R, enable_if_t<is_range<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range<R>::value> = 0>
     void
     assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
@@ -462,7 +462,7 @@ struct sbv_crtp_base {
         this_()->emplace_back_aux(value);
     }
 
-    template<bool Valid = !should_pass_by_value, enable_if_t<Valid, int> = 0>
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
     void
     push_back(rvalue value) {
         this_()->emplace_back_aux(std::move(value));

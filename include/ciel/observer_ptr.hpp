@@ -31,7 +31,7 @@ public:
     explicit observer_ptr(element_type* p) noexcept
         : ptr_{p} {}
 
-    template<class W2, enable_if_t<std::is_convertible<W*, element_type*>::value, int> = 0>
+    template<class W2, enable_if_t<std::is_convertible<W*, element_type*>::value> = 0>
     observer_ptr(observer_ptr<W2> other) noexcept
         : ptr_{other.ptr_} {}
 

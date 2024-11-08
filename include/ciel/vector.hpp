@@ -248,7 +248,7 @@ public:
         }
     }
 
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         for (; first != last; ++first) {
@@ -256,7 +256,7 @@ public:
         }
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         const auto count = std::distance(first, last);
@@ -297,15 +297,15 @@ public:
     vector(std::initializer_list<value_type> init, const allocator_type& alloc = allocator_type())
         : vector(init.begin(), init.end(), alloc) {}
 
-    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(rg.begin(), rg.end(), alloc) {}
 
-    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_without_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
     vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), alloc) {}
 
-    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         const auto count = rg.size();
@@ -316,7 +316,7 @@ public:
         }
     }
 
-    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
     vector(from_range_t, R&& rg, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         const auto count = rg.size();
@@ -541,7 +541,7 @@ public:
             });
     }
 
-    template<class U, enable_if_t<std::is_same<remove_cvref_t<U>, value_type>::value, int> = 0>
+    template<class U, enable_if_t<std::is_same<remove_cvref_t<U>, value_type>::value> = 0>
     iterator
     emplace(const_iterator p, U&& value) {
         return insert(p, std::forward<U>(value));
@@ -567,7 +567,7 @@ public:
             });
     }
 
-    template<bool Valid = !should_pass_by_value, enable_if_t<Valid, int> = 0>
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
     iterator
     insert(const_iterator p, rvalue value) {
         pointer pos = begin_ + (p - begin());
@@ -639,7 +639,7 @@ private:
     }
 
 public:
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     iterator
     insert(const_iterator pos, Iter first, Iter last) {
         return insert(pos, first, last, std::distance(first, last));
@@ -651,7 +651,7 @@ public:
     }
 
     // Construct them all at the end at first, then rotate them to the right place.
-    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value, int> = 0>
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     iterator
     insert(const_iterator p, Iter first, Iter last) {
         pointer pos = begin_ + (p - begin());
@@ -764,13 +764,13 @@ public:
         swap_alloc(other, typename alloc_traits::propagate_on_container_swap{});
     }
 
-    template<class R, enable_if_t<is_range<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range<R>::value> = 0>
     void
     append_range(R&& rg) {
         insert_range(end(), std::forward<R>(rg));
     }
 
-    template<class R, enable_if_t<is_range<R>::value, int> = 0>
+    template<class R, enable_if_t<is_range<R>::value> = 0>
     iterator
     insert_range(const_iterator pos, R&& rg) {
         if (is_range_with_size<R>::value && is_forward_iterator<decltype(rg.begin())>::value) {

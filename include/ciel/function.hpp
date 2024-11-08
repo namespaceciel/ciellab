@@ -272,7 +272,7 @@ public:
         }
     }
 
-    template<class F, class DecayF = decay_t<F>, enable_if_t<!std::is_same<DecayF, function>::value, int> = 0>
+    template<class F, class DecayF = decay_t<F>, enable_if_t<!std::is_same<DecayF, function>::value> = 0>
     function(F&& f) {
         using func_type = details::func<DecayF, R(Args...)>;
 
@@ -298,7 +298,7 @@ public:
     }
 
     template<class F, class DecayF = decay_t<F>,
-             enable_if_t<sizeof(DecayF) <= sizeof(void*) * 3 && alignof(void*) % alignof(DecayF) == 0, int> = 0>
+             enable_if_t<sizeof(DecayF) <= sizeof(void*) * 3 && alignof(void*) % alignof(DecayF) == 0> = 0>
     function(assume_trivially_relocatable_t, F&& f) {
         using func_type = details::func<DecayF, R(Args...)>;
 
@@ -387,7 +387,7 @@ public:
     }
 
     template<class F, class DecayF = decay_t<F>,
-             enable_if_t<sizeof(DecayF) <= sizeof(void*) * 3 && alignof(void*) % alignof(DecayF) == 0, int> = 0>
+             enable_if_t<sizeof(DecayF) <= sizeof(void*) * 3 && alignof(void*) % alignof(DecayF) == 0> = 0>
     void
     assign(assume_trivially_relocatable_t, F&& f) {
         clear();
