@@ -774,8 +774,7 @@ template<class T, class Allocator>
 std::ostream&
 operator<<(std::ostream& out, const vector<T, Allocator>& v) {
 #ifdef CIEL_HAS_RTTI
-    out << "ciel::vector<" << ciel::demangle(typeid(T).name()) << ", " << ciel::demangle(typeid(Allocator).name())
-        << ">: ";
+    out << ciel::demangle(typeid(v).name()) << ": ";
 #endif
     out << "[ ";
 

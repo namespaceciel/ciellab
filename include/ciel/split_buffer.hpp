@@ -841,8 +841,7 @@ template<class T, class Allocator>
 std::ostream&
 operator<<(std::ostream& out, const split_buffer<T, Allocator>& sb) {
 #ifdef CIEL_HAS_RTTI
-    out << "ciel::split_buffer<" << ciel::demangle(typeid(T).name()) << ", " << ciel::demangle(typeid(Allocator).name())
-        << ">: ";
+    out << ciel::demangle(typeid(sb).name()) << ": ";
 #endif
     out << "[ __" << sb.front_spare() << "__, ";
 
@@ -859,6 +858,24 @@ template<class T, class Allocator>
 struct is_trivially_relocatable<split_buffer<T, Allocator>>
     : conjunction<is_trivially_relocatable<Allocator>,
                   is_trivially_relocatable<typename std::allocator_traits<remove_reference_t<Allocator>>::pointer>> {};
+
+template<class T, class Alloc, class U>
+typename split_buffer<T, Alloc>::size_type
+erase(split_buffer<T, Alloc>& c, const U& value) {
+    auto it        = std::remove(c.begin(), c.end(), value);
+    const auto res = std::distance(it, c.end());
+    c.erase(it, c.end());
+    return res;
+}
+
+template<class T, class Alloc, class Pred>
+typename split_buffer<T, Alloc>::size_type
+erase_if(split_buffer<T, Alloc>& c, Pred pred) {
+    auto it        = std::remove_if(c.begin(), c.end(), pred);
+    const auto res = std::distance(it, c.end());
+    c.erase(it, c.end());
+    return res;
+}
 
 #if CIEL_STD_VER >= 17
 
