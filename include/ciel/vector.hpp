@@ -7,6 +7,7 @@
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
 #include <ciel/cstring.hpp>
+#include <ciel/demangle.hpp>
 #include <ciel/do_if_noexcept.hpp>
 #include <ciel/is_range.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
@@ -772,6 +773,10 @@ public:
 template<class T, class Allocator>
 std::ostream&
 operator<<(std::ostream& out, const vector<T, Allocator>& v) {
+#ifdef CIEL_HAS_RTTI
+    out << "ciel::vector<" << ciel::demangle(typeid(T).name()) << ", " << ciel::demangle(typeid(Allocator).name())
+        << ">: ";
+#endif
     out << "[ ";
 
     for (auto it = v.begin(); it != v.end(); ++it) {

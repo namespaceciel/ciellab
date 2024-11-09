@@ -7,6 +7,7 @@
 #include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
 #include <ciel/cstring.hpp>
+#include <ciel/demangle.hpp>
 #include <ciel/do_if_noexcept.hpp>
 #include <ciel/is_range.hpp>
 #include <ciel/is_trivially_relocatable.hpp>
@@ -835,6 +836,24 @@ public:
     }
 
 }; // class split_buffer
+
+template<class T, class Allocator>
+std::ostream&
+operator<<(std::ostream& out, const split_buffer<T, Allocator>& sb) {
+#ifdef CIEL_HAS_RTTI
+    out << "ciel::split_buffer<" << ciel::demangle(typeid(T).name()) << ", " << ciel::demangle(typeid(Allocator).name())
+        << ">: ";
+#endif
+    out << "[ __" << sb.front_spare() << "__, ";
+
+    for (auto it = sb.begin(); it != sb.end(); ++it) {
+        out << *it << ", ";
+    }
+
+    out << "__" << sb.back_spare() << "__ ]";
+
+    return out;
+}
 
 template<class T, class Allocator>
 struct is_trivially_relocatable<split_buffer<T, Allocator>>

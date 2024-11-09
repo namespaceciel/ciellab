@@ -27,6 +27,7 @@ set(SOURCES
     src/split_buffer/emplace_back.cpp
     src/split_buffer/empty.cpp
     src/split_buffer/erase.cpp
+    src/split_buffer/print.cpp
     src/split_buffer/resize.cpp
     src/split_buffer/swap.cpp
     src/vector/assign.cpp
