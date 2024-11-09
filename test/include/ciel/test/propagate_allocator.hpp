@@ -27,19 +27,19 @@ public:
         using other = propagate_allocator<U, POCCAValue, POCMAValue, POCSValue>;
     };
 
-    propagate_allocator() noexcept = default;
+    propagate_allocator() = default;
 
     propagate_allocator(const int id) noexcept
         : id_(id) {}
 
-    propagate_allocator(const propagate_allocator&) noexcept = default;
+    propagate_allocator(const propagate_allocator&) = default;
 
     template<class U>
     propagate_allocator(const propagate_allocator<U, POCCAValue, POCMAValue, POCSValue>& that) noexcept
         : id_(that.id_) {}
 
     // clang-format off
-    propagate_allocator& operator=(const propagate_allocator& a) noexcept = default;
+    propagate_allocator& operator=(const propagate_allocator& a) = default;
     // clang-format on
 
     CIEL_NODISCARD T*

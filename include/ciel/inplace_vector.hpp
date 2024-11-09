@@ -402,7 +402,7 @@ private:
     }
 
 public:
-    inplace_vector() noexcept = default;
+    inplace_vector() = default;
 
     inplace_vector(const size_type count, const value_type& value)
         : inplace_vector() {
@@ -730,14 +730,14 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    static CIEL_CONSTEXPR_SINCE_CXX14 void
+    static void
     reserve(const size_type new_cap) {
         if (new_cap > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
     }
 
-    static CIEL_CONSTEXPR_SINCE_CXX14 void
+    static void
     shrink_to_fit() noexcept {}
 
     // TODO: insert, insert_range, emplace

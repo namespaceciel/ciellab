@@ -26,7 +26,7 @@ private:
     pointer ptr;
 
 public:
-    ForwardIterator() noexcept = default;
+    ForwardIterator() = default;
 
     ForwardIterator(const pointer p) noexcept
         : ptr(p) {}

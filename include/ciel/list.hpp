@@ -83,8 +83,8 @@ public:
     explicit list_iterator(const base_node_type* p) noexcept
         : it_(const_cast<base_node_type*>(p)) {}
 
-    list_iterator(const list_iterator&) noexcept = default;
-    list_iterator(list_iterator&&) noexcept      = default;
+    list_iterator(const list_iterator&) = default;
+    list_iterator(list_iterator&&)      = default;
 
     template<class P, class R>
     list_iterator(const list_iterator<T, P, R>& other) noexcept
@@ -93,8 +93,8 @@ public:
     ~list_iterator() = default;
 
     // clang-format off
-    list_iterator& operator=(const list_iterator&) noexcept = default;
-    list_iterator& operator=(list_iterator&&) noexcept      = default;
+    list_iterator& operator=(const list_iterator&) = default;
+    list_iterator& operator=(list_iterator&&)      = default;
     // clang-format on
 
     CIEL_NODISCARD list_iterator

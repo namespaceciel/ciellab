@@ -9,7 +9,7 @@ using namespace ciel;
 namespace {
 
 struct NoexceptMove {
-    NoexceptMove() noexcept = default;
+    NoexceptMove() = default;
 
     NoexceptMove(const NoexceptMove&) noexcept {}
 

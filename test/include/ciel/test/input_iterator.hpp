@@ -31,7 +31,7 @@ private:
     }
 
 public:
-    InputIterator() noexcept = default;
+    InputIterator() = default;
 
     InputIterator(const pointer p) noexcept
         : ptr(p) {}

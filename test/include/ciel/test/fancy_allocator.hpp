@@ -31,7 +31,7 @@ class min_pointer<void> {
     friend class min_pointer;
 
 public:
-    min_pointer() noexcept = default;
+    min_pointer() = default;
 
     min_pointer(nullptr_t) noexcept
         : ptr_(nullptr) {}
@@ -60,7 +60,7 @@ class min_pointer<const void> {
     friend class min_pointer;
 
 public:
-    min_pointer() noexcept = default;
+    min_pointer() = default;
 
     min_pointer(nullptr_t) noexcept
         : ptr_(nullptr) {}
@@ -100,7 +100,7 @@ public:
     using difference_type   = ptrdiff_t;
     using iterator_category = std::random_access_iterator_tag;
 
-    min_pointer() noexcept = default;
+    min_pointer() = default;
 
     min_pointer(nullptr_t) noexcept
         : ptr_(nullptr) {}
@@ -224,7 +224,7 @@ public:
     using difference_type   = ptrdiff_t;
     using iterator_category = std::random_access_iterator_tag;
 
-    min_pointer() noexcept = default;
+    min_pointer() = default;
 
     min_pointer(nullptr_t) noexcept
         : ptr_(nullptr) {}
@@ -350,7 +350,7 @@ public:
     using value_type = T;
     using pointer    = min_pointer<T>;
 
-    explicit fancy_allocator() noexcept = default;
+    explicit fancy_allocator() = default;
 
     template<class U>
     explicit fancy_allocator(fancy_allocator<U>) noexcept {}

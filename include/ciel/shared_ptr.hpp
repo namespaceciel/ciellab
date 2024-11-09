@@ -36,7 +36,7 @@ protected:
     template<class>
     friend class atomic_shared_ptr;
 
-    shared_weak_count() noexcept = default;
+    shared_weak_count() = default;
 
     // We never call the deleter on the base class pointer,
     // so it's not necessary to mark virtual on destructor.
@@ -656,7 +656,7 @@ public:
     template<class>
     friend class weak_ptr;
 
-    constexpr weak_ptr() noexcept
+    weak_ptr() noexcept
         : ptr_(nullptr), control_block_(nullptr) {}
 
     weak_ptr(const weak_ptr& r) noexcept
@@ -801,11 +801,11 @@ private:
     mutable weak_ptr<T> weak_this_;
 
 protected:
-    constexpr enable_shared_from_this() noexcept                     = default;
-    enable_shared_from_this(const enable_shared_from_this&) noexcept = default;
-    ~enable_shared_from_this()                                       = default;
+    enable_shared_from_this()                               = default;
+    enable_shared_from_this(const enable_shared_from_this&) = default;
+    ~enable_shared_from_this()                              = default;
     // clang-format off
-    enable_shared_from_this& operator=(const enable_shared_from_this&) noexcept = default;
+    enable_shared_from_this& operator=(const enable_shared_from_this&) = default;
     // clang-format on
 
 public:

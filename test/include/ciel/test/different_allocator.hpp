@@ -12,7 +12,7 @@ class different_allocator {
 public:
     using value_type = T;
 
-    different_allocator() noexcept = default;
+    different_allocator() = default;
 
     template<class U>
     different_allocator(different_allocator<U>) noexcept {}

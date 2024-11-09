@@ -9,7 +9,7 @@ namespace {
 struct Trivial {};
 
 struct NotTrivial {
-    NotTrivial() noexcept = default;
+    NotTrivial() = default;
 
     NotTrivial(const NotTrivial&) noexcept {}
 
@@ -26,6 +26,22 @@ struct NotTrivial {
     }
 
     ~NotTrivial() {}
+};
+
+struct NotTriviallyAssignable {
+    NotTriviallyAssignable()                              = default;
+    NotTriviallyAssignable(const NotTriviallyAssignable&) = default;
+    NotTriviallyAssignable(NotTriviallyAssignable&&)      = default;
+
+    NotTriviallyAssignable&
+    operator=(const NotTriviallyAssignable&) noexcept {
+        return *this;
+    }
+
+    NotTriviallyAssignable&
+    operator=(NotTriviallyAssignable&&) noexcept {
+        return *this;
+    }
 };
 
 } // namespace
@@ -191,4 +207,10 @@ TEST(inplace_vector, trivial) {
     static_assert(not std::is_trivially_copy_assignable<inplace_vector<NotTrivial, 8>>::value, "");
     static_assert(not std::is_trivially_move_assignable<inplace_vector<NotTrivial, 8>>::value, "");
     static_assert(not std::is_trivially_destructible<inplace_vector<NotTrivial, 8>>::value, "");
+
+    static_assert(std::is_trivially_copy_constructible<inplace_vector<NotTriviallyAssignable, 8>>::value, "");
+    static_assert(std::is_trivially_move_constructible<inplace_vector<NotTriviallyAssignable, 8>>::value, "");
+    static_assert(not std::is_trivially_copy_assignable<inplace_vector<NotTriviallyAssignable, 8>>::value, "");
+    static_assert(not std::is_trivially_move_assignable<inplace_vector<NotTriviallyAssignable, 8>>::value, "");
+    static_assert(std::is_trivially_destructible<inplace_vector<NotTriviallyAssignable, 8>>::value, "");
 }

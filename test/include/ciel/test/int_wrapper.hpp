@@ -18,9 +18,9 @@ public:
     int_wrapper(const int i = 0) noexcept
         : i_(i) {}
 
-    int_wrapper(const int_wrapper&) noexcept = default;
+    int_wrapper(const int_wrapper&) = default;
     // clang-format off
-    int_wrapper& operator=(const int_wrapper&) noexcept = default;
+    int_wrapper& operator=(const int_wrapper&) = default;
     // clang-format on
 
     int_wrapper(int_wrapper&& other) noexcept(IsNothrowMovable)

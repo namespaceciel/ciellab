@@ -38,8 +38,8 @@ public:
     // clang-format on
 
 protected:
-    func_base() noexcept = default;
-    ~func_base()         = default;
+    func_base()  = default;
+    ~func_base() = default;
 
 public:
     // clang-format off
@@ -241,7 +241,7 @@ private:
     }
 
 public:
-    function() noexcept = default;
+    function() = default;
 
     function(nullptr_t) noexcept {}
 

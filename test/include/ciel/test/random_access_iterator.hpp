@@ -26,7 +26,7 @@ private:
     pointer ptr;
 
 public:
-    RandomAccessIterator() noexcept = default;
+    RandomAccessIterator() = default;
 
     RandomAccessIterator(const pointer p) noexcept
         : ptr(p) {}

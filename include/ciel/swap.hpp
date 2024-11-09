@@ -78,14 +78,14 @@ swap_ranges(T* first1, T* last1, T* first2) noexcept {
 #else  // CIEL_STD_VER < 20
 template<class T>
     requires ciel::is_trivially_relocatable<T>::value
-constexpr void
+void
 swap(T& a, T& b) noexcept {
     ciel::relocatable_swap(a, b);
 }
 
 template<class T, size_t N>
     requires ciel::is_trivially_relocatable<T>::value
-constexpr void
+void
 swap(T (&a)[N], T (&b)[N]) noexcept {
     ciel::relocatable_swap(a, b);
 }

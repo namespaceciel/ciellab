@@ -29,7 +29,7 @@ may_throw() {
 struct NothrowMoveStruct {
     size_t* ptr{nullptr};
 
-    NothrowMoveStruct() noexcept = default;
+    NothrowMoveStruct() = default;
 
     NothrowMoveStruct(size_t i) {
         may_throw();
