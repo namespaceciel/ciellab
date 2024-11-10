@@ -22,7 +22,7 @@
 
 NAMESPACE_CIEL_BEGIN
 
-template<class, uint64_t>
+template<class, size_t>
 class inplace_vector;
 
 namespace detail {
@@ -34,39 +34,55 @@ namespace detail {
 // such as using memcpy for types that support trivial copying.
 // Similarly, it enhances the handling of move constructors and destructors for other types.
 
-// inplace_vector_storage
+// inplace_vector_size
 
-template<class T, uint64_t Capacity, class D>
-struct inplace_vector_storage {
+template<class T, size_t Capacity>
+struct inplace_vector_size {
     // clang-format off
     using inplace_vector_size_type =
         conditional_t<Capacity <= std::numeric_limits<uint8_t>::max(), uint8_t,
         conditional_t<Capacity <= std::numeric_limits<uint16_t>::max(), uint16_t,
-        conditional_t<Capacity <= std::numeric_limits<uint32_t>::max(), uint32_t, uint64_t>>>;
+        conditional_t<Capacity <= std::numeric_limits<uint32_t>::max(), uint32_t, size_t>>>;
     // clang-format on
 
-    inplace_vector_size_type size_;
+    inplace_vector_size_type size_{0};
 
+}; // struct inplace_vector_size
+
+// inplace_vector_storage
+
+template<class T, size_t Capacity, class D, bool = std::is_trivially_destructible<T>::value>
+struct inplace_vector_storage : inplace_vector_size<T, Capacity> {
     union {
         T data_[Capacity];
         unsigned char null_state_;
     };
 
     inplace_vector_storage() noexcept
-        : size_(0), null_state_() {}
+        : null_state_() {}
 
-    inplace_vector_storage(const inplace_vector_storage&) = default;
-    inplace_vector_storage(inplace_vector_storage&&)      = default;
-    // clang-format off
-    inplace_vector_storage& operator=(const inplace_vector_storage&) = default;
-    inplace_vector_storage& operator=(inplace_vector_storage&&) = default;
-    // clang-format on
+    ~inplace_vector_storage() {
+        D& self = static_cast<D&>(*this);
+        self.clear();
+    }
 
 }; // struct inplace_vector_storage
 
+template<class T, size_t Capacity, class D>
+struct inplace_vector_storage<T, Capacity, D, true> : inplace_vector_size<T, Capacity> {
+    union {
+        T data_[Capacity];
+        unsigned char null_state_;
+    };
+
+    inplace_vector_storage() noexcept
+        : null_state_() {}
+
+}; // struct inplace_vector_storage<T, Capacity, D, true>
+
 // maybe_has_trivial_copy_constructor
 
-template<class T, uint64_t Capacity, class D, bool = std::is_trivially_copy_constructible<T>::value>
+template<class T, size_t Capacity, class D, bool = std::is_trivially_copy_constructible<T>::value>
 struct maybe_has_trivial_copy_constructor : inplace_vector_storage<T, Capacity, D> {
     using inplace_vector_storage<T, Capacity, D>::inplace_vector_storage;
 
@@ -74,19 +90,19 @@ struct maybe_has_trivial_copy_constructor : inplace_vector_storage<T, Capacity, 
         std::is_nothrow_copy_constructible<T>::value) {
         D& self        = static_cast<D&>(*this);
         const D& other = static_cast<const D&>(o);
-        self.construct_at_end(other.begin_(), other.end_());
+        self.construct_at_end(other.begin(), other.end());
     }
 
     maybe_has_trivial_copy_constructor()                                     = default;
     maybe_has_trivial_copy_constructor(maybe_has_trivial_copy_constructor&&) = default;
     // clang-format off
     maybe_has_trivial_copy_constructor& operator=(const maybe_has_trivial_copy_constructor&) = default;
-    maybe_has_trivial_copy_constructor& operator=(maybe_has_trivial_copy_constructor&&) = default;
+    maybe_has_trivial_copy_constructor& operator=(maybe_has_trivial_copy_constructor&&)      = default;
     // clang-format on
 
 }; // struct maybe_has_trivial_copy_constructor
 
-template<class T, uint64_t Capacity, class D>
+template<class T, size_t Capacity, class D>
 struct maybe_has_trivial_copy_constructor<T, Capacity, D, true> : inplace_vector_storage<T, Capacity, D> {
     using inplace_vector_storage<T, Capacity, D>::inplace_vector_storage;
 
@@ -94,7 +110,7 @@ struct maybe_has_trivial_copy_constructor<T, Capacity, D, true> : inplace_vector
 
 // maybe_has_trivial_move_constructor
 
-template<class T, uint64_t Capacity, class D, bool = is_trivially_relocatable<T>::value,
+template<class T, size_t Capacity, class D, bool = is_trivially_relocatable<T>::value,
          bool = std::is_trivially_move_constructible<T>::value>
 struct maybe_has_trivial_move_constructor : maybe_has_trivial_copy_constructor<T, Capacity, D> {
     using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
@@ -110,19 +126,19 @@ struct maybe_has_trivial_move_constructor : maybe_has_trivial_copy_constructor<T
     maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&) = default;
     // clang-format off
     maybe_has_trivial_move_constructor& operator=(const maybe_has_trivial_move_constructor&) = default;
-    maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&) = default;
+    maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&)      = default;
     // clang-format on
 
 }; // struct maybe_has_trivial_move_constructor
 
-template<class T, uint64_t Capacity, class D, bool B>
+template<class T, size_t Capacity, class D, bool B>
 struct maybe_has_trivial_move_constructor<T, Capacity, D, B, true>
     : maybe_has_trivial_copy_constructor<T, Capacity, D> {
     using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
 
 }; // struct maybe_has_trivial_move_constructor<T, Capacity, D, B, true>
 
-template<class T, uint64_t Capacity, class D>
+template<class T, size_t Capacity, class D>
 struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
     : maybe_has_trivial_copy_constructor<T, Capacity, D> {
     using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
@@ -136,14 +152,14 @@ struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
     maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&) = default;
     // clang-format off
     maybe_has_trivial_move_constructor& operator=(const maybe_has_trivial_move_constructor&) = default;
-    maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&) = default;
+    maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&)      = default;
     // clang-format on
 
 }; // struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
 
 // maybe_has_trivial_copy_assignment
 
-template<class T, uint64_t Capacity, class D,
+template<class T, size_t Capacity, class D,
          bool = std::is_trivially_copy_constructible<T>::value && std::is_trivially_copy_assignable<T>::value
              && std::is_trivially_destructible<T>::value>
 struct maybe_has_trivial_copy_assignment : maybe_has_trivial_move_constructor<T, Capacity, D> {
@@ -171,7 +187,7 @@ struct maybe_has_trivial_copy_assignment : maybe_has_trivial_move_constructor<T,
 
 }; // struct maybe_has_trivial_copy_assignment
 
-template<class T, uint64_t Capacity, class D>
+template<class T, size_t Capacity, class D>
 struct maybe_has_trivial_copy_assignment<T, Capacity, D, true> : maybe_has_trivial_move_constructor<T, Capacity, D> {
     using maybe_has_trivial_move_constructor<T, Capacity, D>::maybe_has_trivial_move_constructor;
 
@@ -179,7 +195,7 @@ struct maybe_has_trivial_copy_assignment<T, Capacity, D, true> : maybe_has_trivi
 
 // maybe_has_trivial_move_assignment
 
-template<class T, uint64_t Capacity, class D, bool = is_trivially_relocatable<T>::value,
+template<class T, size_t Capacity, class D, bool = is_trivially_relocatable<T>::value,
          bool = std::is_trivially_move_constructible<T>::value && std::is_trivially_move_assignable<T>::value
              && std::is_trivially_destructible<T>::value>
 struct maybe_has_trivial_move_assignment : maybe_has_trivial_copy_assignment<T, Capacity, D> {
@@ -207,13 +223,13 @@ struct maybe_has_trivial_move_assignment : maybe_has_trivial_copy_assignment<T, 
 
 }; // struct maybe_has_trivial_move_assignment
 
-template<class T, uint64_t Capacity, class D, bool B>
+template<class T, size_t Capacity, class D, bool B>
 struct maybe_has_trivial_move_assignment<T, Capacity, D, B, true> : maybe_has_trivial_copy_assignment<T, Capacity, D> {
     using maybe_has_trivial_copy_assignment<T, Capacity, D>::maybe_has_trivial_copy_assignment;
 
 }; // struct maybe_has_trivial_move_assignment<T, Capacity, D, B, true>
 
-template<class T, uint64_t Capacity, class D>
+template<class T, size_t Capacity, class D>
 struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
     : maybe_has_trivial_copy_assignment<T, Capacity, D> {
     using maybe_has_trivial_copy_assignment<T, Capacity, D>::maybe_has_trivial_copy_assignment;
@@ -239,31 +255,27 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
 
 }; // struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
 
-// maybe_has_trivial_destructor
-
-template<class T, uint64_t Capacity, class D, bool = std::is_trivially_destructible<T>::value>
-struct maybe_has_trivial_destructor : maybe_has_trivial_move_assignment<T, Capacity, D> {
-    using maybe_has_trivial_move_assignment<T, Capacity, D>::maybe_has_trivial_move_assignment;
-
-    ~maybe_has_trivial_destructor() {
-        D& self = static_cast<D&>(*this);
-        self.clear();
-    }
-
-}; // struct maybe_has_trivial_destructor
-
-template<class T, uint64_t Capacity, class D>
-struct maybe_has_trivial_destructor<T, Capacity, D, true> : maybe_has_trivial_move_assignment<T, Capacity, D> {
-    using maybe_has_trivial_move_assignment<T, Capacity, D>::maybe_has_trivial_move_assignment;
-
-}; // struct maybe_has_trivial_destructor<T, Capacity, D, true>
-
 } // namespace detail
 
-template<class T, uint64_t Capacity>
-class inplace_vector : detail::maybe_has_trivial_destructor<T, Capacity, inplace_vector<T, Capacity>> {
+template<class T, size_t Capacity>
+class inplace_vector : private detail::maybe_has_trivial_move_assignment<T, Capacity, inplace_vector<T, Capacity>> {
+    using base_type = detail::maybe_has_trivial_move_assignment<T, Capacity, inplace_vector<T, Capacity>>;
+
+    template<class, size_t>
+    friend struct detail::inplace_vector_size;
+    template<class, size_t, class, bool>
+    friend struct detail::inplace_vector_storage;
+    template<class, size_t, class, bool>
+    friend struct detail::maybe_has_trivial_copy_constructor;
+    template<class, size_t, class, bool, bool>
+    friend struct detail::maybe_has_trivial_move_constructor;
+    template<class, size_t, class, bool>
+    friend struct detail::maybe_has_trivial_copy_assignment;
+    template<class, size_t, class, bool, bool>
+    friend struct detail::maybe_has_trivial_move_assignment;
+
 public:
-    using detail::maybe_has_trivial_destructor<T, Capacity, inplace_vector<T, Capacity>>::maybe_has_trivial_destructor;
+    using base_type::base_type;
 
     using value_type             = T;
     using size_type              = size_t;
@@ -328,6 +340,7 @@ private:
         }
     }
 
+public: // FIXME
     template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     void
     construct_at_end(Iter first, Iter last) {
@@ -351,8 +364,18 @@ private:
         }
     }
 
+private:
     void
-    range_destroy(pointer begin, pointer end) noexcept {
+    destroy(pointer p) noexcept {
+        CIEL_PRECONDITION(begin_() <= p);
+        CIEL_PRECONDITION(p < end_());
+
+        p->~value_type();
+        --this->size_;
+    }
+
+    void
+    destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
         CIEL_PRECONDITION(begin_() <= begin);
         CIEL_PRECONDITION(end <= end_());
@@ -390,7 +413,7 @@ private:
         }
 
         if (size() > count) {
-            range_destroy(begin_() + count, end_());
+            destroy(begin_() + count, end_());
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -404,8 +427,7 @@ private:
 public:
     inplace_vector() = default;
 
-    inplace_vector(const size_type count, const value_type& value)
-        : inplace_vector() {
+    inplace_vector(const size_type count, const value_type& value) {
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -413,8 +435,7 @@ public:
         construct_at_end(count, value);
     }
 
-    explicit inplace_vector(const size_type count)
-        : inplace_vector() {
+    explicit inplace_vector(const size_type count) {
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -423,16 +444,14 @@ public:
     }
 
     template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
-    inplace_vector(Iter first, Iter last)
-        : inplace_vector() {
+    inplace_vector(Iter first, Iter last) {
         for (; first != last; ++first) {
             emplace_back(*first);
         }
     }
 
     template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
-    inplace_vector(Iter first, Iter last)
-        : inplace_vector() {
+    inplace_vector(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
@@ -441,8 +460,8 @@ public:
         construct_at_end(first, last);
     }
 
-    inplace_vector(const inplace_vector& other) noexcept(std::is_nothrow_copy_constructible<T>::value) = default;
-    inplace_vector(inplace_vector&& other) noexcept(std::is_nothrow_move_constructible<T>::value)      = default;
+    inplace_vector(const inplace_vector& other) = default;
+    inplace_vector(inplace_vector&& other)      = default;
 
     template<class R, enable_if_t<is_range_without_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
     inplace_vector(from_range_t, R&& rg)
@@ -453,8 +472,7 @@ public:
         : inplace_vector(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end())) {}
 
     template<class R, enable_if_t<is_range_with_size<R>::value && std::is_lvalue_reference<R>::value> = 0>
-    inplace_vector(from_range_t, R&& rg)
-        : inplace_vector() {
+    inplace_vector(from_range_t, R&& rg) {
         const size_type count = rg.size();
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
@@ -464,8 +482,7 @@ public:
     }
 
     template<class R, enable_if_t<is_range_with_size<R>::value && !std::is_lvalue_reference<R>::value> = 0>
-    inplace_vector(from_range_t, R&& rg)
-        : inplace_vector() {
+    inplace_vector(from_range_t, R&& rg) {
         const size_type count = rg.size();
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
@@ -477,12 +494,9 @@ public:
     inplace_vector(std::initializer_list<value_type> init)
         : inplace_vector(init.begin(), init.end()) {}
 
-    ~inplace_vector() = default;
-
     // clang-format off
-    inplace_vector& operator=(const inplace_vector& other) noexcept(std::is_nothrow_copy_assignable<value_type>::value) = default;
-    inplace_vector& operator=(inplace_vector&& other)
-        noexcept(std::is_nothrow_move_assignable<value_type>::value || is_trivially_relocatable<value_type>::value) = default;
+    inplace_vector& operator=(const inplace_vector& other) = default;
+    inplace_vector& operator=(inplace_vector&& other)      = default;
     // clang-format on
 
     inplace_vector&
@@ -498,7 +512,7 @@ public:
         }
 
         if (size() > count) {
-            range_destroy(begin_() + count, end_());
+            destroy(begin_() + count, end_());
         }
 
         CIEL_POSTCONDITION(size() <= count);
@@ -528,7 +542,7 @@ public:
 
     void
     assign(std::initializer_list<value_type> ilist) {
-        assign(ilist.begin(), ilist.end());
+        assign(ilist.begin(), ilist.end(), ilist.size());
     }
 
     template<class R, enable_if_t<is_range<R>::value> = 0>
@@ -709,7 +723,7 @@ public:
         }
 
         if (size() >= count) {
-            range_destroy(begin_() + count, end_());
+            destroy(begin_() + count, end_());
             return;
         }
 
@@ -723,7 +737,7 @@ public:
         }
 
         if (size() >= count) {
-            range_destroy(begin_() + count, end_());
+            destroy(begin_() + count, end_());
             return;
         }
 
@@ -812,17 +826,73 @@ public:
     pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
-        range_destroy(end_() - 1, end_());
+        destroy(end_() - 1);
     }
 
     // TODO: append_range, try_append_range
 
     void
     clear() noexcept {
-        range_destroy(begin_(), end_());
+        destroy(begin_(), end_());
     }
 
-    // TODO: erase
+private:
+    iterator
+    erase_impl(pointer first, pointer last,
+               const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
+                                                     || std::is_nothrow_move_assignable<value_type>::value) {
+        CIEL_PRECONDITION(last - first == count);
+        CIEL_PRECONDITION(count != 0);
+
+        const auto index      = first - begin_();
+        const auto back_count = end_() - last;
+
+        if (back_count == 0) {
+            destroy(first, end_());
+
+        } else if (is_trivially_relocatable<value_type>::value) {
+            destroy(first, last);
+
+            if (count >= back_count) {
+                ciel::memcpy(first, last, sizeof(value_type) * back_count);
+
+            } else {
+                ciel::memmove(first, last, sizeof(value_type) * back_count);
+            }
+
+        } else {
+            pointer new_end = std::move(last, end_(), first);
+            destroy(new_end, end_());
+        }
+
+        return begin() + index;
+    }
+
+public:
+    iterator
+    erase(const_iterator p) {
+        const pointer pos = begin_() + (p - begin());
+        CIEL_PRECONDITION(begin_() <= pos);
+        CIEL_PRECONDITION(pos < end_());
+
+        return erase_impl(pos, pos + 1, 1);
+    }
+
+    iterator
+    erase(const_iterator f, const_iterator l) {
+        const pointer first = begin_() + (f - begin());
+        const pointer last  = begin_() + (l - begin());
+        CIEL_PRECONDITION(begin_() <= first);
+        CIEL_PRECONDITION(last <= end_());
+
+        const auto count = last - first;
+
+        if CIEL_UNLIKELY (count <= 0) {
+            return last;
+        }
+
+        return erase_impl(first, last, count);
+    }
 
     template<class U = inplace_vector, enable_if_t<is_trivially_relocatable<U>::value> = 0>
     void
@@ -850,7 +920,7 @@ public:
             smaller->unchecked_emplace_back(std::move(bigger->operator[](i)));
         }
 
-        bigger->range_destroy(bigger->begin_() + smaller_size, bigger->end_());
+        bigger->destroy(bigger->begin_() + smaller_size, bigger->end_());
     }
 
 }; // class inplace_vector
@@ -858,12 +928,11 @@ public:
 template<class T, size_t Capacity>
 struct is_trivially_relocatable<inplace_vector<T, Capacity>> : is_trivially_relocatable<T> {};
 
-/*
 template<class T, size_t N, class U = T>
 typename inplace_vector<T, N>::size_type
 erase(inplace_vector<T, N>& c, const U& value) {
     auto it = std::remove(c.begin(), c.end(), value);
-    auto r = std::distance(it, c.end());
+    auto r  = std::distance(it, c.end());
     c.erase(it, c.end());
     return r;
 }
@@ -872,11 +941,10 @@ template<class T, size_t N, class Pred>
 typename inplace_vector<T, N>::size_type
 erase_if(inplace_vector<T, N>& c, Pred pred) {
     auto it = std::remove_if(c.begin(), c.end(), pred);
-    auto r = std::distance(it, c.end());
+    auto r  = std::distance(it, c.end());
     c.erase(it, c.end());
     return r;
 }
-*/
 
 NAMESPACE_CIEL_END
 

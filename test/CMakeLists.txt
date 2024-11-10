@@ -20,6 +20,8 @@ set(SOURCES
     src/shared_ptr.cpp
     src/split_buffer.cpp
     src/worth_move.cpp
+    src/inplace_vector/constructor.cpp
+    src/inplace_vector/erase.cpp
     src/split_buffer/assign.cpp
     src/split_buffer/compare.cpp
     src/split_buffer/constructor.cpp
