@@ -340,7 +340,6 @@ private:
         }
     }
 
-public: // FIXME
     template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
     void
     construct_at_end(Iter first, Iter last) {
@@ -364,7 +363,6 @@ public: // FIXME
         }
     }
 
-private:
     void
     destroy(pointer p) noexcept {
         CIEL_PRECONDITION(begin_() <= p);
