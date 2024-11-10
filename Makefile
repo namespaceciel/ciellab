@@ -65,3 +65,7 @@ format:
 check_format:
 	./format.sh check
 .PHONY: check_format
+
+clangd:
+	cmake -S . -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+.PHONY: clangd

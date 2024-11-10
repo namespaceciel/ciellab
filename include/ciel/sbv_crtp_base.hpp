@@ -202,18 +202,6 @@ struct sbv_crtp_base {
         ++this_()->end_;
     }
 
-    void
-    move_range(pointer from_s, pointer from_e, pointer to) {
-        pointer old_end   = this_()->end_;
-        difference_type n = old_end - to;
-
-        for (pointer p = from_s + n; p < from_e; ++p) {
-            unchecked_emplace_back_aux(std::move(*p));
-        }
-
-        std::move_backward(from_s, from_s + n, old_end);
-    }
-
     Derived&
     operator=(const Derived& other) {
         if CIEL_UNLIKELY (this == std::addressof(other)) {

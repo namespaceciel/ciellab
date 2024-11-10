@@ -68,7 +68,6 @@ private: // private functions
     using base_type::destroy;
     using base_type::end_cap_;
     using base_type::internal_value;
-    using base_type::move_range;
     using base_type::recommend_cap;
     using base_type::reset;
     using base_type::swap_alloc;
@@ -229,7 +228,7 @@ private:
     }
 
 public:
-    vector() noexcept(noexcept(allocator_type())) = default;
+    vector() = default;
 
     explicit vector(const allocator_type& alloc) noexcept
         : end_cap_alloc_(nullptr, alloc) {}

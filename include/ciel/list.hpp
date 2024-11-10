@@ -12,7 +12,6 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
-#include <stdexcept>
 #include <type_traits>
 
 NAMESPACE_CIEL_BEGIN

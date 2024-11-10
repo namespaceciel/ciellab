@@ -4,6 +4,7 @@
 #include <ciel/config.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 
 NAMESPACE_CIEL_BEGIN

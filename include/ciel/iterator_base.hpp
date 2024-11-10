@@ -79,8 +79,6 @@ struct random_access_iterator_base : bidirectional_iterator_base<Derived> {
         return res;
     }
 
-    // TODO: friend
-
 }; // struct random_access_iterator_base
 
 NAMESPACE_CIEL_END

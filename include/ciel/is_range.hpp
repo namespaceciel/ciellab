@@ -10,6 +10,7 @@
 NAMESPACE_CIEL_BEGIN
 
 // is_range
+
 template<class T, class = void>
 struct is_range : std::false_type {};
 
@@ -28,6 +29,7 @@ template<class T>
 struct is_range_without_size : std::integral_constant<bool, is_range<T>::value && !is_range_with_size<T>::value> {};
 
 // from_range_t
+
 struct from_range_t {};
 
 static constexpr from_range_t from_range;

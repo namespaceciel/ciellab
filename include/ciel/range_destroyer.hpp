@@ -3,6 +3,7 @@
 
 #include <ciel/compressed_pair.hpp>
 #include <ciel/config.hpp>
+#include <ciel/to_address.hpp>
 #include <ciel/void_t.hpp>
 
 #include <cstddef>
