@@ -75,7 +75,7 @@ swap_ranges(T* first1, T* last1, T* first2) noexcept {
 
     return first2 + N;
 }
-#else  // CIEL_STD_VER < 20
+#else
 template<class T>
     requires ciel::is_trivially_relocatable<T>::value
 void
@@ -103,7 +103,7 @@ swap_ranges(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2) noexcept {
 
     return first2 + N;
 }
-#endif // CIEL_STD_VER >= 20
+#endif
 
 } // namespace std
 

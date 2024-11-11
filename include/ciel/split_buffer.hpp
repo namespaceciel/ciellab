@@ -17,6 +17,7 @@
 #include <ciel/to_address.hpp>
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -190,8 +191,8 @@ private:
 
         const size_type old_size = size();
 
-        pointer new_begin = begin_ - n;
-        pointer new_end   = new_begin;
+        const pointer new_begin = begin_ - n;
+        pointer new_end         = new_begin;
         range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
@@ -263,8 +264,8 @@ private:
 
         const size_type old_size = size();
 
-        pointer new_end   = end_ + n;
-        pointer new_begin = new_end;
+        const pointer new_end = end_ + n;
+        pointer new_begin     = new_end;
         range_destroyer<value_type, allocator_type&> rd{new_begin, new_end, allocator_()};
 
         if (old_size >= n) { // n placement new, size - n move assign, n destroy
@@ -552,7 +553,7 @@ public:
             };
 
             if (internal_value(value, begin_)) {
-                value_type copy = std::move(*(begin_ + (std::addressof(value) - ciel::to_address(begin_))));
+                const value_type copy = std::move(*(begin_ + (std::addressof(value) - ciel::to_address(begin_))));
                 callback();
                 construct_at_end(count, copy);
 

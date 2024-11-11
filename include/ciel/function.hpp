@@ -49,12 +49,10 @@ public:
     virtual void destroy_and_deallocate() noexcept = 0;
     virtual R operator()(Args&&...) const = 0;
     CIEL_NODISCARD virtual const void* target(const std::type_info&) const noexcept = 0;
-    // clang-format on
 #ifdef CIEL_HAS_RTTI
-    // clang-format off
     CIEL_NODISCARD virtual const std::type_info& target_type() const noexcept = 0;
-        // clang-format on
 #endif
+    // clang-format on
 
 }; // class func_base<R(Args...)>
 

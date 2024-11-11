@@ -118,10 +118,10 @@ public:
 
     void
     store(shared_ptr<T> desired) noexcept {
-        counted_control_block new_control_block{desired.control_block_};
+        const counted_control_block new_control_block{desired.control_block_};
         desired.clear();
 
-        counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
+        const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
         // Help inflight loads to update those local refcounts to the global.
         if ((shared_weak_count*)old_control_block.control_block_ != nullptr) {
@@ -133,7 +133,7 @@ public:
     CIEL_NODISCARD shared_ptr<T>
     load() const noexcept {
         // Atomically increment local ref count, so that store() after this can be safe.
-        counted_control_block cur_control_block = increment_local_ref_count();
+        const counted_control_block cur_control_block = increment_local_ref_count();
 
         if ((shared_weak_count*)cur_control_block.control_block_ != nullptr) {
             ((shared_weak_count*)cur_control_block.control_block_)->shared_add_ref();
@@ -153,10 +153,10 @@ public:
 
     CIEL_NODISCARD shared_ptr<T>
     exchange(shared_ptr<T> desired) noexcept {
-        counted_control_block new_control_block(desired.control_block_);
+        const counted_control_block new_control_block(desired.control_block_);
         desired.clear();
 
-        counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
+        const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
         return shared_ptr<T>((shared_weak_count*)old_control_block.control_block_);
     }
@@ -164,7 +164,7 @@ public:
     CIEL_NODISCARD bool
     compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         counted_control_block expected_control_block(expected.control_block_);
-        counted_control_block desired_control_block(desired.control_block_);
+        const counted_control_block desired_control_block(desired.control_block_);
 
         if (counted_control_block_.compare_exchange_weak(expected_control_block, desired_control_block)) {
             if ((shared_weak_count*)expected_control_block.control_block_ != nullptr) {
@@ -181,7 +181,7 @@ public:
 
     CIEL_NODISCARD bool
     compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
-        counted_control_block expected_control_block(expected.control_block_);
+        const counted_control_block expected_control_block(expected.control_block_);
 
         do {
             if (compare_exchange_weak(expected, desired)) {
@@ -196,7 +196,7 @@ public:
 #if CIEL_STD_VER >= 17
     static constexpr bool is_always_lock_free = std::atomic<counted_control_block>::is_always_lock_free;
     static_assert(is_always_lock_free == true, "");
-#endif // CIEL_STD_VER >= 17
+#endif
 
 }; // class atomic_shared_ptr
 

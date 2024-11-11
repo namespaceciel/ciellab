@@ -46,8 +46,7 @@ TEST(compressed_pair, default_init) {
 }
 
 TEST(compressed_pair, both_same_empty_bases) {
-    compressed_pair<Empty, Empty> p;
-    static_assert(sizeof(p) == 2, "");
+    static_assert(sizeof(compressed_pair<Empty, Empty>) == 2, "");
 }
 
 #ifdef CIEL_HAS_EXCEPTIONS
@@ -58,7 +57,7 @@ TEST(compressed_pair, exception_safety) {
     EG::enabled = true;
 
     CIEL_TRY {
-        compressed_pair<EG, EG> p(1, 2);
+        const compressed_pair<EG, EG> p(1, 2);
 
         ASSERT_TRUE(false);
     }

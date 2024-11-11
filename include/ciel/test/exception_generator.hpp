@@ -146,7 +146,7 @@ template<size_t ThrowOn, size_t ValidOn, bool IsNothrowMovable>
 struct is_trivially_relocatable<ExceptionGeneratorTriviallyRelocatable<ThrowOn, ValidOn, IsNothrowMovable>>
     : std::true_type {};
 
-#endif // CIEL_HAS_EXCEPTIONS
+#endif
 
 NAMESPACE_CIEL_END
 

@@ -32,7 +32,7 @@ TEST(vector_exception_safety, push_back_in_capacity) {
     try {
         EG::reset();
 
-        EG eg;
+        const EG eg;
         ASSERT_TRUE(v.capacity() > v.size());
         v.push_back(eg);
 
@@ -69,7 +69,7 @@ TEST(vector_exception_safety, push_back_beyond_capacity_trivially_relocatable) {
     try {
         EG::reset();
 
-        EG eg;
+        const EG eg;
         ASSERT_TRUE(v.capacity() == v.size());
         v.push_back(eg);
 
@@ -106,7 +106,7 @@ TEST(vector_exception_safety, push_back_beyond_capacity_noexcept_move) {
     try {
         EG::reset();
 
-        EG eg;
+        const EG eg;
         ASSERT_TRUE(v.capacity() == v.size());
         v.push_back(eg);
 
@@ -143,7 +143,7 @@ TEST(vector_exception_safety, push_back_beyond_capacity_copy) {
     try {
         EG::reset();
 
-        EG eg;
+        const EG eg;
         ASSERT_TRUE(v.capacity() == v.size());
         v.push_back(eg);
 
@@ -167,7 +167,7 @@ TEST(vector_exception_safety, insert_in_capacity_N_gt_pos_end_dis) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() >= v.size() + 3);
@@ -191,7 +191,7 @@ TEST(vector_exception_safety, insert_in_capacity_N_lt_pos_end_dis) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() >= v.size() + 3);
@@ -215,7 +215,7 @@ TEST(vector_exception_safety, insert_in_capacity_N_gt_pos_end_dis_trivially_relo
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() >= v.size() + 3);
@@ -239,7 +239,7 @@ TEST(vector_exception_safety, insert_in_capacity_N_lt_pos_end_dis_trivially_relo
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() >= v.size() + 3);
@@ -262,7 +262,7 @@ TEST(vector_exception_safety, insert_in_capacity_one_at_end) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() >= v.size() + 1);
@@ -288,7 +288,7 @@ TEST(vector_exception_safety, insert_beyond_capacity_noexcept_move) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() < v.size() + 3);
@@ -312,7 +312,7 @@ TEST(vector_exception_safety, insert_beyond_capacity_copy) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() < v.size() + 3);
@@ -336,7 +336,7 @@ TEST(vector_exception_safety, insert_beyond_capacity_trivially_relocatable) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() < v.size() + 3);
@@ -359,7 +359,7 @@ TEST(vector_exception_safety, insert_beyond_capacity_one_at_end) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         ASSERT_TRUE(v.capacity() < v.size() + 1);
@@ -451,7 +451,7 @@ TEST(vector_exception_safety, assign_N_lt_size) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         v.assign(3, eg);
@@ -473,7 +473,7 @@ TEST(vector_exception_safety, assign_N_gt_size_lt_capacity) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         v.assign(7, eg);
@@ -495,7 +495,7 @@ TEST(vector_exception_safety, assign_N_gt_capacity) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         v.assign(7, eg);
@@ -515,7 +515,7 @@ TEST(vector_exception_safety, resize_N_lt_size) {
         v.emplace_back(i);
     }
 
-    EG eg;
+    const EG eg;
     EG::enabled = true;
 
     try {
@@ -540,7 +540,7 @@ TEST(vector_exception_safety, resize_N_gt_size_lt_capacity) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         v.resize(7, eg);
@@ -562,7 +562,7 @@ TEST(vector_exception_safety, resize_N_gt_capacity) {
     EG::enabled = true;
 
     try {
-        EG eg;
+        const EG eg;
         EG::reset();
 
         v.resize(7, eg);
@@ -572,4 +572,4 @@ TEST(vector_exception_safety, resize_N_gt_capacity) {
     } catch (...) {}
 }
 
-#endif // CIEL_HAS_EXCEPTIONS
+#endif

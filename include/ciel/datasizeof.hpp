@@ -54,7 +54,7 @@ struct datasizeof {
     static constexpr size_t value = offsetof(FirstPaddingByte<T>, first_padding_byte);
 
 }; // struct datasizeof
-#endif // CIEL_STD_VER >= 20
+#endif
 
 CIEL_DIAGNOSTIC_POP
 

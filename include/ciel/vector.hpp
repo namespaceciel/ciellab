@@ -347,7 +347,7 @@ public:
     assign(const size_type count, lvalue value) {
         if (capacity() < count) {
             if (internal_value(value, begin_)) {
-                value_type copy = std::move(*(begin_ + (std::addressof(value) - ciel::to_address(begin_))));
+                const value_type copy = std::move(*(begin_ + (std::addressof(value) - ciel::to_address(begin_))));
                 reset(count);
                 construct_at_end(count, copy);
 
@@ -617,7 +617,7 @@ private:
     template<class Iter>
     iterator
     insert(const_iterator p, Iter first, Iter last, size_type count) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
         if CIEL_UNLIKELY (count == 0) {
             return iterator(pos);
@@ -655,7 +655,7 @@ public:
     template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     iterator
     insert(const_iterator p, Iter first, Iter last) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
         const auto pos_index     = pos - begin();
         const size_type old_size = size();
@@ -694,8 +694,8 @@ private:
             }
 
         } else {
-            pointer new_end = std::move(last, end_, first);
-            end_            = destroy(new_end, end_);
+            const pointer new_end = std::move(last, end_, first);
+            end_                  = destroy(new_end, end_);
         }
 
         return begin() + index;

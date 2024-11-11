@@ -8,8 +8,8 @@
 #include <string>
 
 #if defined(__has_include) && __has_include(<cxxabi.h>)
-#define CIEL_HAS_CXXABI_H
-#include <cxxabi.h>
+#  define CIEL_HAS_CXXABI_H
+#  include <cxxabi.h>
 #endif
 
 NAMESPACE_CIEL_BEGIN
@@ -24,9 +24,9 @@ demangle_alloc(const char* name) noexcept {
 
 inline void
 demangle_free(const char* name) noexcept {
-    std::free(const_cast<char*>(name));
+    std::free(const_cast<char*>(name)); // NOLINT(cppcoreguidelines-no-malloc)
 }
-#else  // #ifdef CIEL_HAS_CXXABI_H
+#else
 inline const char*
 demangle_alloc(const char* name) noexcept {
     return name;
@@ -34,7 +34,7 @@ demangle_alloc(const char* name) noexcept {
 
 inline void
 demangle_free(const char*) noexcept {}
-#endif // #ifdef CIEL_HAS_CXXABI_H
+#endif
 
 class scoped_demangled_name {
 private:
@@ -63,19 +63,19 @@ public:
 #ifdef CIEL_HAS_CXXABI_H
 inline std::string
 demangle(const char* name) {
-    scoped_demangled_name demangled_name(name);
+    const scoped_demangled_name demangled_name(name);
     const char* p = demangled_name.get();
     if (!p) {
         p = name;
     }
     return p;
 }
-#else  // #ifdef CIEL_HAS_CXXABI_H
+#else
 inline std::string
 demangle(const char* name) {
     return name;
 }
-#endif // #ifdef CIEL_HAS_CXXABI_H
+#endif
 
 NAMESPACE_CIEL_END
 

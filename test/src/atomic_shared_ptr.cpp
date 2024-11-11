@@ -10,7 +10,7 @@
 using namespace ciel;
 
 TEST(atomic_shared_ptr, construction_empty) {
-    atomic_shared_ptr<int> p;
+    const atomic_shared_ptr<int> p;
 
     auto s = p.load();
     ASSERT_FALSE(s);
@@ -19,7 +19,7 @@ TEST(atomic_shared_ptr, construction_empty) {
 
 TEST(atomic_shared_ptr, construction_value) {
     shared_ptr<int> s{new int(5)};
-    atomic_shared_ptr<int> p{std::move(s)};
+    const atomic_shared_ptr<int> p{std::move(s)};
 
     auto s2 = p.load();
     ASSERT_EQ(s2.use_count(), 2);
@@ -29,12 +29,12 @@ TEST(atomic_shared_ptr, construction_value) {
 TEST(atomic_shared_ptr, store_copy) {
     atomic_shared_ptr<int> p;
 
-    shared_ptr<int> s{new int(5)};
+    const shared_ptr<int> s{new int(5)};
     ASSERT_EQ(s.use_count(), 1);
     p.store(s);
     ASSERT_EQ(s.use_count(), 2);
 
-    auto s2 = p.load();
+    const shared_ptr<int> s2 = p.load();
     ASSERT_EQ(s2.use_count(), 3);
     ASSERT_EQ(*s2, 5);
 }
@@ -42,8 +42,8 @@ TEST(atomic_shared_ptr, store_copy) {
 TEST(atomic_shared_ptr, store_move) {
     atomic_shared_ptr<int> p;
 
-    shared_ptr<int> s{new int(5)};
-    auto s2 = s;
+    const shared_ptr<int> s{new int(5)};
+    shared_ptr<int> s2 = s;
     ASSERT_EQ(s.use_count(), 2);
 
     p.store(std::move(s2));
@@ -54,11 +54,11 @@ TEST(atomic_shared_ptr, store_move) {
 
 TEST(atomic_shared_ptr, load) {
     shared_ptr<int> s{new int(5)};
-    atomic_shared_ptr<int> p{std::move(s)};
+    const atomic_shared_ptr<int> p{std::move(s)};
     ASSERT_FALSE(s);
     ASSERT_EQ(s, nullptr);
 
-    shared_ptr<int> l = p.load();
+    const shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 5);
     ASSERT_EQ(l.use_count(), 2);
 }
@@ -70,12 +70,12 @@ TEST(atomic_shared_ptr, exchange) {
     ASSERT_EQ(s, nullptr);
 
     shared_ptr<int> s2{new int(42)};
-    shared_ptr<int> s3 = p.exchange(std::move(s2));
+    const shared_ptr<int> s3 = p.exchange(std::move(s2));
 
     ASSERT_EQ(*s3, 5);
     ASSERT_EQ(s3.use_count(), 1);
 
-    shared_ptr<int> l = p.load();
+    const shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 42);
     ASSERT_EQ(l.use_count(), 2);
 }
@@ -87,28 +87,28 @@ TEST(atomic_shared_ptr, compare_exchange_weak_true) {
     ASSERT_EQ(s.use_count(), 2);
 
     shared_ptr<int> s2{new int(42)};
-    bool result = p.compare_exchange_weak(s, std::move(s2));
+    const bool result = p.compare_exchange_weak(s, std::move(s2));
     ASSERT_TRUE(result);
     ASSERT_FALSE(s2);
     ASSERT_EQ(s2, nullptr);
 
-    shared_ptr<int> l = p.load();
+    const shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 42);
     ASSERT_EQ(l.use_count(), 2);
 }
 
 TEST(atomic_shared_ptr, compare_exchange_weak_false) {
-    shared_ptr<int> s{new int(5)};
+    const shared_ptr<int> s{new int(5)};
     atomic_shared_ptr<int> p{s};
     ASSERT_TRUE(s);
     ASSERT_EQ(s.use_count(), 2);
 
     shared_ptr<int> s2{new int(42)};
     shared_ptr<int> s3{new int(5)};
-    bool result = p.compare_exchange_weak(s3, std::move(s2));
+    const bool result = p.compare_exchange_weak(s3, std::move(s2));
     ASSERT_FALSE(result);
 
-    shared_ptr<int> l = p.load();
+    const shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 5);
     ASSERT_EQ(l.use_count(), 4);
 }
@@ -120,28 +120,28 @@ TEST(atomic_shared_ptr, compare_exchange_strong_true) {
     ASSERT_EQ(s.use_count(), 2);
 
     shared_ptr<int> s2{new int(42)};
-    bool result = p.compare_exchange_strong(s, std::move(s2));
+    const bool result = p.compare_exchange_strong(s, std::move(s2));
     ASSERT_TRUE(result);
     ASSERT_FALSE(s2);
     ASSERT_EQ(s2, nullptr);
 
-    shared_ptr<int> l = p.load();
+    const shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 42);
     ASSERT_EQ(l.use_count(), 2);
 }
 
 TEST(atomic_shared_ptr, compare_exchange_strong_false) {
-    shared_ptr<int> s{new int(5)};
+    const shared_ptr<int> s{new int(5)};
     atomic_shared_ptr<int> p{s};
     ASSERT_TRUE(s);
     ASSERT_EQ(s.use_count(), 2);
 
     shared_ptr<int> s2{new int(42)};
     shared_ptr<int> s3{new int(5)};
-    bool result = p.compare_exchange_strong(s3, std::move(s2));
+    const bool result = p.compare_exchange_strong(s3, std::move(s2));
     ASSERT_FALSE(result);
 
-    shared_ptr<int> l = p.load();
+    const shared_ptr<int> l = p.load();
     ASSERT_EQ(*l, 5);
     ASSERT_EQ(l.use_count(), 4);
 }
@@ -217,7 +217,7 @@ TEST(atomic_shared_ptr, concurrent_exchange) {
                     shared_ptr<size_t> new_sp = make_shared<size_t>(std::rand());
                     local_sum_produced += *new_sp;
 
-                    shared_ptr<size_t> old_sp = s.exchange(std::move(new_sp));
+                    const shared_ptr<size_t> old_sp = s.exchange(std::move(new_sp));
                     ASSERT_TRUE(old_sp);
                     local_sum_consumed += *old_sp;
                 }

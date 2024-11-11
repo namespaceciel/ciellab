@@ -64,7 +64,7 @@ TEST(function, constructors_and_assignments) {
     CIEL_UNUSED(f4());
 
     static_assert(not is_small_object<std::deque<int>>::value, "");
-    std::deque<int> deque{1, 2, 3, 4, 5};
+    const std::deque<int> deque{1, 2, 3, 4, 5};
     function<void()> f7{[deque] {
         CIEL_UNUSED(deque);
     }};

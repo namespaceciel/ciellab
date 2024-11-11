@@ -15,5 +15,7 @@ cppcoreguidelines-avoid-const-or-ref-data-members,
 cppcoreguidelines-avoid-capturing-lambda-coroutines,
 llvm-include-order,
 llvm-namespace-comment,
-misc-const-correctness,
+misc-const-correctness
 '
+
+HeaderFilterRegex: 'include/ciel'

@@ -345,11 +345,13 @@ public:
     template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
     explicit shared_ptr(Y* ptr)
         : ptr_(ptr) {
-        std::unique_ptr<Y> holder(ptr);
-
-        control_block_ = alloc_control_block(ptr, std::default_delete<Y>(), std::allocator<Y>());
-
-        CIEL_UNUSED(holder.release());
+        CIEL_TRY {
+            control_block_ = alloc_control_block(ptr, std::default_delete<Y>(), std::allocator<Y>());
+        }
+        CIEL_CATCH (...) {
+            ptr->~Y();
+            CIEL_THROW;
+        }
 
         enable_weak_this(ptr, ptr);
     }
@@ -637,8 +639,7 @@ shared_ptr(weak_ptr<T>) -> shared_ptr<T>;
 
 template<class T, class D>
 shared_ptr(std::unique_ptr<T, D>) -> shared_ptr<T>;
-
-#endif // CIEL_STD_VER >= 17
+#endif
 
 template<class T>
 class weak_ptr {
@@ -792,8 +793,7 @@ struct is_trivially_relocatable<weak_ptr<T>> : std::true_type {};
 #if CIEL_STD_VER >= 17
 template<class T>
 weak_ptr(shared_ptr<T>) -> weak_ptr<T>;
-
-#endif // #if CIEL_STD_VER >= 17
+#endif
 
 template<class T>
 class enable_shared_from_this {

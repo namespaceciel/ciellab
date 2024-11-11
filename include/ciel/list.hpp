@@ -164,8 +164,8 @@ private:
 
     void
     do_destroy() noexcept {
-        iterator it = begin();
-        iterator e  = end();
+        iterator it      = begin();
+        const iterator e = end();
 
         while (it != e) {
             auto* to_be_destroyed = static_cast<node_type*>(it.base());
@@ -221,8 +221,8 @@ private:
 
     iterator
     alloc_range_destroy(iterator begin, iterator end) noexcept {
-        iterator loop         = begin;
-        iterator before_begin = begin.prev();
+        iterator loop               = begin;
+        const iterator before_begin = begin.prev();
 
         while (loop != end) {
             auto* to_be_destroyed = static_cast<node_type*>(loop.base());
@@ -243,8 +243,8 @@ private:
     template<class... Arg>
     iterator
     alloc_range_construct_n(iterator begin, const size_type n, Arg&&... arg) {
-        iterator before_begin          = begin.prev();
-        iterator original_before_begin = before_begin;
+        iterator before_begin                = begin.prev();
+        const iterator original_before_begin = before_begin;
 
         CIEL_TRY {
             for (size_type i = 0; i < n; ++i) {
@@ -275,8 +275,8 @@ private:
     template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
     iterator
     alloc_range_construct(iterator begin, Iter first, Iter last) {
-        iterator before_begin          = begin.prev();
-        iterator original_before_begin = before_begin;
+        iterator before_begin                = begin.prev();
+        const iterator original_before_begin = before_begin;
 
         CIEL_TRY {
             while (first != last) {
@@ -434,8 +434,8 @@ public:
 
     void
     assign(size_type count, const value_type& value) {
-        iterator it = begin();
-        iterator e  = end();
+        iterator it      = begin();
+        const iterator e = end();
 
         for (; count > 0 && it != e; --count, ++it) {
             *it = value;
@@ -452,8 +452,8 @@ public:
     template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
     void
     assign(Iter first, Iter last) {
-        iterator it = begin();
-        iterator e  = end();
+        iterator it      = begin();
+        const iterator e = end();
 
         for (; first != last && it != e; ++first, ++it) {
             *it = *first;
@@ -676,7 +676,7 @@ public:
     void
     resize(const size_type count) {
         if (size() >= count) {
-            iterator tmp = std::prev(end(), size() - count);
+            const iterator tmp = std::prev(end(), size() - count);
             alloc_range_destroy(tmp, end());
 
         } else {
@@ -687,7 +687,7 @@ public:
     void
     resize(const size_type count, const value_type& value) {
         if (size() >= count) {
-            iterator tmp = std::prev(end(), size() - count);
+            const iterator tmp = std::prev(end(), size() - count);
             alloc_range_destroy(tmp, end());
 
         } else {

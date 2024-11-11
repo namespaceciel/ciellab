@@ -6,7 +6,7 @@ using namespace ciel;
 
 TEST(vector, capacity) {
     {
-        vector<int> v;
+        const vector<int> v;
         ASSERT_EQ(v.capacity(), 0);
     }
     {

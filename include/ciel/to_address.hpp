@@ -14,7 +14,7 @@ CIEL_DIAGNOSTIC_PUSH
 #if CIEL_STD_VER >= 20
 // std::move_iterator's operator-> has been deprecated in C++20
 CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wdeprecated-declarations")
-#endif // CIEL_STD_VER >= 20
+#endif
 
 template<class Pointer, class = void>
 struct to_address_helper;

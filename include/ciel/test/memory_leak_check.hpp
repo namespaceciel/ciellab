@@ -5,6 +5,7 @@
 #include <ciel/memory.hpp>
 
 #include <cstddef>
+#include <iostream>
 #include <mutex>
 
 NAMESPACE_CIEL_BEGIN
@@ -34,7 +35,7 @@ public:
         CIEL_PRECONDITION(this != &dummy_head());
         CIEL_PRECONDITION(size_ != 0);
 
-        std::lock_guard<std::mutex> lg(mutex());
+        const std::lock_guard<std::mutex> lg(mutex());
 
         prev                    = &dummy_head();
         next                    = dummy_head().next;
@@ -47,7 +48,7 @@ public:
         CIEL_PRECONDITION(this != &dummy_head());
         CIEL_PRECONDITION(size_ != 0);
 
-        std::lock_guard<std::mutex> lg(mutex());
+        const std::lock_guard<std::mutex> lg(mutex());
 
         next->prev = prev;
         prev->next = next;
@@ -69,6 +70,8 @@ public:
 
 NAMESPACE_CIEL_END
 
+#if !(defined(__clang__) && defined(__linux__)) // linux clang is unhappy about this.
+
 CIEL_NODISCARD void*
 operator new(const size_t);
 CIEL_NODISCARD void*
@@ -77,11 +80,13 @@ void
 operator delete(void*) noexcept;
 void
 operator delete[](void*) noexcept;
-#if CIEL_STD_VER >= 14
+#  if CIEL_STD_VER >= 14
 void
 operator delete(void*, size_t) noexcept;
 void
 operator delete[](void*, size_t) noexcept;
-#endif // if CIEL_STD_VER >= 14
+#  endif
+
+#endif
 
 #endif // CIELLAB_INCLUDE_CIEL_MEMORY_LEAK_CHECK_HPP_

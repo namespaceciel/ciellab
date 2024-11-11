@@ -8,7 +8,7 @@ NAMESPACE_CIEL_BEGIN
 #if CIEL_STD_VER >= 20
 template<class T, auto = [] {}>
 inline constexpr bool is_complete_type_v = requires { sizeof(T); };
-#endif // CIEL_STD_VER >= 20
+#endif
 
 NAMESPACE_CIEL_END
 

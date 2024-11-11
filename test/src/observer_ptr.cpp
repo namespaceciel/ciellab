@@ -12,12 +12,12 @@ TEST(observer_ptr, all) {
     struct Derived : Base {};
 
     observer_ptr<int> p1;
-    observer_ptr<int> p2{nullptr};
+    const observer_ptr<int> p2{nullptr};
 
     ASSERT_FALSE(p1);
     ASSERT_FALSE(p2);
 
-    std::unique_ptr<int> up1{new int{123}};
+    const std::unique_ptr<int> up1{new int{123}};
     observer_ptr<int> p3{up1.get()};
 
     ASSERT_TRUE(p3);
@@ -31,7 +31,7 @@ TEST(observer_ptr, all) {
     ASSERT_FALSE(p3);
     ASSERT_EQ(up1.get(), p1.get());
 
-    std::unique_ptr<Derived> up2{new Derived{}};
+    const std::unique_ptr<Derived> up2{new Derived{}};
     observer_ptr<Base> p4{up2.get()};
 
     ASSERT_TRUE(p4);

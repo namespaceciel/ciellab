@@ -22,7 +22,7 @@ TEST(vector, constructor_size_value) {
     test_constructor_size_value_impl<vector<Int, fancy_allocator<Int>>>(this);
     {
         // distinguish from iterator range constructor
-        vector<size_t> v(size_t{5}, size_t{5});
+        const vector<size_t> v(size_t{5}, size_t{5});
         ASSERT_EQ(v, std::initializer_list<size_t>({5, 5, 5, 5, 5}));
     }
 }
@@ -70,7 +70,7 @@ TEST(vector, move_constructor_with_allocator) {
         using Alloc = typename C::allocator_type;
 
         C v1({0, 1, 2, 3, 4});
-        C v2(std::move(v1), Alloc{});
+        const C v2(std::move(v1), Alloc{});
         ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
         ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1}));
     }

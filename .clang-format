@@ -69,7 +69,7 @@ IndentCaseBlocks: false
 IndentCaseLabels: true
 IndentExternBlock: NoIndent
 IndentGotoLabels: true
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: AfterHash
 IndentRequiresClause: true
 IndentWidth: 4
 IndentWrappedFunctionNames: false
@@ -81,7 +81,7 @@ Language: Cpp
 LineEnding: LF
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
-PPIndentWidth: 0
+PPIndentWidth: 2
 PackConstructorInitializers: NextLineOnly
 PointerAlignment: Left
 QualifierAlignment: Custom

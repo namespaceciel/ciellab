@@ -99,7 +99,7 @@ TEST(inplace_vector, constructor_size_value) {
     test_constructor_size_value_impl<inplace_vector<Int, 8>>(this);
     {
         // distinguish from iterator range constructor
-        inplace_vector<size_t, 8> v(size_t{5}, size_t{5});
+        const inplace_vector<size_t, 8> v(size_t{5}, size_t{5});
         ASSERT_EQ(v, std::initializer_list<size_t>({5, 5, 5, 5, 5}));
     }
 }

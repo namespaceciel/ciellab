@@ -11,18 +11,16 @@ set(SOURCES
     src/can_be_destroyed_from_base.cpp
     src/compressed_pair.cpp
     src/do_if_noexcept.cpp
-    src/exception_safety.cpp
     src/finally.cpp
     src/function.cpp
-    src/inplace_vector.cpp
     src/is_nullable.cpp
     src/list.cpp
     src/observer_ptr.cpp
     src/shared_ptr.cpp
-    src/split_buffer.cpp
     src/worth_move.cpp
     src/inplace_vector/constructor.cpp
     src/inplace_vector/erase.cpp
+    src/inplace_vector/trivial.cpp
     src/split_buffer/assign.cpp
     src/split_buffer/compare.cpp
     src/split_buffer/constructor.cpp
@@ -82,8 +80,6 @@ function (add_ciellab_test CXX_STANDARD ENABLE_EXCEPTIONS ENABLE_RTTI)
     else ()
         message(FATAL_ERROR "CXX_STANDARD ${CXX_STANDARD} is not available.")
     endif ()
-
-    target_include_directories(${SUB_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
     target_link_libraries(${SUB_PROJECT_NAME} PRIVATE ciellab GTest::gtest)
 
