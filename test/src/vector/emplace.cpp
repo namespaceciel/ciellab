@@ -88,30 +88,27 @@ test_emplace_rvalue_impl(::testing::Test*) {
 
     // expansion
     {
-        T value(5);
         C v{0, 1, 2, 3, 4};
         v.resize(v.capacity());
 
-        v.emplace(v.begin() + 2, std::move(value));
+        v.emplace(v.begin() + 2, T{5});
         v.resize(6);
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 5, 2, 3, 4}));
     }
     // emplace not at end()
     {
-        T value(5);
         C v{0, 1, 2, 3, 4};
         v.reserve(10);
 
-        v.emplace(v.begin() + 1, std::move(value));
+        v.emplace(v.begin() + 1, T{5});
         ASSERT_EQ(v, std::initializer_list<T>({0, 5, 1, 2, 3, 4}));
     }
     // emplace at end()
     {
-        T value(5);
         C v{0, 1, 2, 3, 4};
         v.reserve(10);
 
-        v.emplace(v.end(), std::move(value));
+        v.emplace(v.end(), T{5});
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5}));
     }
 }

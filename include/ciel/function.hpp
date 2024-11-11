@@ -80,7 +80,7 @@ public:
         : f_(std::move(f)) {}
 
     // When callable object is large.
-    CIEL_NODISCARD virtual func_base<R(Args...)>*
+    CIEL_NODISCARD func_base<R(Args...)>*
     clone() const override {
         func* res = ciel::allocate<func>(1);
 
@@ -96,30 +96,30 @@ public:
     }
 
     // When stored object is large.
-    virtual void
+    void
     destroy_and_deallocate() noexcept override {
         this->~func();
         ciel::deallocate<func>(this);
     }
 
     // When callable object is small, construct on other's buffer_.
-    virtual void
+    void
     clone_to(void* buffer) const override {
         ::new (buffer) func(f_);
     }
 
     // When stored object is small and stored on buffer_.
-    virtual void
+    void
     destroy() noexcept override {
         this->~func();
     }
 
-    virtual R
+    R
     operator()(Args&&... args) const override {
         return f_(std::forward<Args>(args)...);
     }
 
-    CIEL_NODISCARD virtual const void*
+    CIEL_NODISCARD const void*
     target(const std::type_info& ti) const noexcept override {
         CIEL_UNUSED(ti);
 
@@ -135,7 +135,7 @@ public:
     }
 
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD virtual const std::type_info&
+    CIEL_NODISCARD const std::type_info&
     target_type() const noexcept override {
         return typeid(F);
     }
@@ -252,7 +252,7 @@ public:
                 f_ = 1;
                 break;
             case state::Large :
-                f_ = (uintptr_t)(other.heap_ptr()->clone());
+                f_ = reinterpret_cast<uintptr_t>(other.heap_ptr()->clone());
         }
     }
 
@@ -290,7 +290,7 @@ public:
                     CIEL_THROW;
                 }
 
-                f_ = (uintptr_t)res;
+                f_ = reinterpret_cast<uintptr_t>(res);
             }
         }
     }
@@ -326,7 +326,7 @@ public:
                 f_ = 1;
                 break;
             case state::Large :
-                f_ = (uintptr_t)(other.heap_ptr()->clone());
+                f_ = reinterpret_cast<uintptr_t>(other.heap_ptr()->clone());
         }
     }
 
@@ -379,7 +379,7 @@ public:
                     CIEL_THROW;
                 }
 
-                f_ = (uintptr_t)res;
+                f_ = reinterpret_cast<uintptr_t>(res);
             }
         }
     }

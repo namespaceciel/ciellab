@@ -27,16 +27,15 @@ copy_n(InputIt first, Size count, OutputIt result) {
         }
 
         return std::next(first, count);
-
-    } else {
-        for (Size i = 0; i < count; ++i) {
-            *result = *first;
-            ++result;
-            ++first;
-        }
-
-        return first;
     }
+
+    for (Size i = 0; i < count; ++i) {
+        *result = *first;
+        ++result;
+        ++first;
+    }
+
+    return first;
 }
 
 template<class Alloc, class InputIt, class Size, class OutputIt>
@@ -52,16 +51,15 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
         }
 
         return std::next(first, count);
-
-    } else {
-        for (Size i = 0; i < count; ++i) {
-            std::allocator_traits<Alloc>::construct(alloc, ciel::to_address(result), *first);
-            ++result;
-            ++first;
-        }
-
-        return first;
     }
+
+    for (Size i = 0; i < count; ++i) {
+        std::allocator_traits<Alloc>::construct(alloc, ciel::to_address(result), *first);
+        ++result;
+        ++first;
+    }
+
+    return first;
 }
 
 template<class Alloc, class InputIt, class OutputIt>

@@ -19,7 +19,7 @@ inline const char*
 demangle_alloc(const char* name) noexcept {
     size_t size = 0;
     int status  = 0;
-    return abi::__cxa_demangle(name, NULL, &size, &status);
+    return abi::__cxa_demangle(name, nullptr, &size, &status);
 }
 
 inline void

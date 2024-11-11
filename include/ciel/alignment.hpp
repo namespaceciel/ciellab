@@ -24,7 +24,7 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
-    return ((uintptr_t)ptr % alignment) == 0;
+    return (reinterpret_cast<uintptr_t>(ptr) % alignment) == 0;
 }
 
 // align_up

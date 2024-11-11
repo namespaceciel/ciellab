@@ -25,8 +25,8 @@ private:
         size_t local_count_      : 16; // TODO: Use spin_lock as a backup when local_count_ is beyond 2 ^ 16
 
         counted_control_block(shared_weak_count* other, const size_t local_count = 0) noexcept
-            : control_block_((uintptr_t)other), local_count_(local_count) {
-            CIEL_PRECONDITION((uintptr_t)other < (1ULL << 48));
+            : control_block_(reinterpret_cast<uintptr_t>(other)), local_count_(local_count) {
+            CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(other) < (1ULL << 48));
         }
 
         CIEL_NODISCARD friend bool
@@ -71,9 +71,9 @@ private:
 
         // Already pointing to another control_block by store().
         // store() already help us update the remote ref count, so we just decrement that.
-        if (old_control_block.control_block_ != prev_control_block.control_block_
-            && (shared_weak_count*)prev_control_block.control_block_ != nullptr) {
-            ((shared_weak_count*)prev_control_block.control_block_)->shared_count_release();
+        shared_weak_count* pcb = reinterpret_cast<shared_weak_count*>(prev_control_block.control_block_);
+        if (old_control_block.control_block_ != prev_control_block.control_block_ && pcb != nullptr) {
+            pcb->shared_count_release();
         }
     }
 
@@ -124,9 +124,10 @@ public:
         const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
         // Help inflight loads to update those local refcounts to the global.
-        if ((shared_weak_count*)old_control_block.control_block_ != nullptr) {
-            ((shared_weak_count*)old_control_block.control_block_)->shared_add_ref(old_control_block.local_count_);
-            ((shared_weak_count*)old_control_block.control_block_)->shared_count_release();
+        shared_weak_count* ocb = reinterpret_cast<shared_weak_count*>(old_control_block.control_block_);
+        if (ocb != nullptr) {
+            ocb->shared_add_ref(old_control_block.local_count_);
+            ocb->shared_count_release();
         }
     }
 
@@ -135,11 +136,12 @@ public:
         // Atomically increment local ref count, so that store() after this can be safe.
         const counted_control_block cur_control_block = increment_local_ref_count();
 
-        if ((shared_weak_count*)cur_control_block.control_block_ != nullptr) {
-            ((shared_weak_count*)cur_control_block.control_block_)->shared_add_ref();
+        shared_weak_count* ccb = reinterpret_cast<shared_weak_count*>(cur_control_block.control_block_);
+        if (ccb != nullptr) {
+            ccb->shared_add_ref();
         }
 
-        shared_ptr<T> result{(shared_weak_count*)cur_control_block.control_block_}; // private constructor
+        shared_ptr<T> result{ccb}; // private constructor
 
         decrement_local_ref_count(cur_control_block);
 
@@ -158,7 +160,7 @@ public:
 
         const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
-        return shared_ptr<T>((shared_weak_count*)old_control_block.control_block_);
+        return shared_ptr<T>(reinterpret_cast<shared_weak_count*>(old_control_block.control_block_));
     }
 
     CIEL_NODISCARD bool
@@ -167,8 +169,9 @@ public:
         const counted_control_block desired_control_block(desired.control_block_);
 
         if (counted_control_block_.compare_exchange_weak(expected_control_block, desired_control_block)) {
-            if ((shared_weak_count*)expected_control_block.control_block_ != nullptr) {
-                ((shared_weak_count*)expected_control_block.control_block_)->shared_count_release();
+            shared_weak_count* ecb = reinterpret_cast<shared_weak_count*>(expected_control_block.control_block_);
+            if (ecb != nullptr) {
+                ecb->shared_count_release();
             }
 
             desired.clear();

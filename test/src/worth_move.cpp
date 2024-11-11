@@ -47,6 +47,7 @@ struct T7 {
     std::unique_ptr<int> v;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-virtual-class-destructor)
 struct T8 {
     virtual void
     f() noexcept {}

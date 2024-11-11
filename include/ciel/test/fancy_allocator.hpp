@@ -358,14 +358,14 @@ public:
     CIEL_NODISCARD pointer
     allocate(ptrdiff_t n) {
         T* memory = std::allocator<T>().allocate(n);
-        std::memset((void*)memory, 0, sizeof(T) * n);
+        std::memset(static_cast<void*>(memory), 0, sizeof(T) * n);
 
         return pointer(memory);
     }
 
     void
     deallocate(pointer p, ptrdiff_t n) noexcept {
-        std::memset((void*)p.ptr_, 0, sizeof(T) * n);
+        std::memset(static_cast<void*>(p.ptr_), 0, sizeof(T) * n);
         std::allocator<T>().deallocate(p.ptr_, n);
     }
 

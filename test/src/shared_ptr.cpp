@@ -57,7 +57,7 @@ TEST(shared_ptr, alias_move_constructor) {
 
     class Derived final : public Base {
     public:
-        virtual std::string
+        std::string
         str() const noexcept override {
             return "Derived";
         }
@@ -102,7 +102,7 @@ TEST(shared_ptr, custom_deleter) {
     int count = 0;
 
     {
-        const shared_ptr<int> s{new int{123}, [&count](int* ptr) {
+        const shared_ptr<int> s{new int{123}, [&count](const int* ptr) {
                                     ++count;
                                     delete ptr;
                                 }};

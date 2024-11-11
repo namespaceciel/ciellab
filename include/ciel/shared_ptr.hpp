@@ -175,19 +175,19 @@ public:
         : compressed_(compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {}
 
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD virtual void*
+    CIEL_NODISCARD void*
     get_deleter(const std::type_info& type) noexcept override {
         return (type == typeid(deleter_type)) ? static_cast<void*>(&deleter_()) : nullptr;
     }
 #endif
 
-    virtual void
+    void
     dispose() noexcept override {
         deleter_()(ptr_());
         deleter_().~deleter_type();
     }
 
-    virtual void
+    void
     destroy() noexcept override {
         control_block_allocator allocator = std::move(allocator_());
         allocator_().~control_block_allocator();
@@ -195,7 +195,7 @@ public:
         control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
-    CIEL_NODISCARD virtual void*
+    CIEL_NODISCARD void*
     managed_pointer() const noexcept override {
         return const_cast<void*>(static_cast<const void*>(ptr_()));
     }
@@ -244,12 +244,12 @@ public:
         : compressed_(std::piecewise_construct, std::forward_as_tuple(std::forward<Args>(args)...),
                       std::forward_as_tuple(std::move(alloc))) {}
 
-    virtual void
+    void
     dispose() noexcept override {
         ptr_()->~element_type();
     }
 
-    virtual void
+    void
     destroy() noexcept override {
         control_block_allocator allocator = std::move(allocator_());
         allocator_().~control_block_allocator();
@@ -257,7 +257,7 @@ public:
         control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
-    CIEL_NODISCARD virtual void*
+    CIEL_NODISCARD void*
     managed_pointer() const noexcept override {
         return const_cast<void*>(static_cast<const void*>(ptr_()));
     }

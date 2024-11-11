@@ -11,8 +11,10 @@ struct Trivial {};
 struct NotTrivial {
     NotTrivial() = default;
 
+    // NOLINTNEXTLINE([modernize-use-equals-default)
     NotTrivial(const NotTrivial&) noexcept {}
 
+    // NOLINTNEXTLINE([modernize-use-equals-default)
     NotTrivial(NotTrivial&&) noexcept {}
 
     NotTrivial&
@@ -25,6 +27,7 @@ struct NotTrivial {
         return *this;
     }
 
+    // NOLINTNEXTLINE([modernize-use-equals-default)
     ~NotTrivial() {}
 };
 

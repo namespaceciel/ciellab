@@ -332,13 +332,13 @@ public:
 
     vector&
     operator=(const vector& other) {
-        return static_cast<base_type&>(*this) = other;
+        return static_cast<base_type&>(*this) = other; // NOLINT(misc-unconventional-assign-operator)
     }
 
     vector&
     operator=(vector&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
                                        || alloc_traits::is_always_equal::value) {
-        return static_cast<base_type&>(*this) = std::move(other);
+        return static_cast<base_type&>(*this) = std::move(other); // NOLINT(misc-unconventional-assign-operator)
     }
 
     void

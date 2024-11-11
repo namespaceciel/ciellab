@@ -364,7 +364,7 @@ private:
     emplace_back_aux(Args&&... args) {
         if (back_spare() == 0) {
             if CIEL_UNLIKELY (front_spare() > size()) {
-                value_type tmp(std::forward<Args>(args)...);
+                value_type tmp(std::forward<Args>(args)...); // NOLINT(misc-const-correctness)
                 left_shift_n(std::max<size_type>(front_spare() / 2, 1));
                 unchecked_emplace_back(std::move(tmp));
 
@@ -386,7 +386,7 @@ private:
     emplace_front_aux(Args&&... args) {
         if (front_spare() == 0) {
             if CIEL_UNLIKELY (back_spare() > size()) {
-                value_type tmp(std::forward<Args>(args)...);
+                value_type tmp(std::forward<Args>(args)...); // NOLINT(misc-const-correctness)
                 right_shift_n(std::max<size_type>(back_spare() / 2, 1));
                 unchecked_emplace_front(std::move(tmp));
 
@@ -527,13 +527,13 @@ public:
 
     split_buffer&
     operator=(const split_buffer& other) {
-        return static_cast<base_type&>(*this) = other;
+        return static_cast<base_type&>(*this) = other; // NOLINT(misc-unconventional-assign-operator)
     }
 
     split_buffer&
     operator=(split_buffer&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
                                              || alloc_traits::is_always_equal::value) {
-        return static_cast<base_type&>(*this) = std::move(other);
+        return static_cast<base_type&>(*this) = std::move(other); // NOLINT(misc-unconventional-assign-operator)
     }
 
     void

@@ -11,16 +11,20 @@ namespace {
 struct NoexceptMove {
     NoexceptMove() = default;
 
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     NoexceptMove(const NoexceptMove&) noexcept {}
 
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     NoexceptMove(NoexceptMove&&) noexcept {}
 };
 
 struct NonNothrowMove {
     NonNothrowMove() = default;
 
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     NonNothrowMove(const NonNothrowMove&) {}
 
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     NonNothrowMove(NonNothrowMove&&) {}
 };
 
@@ -28,15 +32,16 @@ struct NonCopy {
     NonCopy()               = default;
     NonCopy(const NonCopy&) = delete;
 
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     NonCopy(NonCopy&&) {}
 };
 
 } // namespace
 
 TEST(do_if_noexcept, move) {
-    NoexceptMove a;
-    NonNothrowMove b;
-    NonCopy c;
+    NoexceptMove a;   // NOLINT(misc-const-correctness)
+    NonNothrowMove b; // NOLINT(misc-const-correctness)
+    NonCopy c;        // NOLINT(misc-const-correctness)
 
 #ifdef CIEL_HAS_EXCEPTIONS
     static_assert(std::is_same<decltype(ciel::move_if_noexcept(a)), NoexceptMove&&>::value, "");
@@ -50,9 +55,9 @@ TEST(do_if_noexcept, move) {
 }
 
 TEST(do_if_noexcept, forward) {
-    NoexceptMove a;
-    NonNothrowMove b;
-    NonCopy c;
+    NoexceptMove a;   // NOLINT(misc-const-correctness)
+    NonNothrowMove b; // NOLINT(misc-const-correctness)
+    NonCopy c;        // NOLINT(misc-const-correctness)
 
 #ifdef CIEL_HAS_EXCEPTIONS
     static_assert(std::is_same<decltype(ciel::forward_if_noexcept(a)), NoexceptMove&>::value, "");

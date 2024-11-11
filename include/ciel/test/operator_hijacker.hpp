@@ -38,7 +38,7 @@ struct operator_hijacker_allocator : std::allocator<T>,
                                      operator_hijacker {
 #if CIEL_STD_VER <= 17
     struct rebind {
-        typedef operator_hijacker_allocator<T> other;
+        using other = operator_hijacker_allocator<T>;
     };
 #endif
 

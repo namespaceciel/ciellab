@@ -50,7 +50,7 @@ elif [ "${operation}" == "check" ]; then
     done
 
     echo "All header and source files have been formatted."
-    
+
 else
     echo "Unknown operation: ${operation}"
     echo "Usage: $0 run/check"

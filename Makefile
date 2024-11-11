@@ -66,6 +66,11 @@ check_format:
 	./format.sh check
 .PHONY: check_format
 
-clangd:
+cc:
 	cmake -S . -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-.PHONY: clangd
+.PHONY: cc
+
+ct:
+	cmake -S . -B $(BUILD_DIR)/clang-tidy -DCMAKE_CXX_CLANG_TIDY="clang-tidy" && \
+	cmake --build $(BUILD_DIR)/clang-tidy --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB)
+.PHONY: ct

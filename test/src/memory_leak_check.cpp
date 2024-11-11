@@ -19,7 +19,7 @@ operator new(const size_t count) {
     node->size_                    = count;
     node->push();
 
-    ptr = (void*)((uintptr_t)ptr + extra);
+    ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + extra);
 
     CIEL_POSTCONDITION(ciel::is_aligned(ptr, ciel::max_align));
     return ptr;
@@ -40,7 +40,7 @@ operator delete(void* ptr) noexcept {
     CIEL_POSTCONDITION(extra >= ciel::max_align);
     CIEL_POSTCONDITION(extra % ciel::max_align == 0);
 
-    ptr = (void*)((uintptr_t)ptr - extra);
+    ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) - extra);
 
     ciel::HeapMemoryListNode* node = static_cast<ciel::HeapMemoryListNode*>(ptr);
     node->pop();

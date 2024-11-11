@@ -202,6 +202,7 @@ struct sbv_crtp_base {
         ++this_()->end_;
     }
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator)
     Derived&
     operator=(const Derived& other) {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
@@ -214,6 +215,7 @@ struct sbv_crtp_base {
         return *(this_());
     }
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator)
     Derived&
     operator=(Derived&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
                                         || alloc_traits::is_always_equal::value) {
@@ -231,6 +233,7 @@ struct sbv_crtp_base {
         return *(this_());
     }
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator)
     Derived&
     operator=(std::initializer_list<value_type> ilist) {
         this_()->assign(ilist.begin(), ilist.end(), ilist.size());
