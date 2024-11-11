@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <type_traits>
 
 NAMESPACE_CIEL_BEGIN
 

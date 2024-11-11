@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <iterator>
-#include <type_traits>
 
 NAMESPACE_CIEL_BEGIN
 

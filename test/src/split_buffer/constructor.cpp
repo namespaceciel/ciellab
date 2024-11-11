@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <ciel/split_buffer.hpp>
+#include <ciel/test/different_allocator.hpp>
+#include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/sbv_constructor_tests.hpp>
 
 using namespace ciel;

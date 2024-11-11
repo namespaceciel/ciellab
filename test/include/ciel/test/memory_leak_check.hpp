@@ -2,11 +2,10 @@
 #define CIELLAB_INCLUDE_CIEL_MEMORY_LEAK_CHECK_HPP_
 
 #include <ciel/config.hpp>
+#include <ciel/memory.hpp>
 
 #include <cstddef>
-#include <memory>
 #include <mutex>
-#include <new>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -20,13 +19,13 @@ public:
 
     CIEL_NODISCARD static HeapMemoryListNode&
     dummy_head() noexcept {
-        HeapMemoryListNode instance;
+        static HeapMemoryListNode instance;
         return instance;
     }
 
     CIEL_NODISCARD static std::mutex&
     mutex() noexcept {
-        std::mutex instance;
+        static std::mutex instance;
         return instance;
     }
 
@@ -68,71 +67,21 @@ public:
 
 }; // class HeapMemoryListNode
 
-#ifndef __clang__ // clang is unhappy about this.
-CIEL_NODISCARD inline void*
-operator new(const size_t count) {
-    const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), max_align);
-    CIEL_POSTCONDITION(extra >= max_align);
-    CIEL_POSTCONDITION(extra % max_align == 0);
-
-    void* ptr = std::malloc(count + extra);
-    if (ptr == nullptr) {
-        CIEL_THROW_EXCEPTION(std::bad_alloc{});
-    }
-
-    HeapMemoryListNode* node = static_cast<HeapMemoryListNode*>(ptr);
-    node->size_              = count;
-    node->push();
-
-    ptr = (void*)((uintptr_t)ptr + extra);
-
-    CIEL_POSTCONDITION(ciel::is_aligned(ptr, max_align));
-    return ptr;
-}
-
-CIEL_NODISCARD inline void*
-operator new[](const size_t count) {
-    return operator new(count);
-}
-
-inline void
-operator delete(void* ptr) noexcept {
-    if (ptr == nullptr) {
-        return;
-    }
-
-    const size_t extra = ciel::align_up(sizeof(HeapMemoryListNode), max_align);
-    CIEL_POSTCONDITION(extra >= max_align);
-    CIEL_POSTCONDITION(extra % max_align == 0);
-
-    ptr = (void*)((uintptr_t)ptr - extra);
-
-    HeapMemoryListNode* node = static_cast<HeapMemoryListNode*>(ptr);
-    node->pop();
-
-    CIEL_POSTCONDITION(ciel::is_aligned(ptr, max_align));
-    std::free(ptr);
-}
-
-inline void
-operator delete[](void* ptr) noexcept {
-    return operator delete(ptr);
-}
-
-#if CIEL_STD_VER >= 14
-inline void
-operator delete(void* ptr, size_t sz) noexcept {
-    return operator delete(ptr);
-}
-
-inline void
-operator delete[](void* ptr, size_t sz) noexcept {
-    return operator delete(ptr);
-}
-#endif // if CIEL_STD_VER >= 14
-
-#endif // ifndef __clang__
-
 NAMESPACE_CIEL_END
+
+CIEL_NODISCARD void*
+operator new(const size_t);
+CIEL_NODISCARD void*
+operator new[](const size_t);
+void
+operator delete(void*) noexcept;
+void
+operator delete[](void*) noexcept;
+#if CIEL_STD_VER >= 14
+void
+operator delete(void*, size_t) noexcept;
+void
+operator delete[](void*, size_t) noexcept;
+#endif // if CIEL_STD_VER >= 14
 
 #endif // CIELLAB_INCLUDE_CIEL_MEMORY_LEAK_CHECK_HPP_

@@ -4,6 +4,7 @@ project(ciellab_test LANGUAGES CXX)
 set(CMAKE_BUILD_TYPE "Debug")
 
 set(SOURCES
+    src/memory_leak_check.cpp
     src/main.cpp
     src/allocator_traits.cpp
     src/atomic_shared_ptr.cpp

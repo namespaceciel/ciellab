@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <ciel/test/different_allocator.hpp>
+#include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/sbv_constructor_tests.hpp>
 #include <ciel/vector.hpp>
 
