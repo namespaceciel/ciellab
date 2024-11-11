@@ -64,14 +64,12 @@ private: // private functions
     using base_type::allocator_;
     using base_type::construct;
     using base_type::construct_at_end;
-    using base_type::copy_assign_alloc;
     using base_type::destroy;
     using base_type::end_cap_;
     using base_type::internal_value;
     using base_type::recommend_cap;
     using base_type::reset;
     using base_type::swap_alloc;
-    using base_type::unchecked_emplace_back_aux;
 
 public: // public functions
     // constructor
@@ -128,7 +126,7 @@ private:
 
             } else {
                 for (pointer p = end_ - 1; p >= begin_; --p) {
-                    sb.unchecked_emplace_front_aux(ciel::move_if_noexcept(*p));
+                    sb.unchecked_emplace_front(ciel::move_if_noexcept(*p));
                 }
 
                 clear();
@@ -166,11 +164,11 @@ private:
 
             } else {
                 for (pointer p = pos - 1; p >= begin_; --p) {
-                    sb.unchecked_emplace_front_aux(ciel::move_if_noexcept(*p));
+                    sb.unchecked_emplace_front(ciel::move_if_noexcept(*p));
                 }
 
                 for (pointer p = pos; p < end_; ++p) {
-                    sb.unchecked_emplace_back_aux(ciel::move_if_noexcept(*p));
+                    sb.unchecked_emplace_back(ciel::move_if_noexcept(*p));
                 }
 
                 clear();
@@ -219,11 +217,11 @@ private:
         if (end_ == end_cap_()) {
             split_buffer<value_type, allocator_type&> sb(allocator_());
             sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
-            sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            sb.unchecked_emplace_back(std::forward<Args>(args)...);
             swap_out_buffer(std::move(sb));
 
         } else {
-            unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
         }
     }
 
@@ -253,7 +251,7 @@ public:
     vector(Iter first, Iter last, const allocator_type& alloc = allocator_type())
         : vector(alloc) {
         for (; first != last; ++first) {
-            emplace_back_aux(*first);
+            emplace_back(*first);
         }
     }
 
@@ -508,10 +506,10 @@ public:
         return insert_impl(
             pos, 1,
             [&](split_buffer<value_type, allocator_type&>& sb) {
-                sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
+                sb.unchecked_emplace_back(std::forward<Args>(args)...);
             },
             [&] {
-                unchecked_emplace_back_aux(std::forward<Args>(args)...);
+                unchecked_emplace_back(std::forward<Args>(args)...);
             },
             [&] {
                 unreachable();
@@ -529,10 +527,10 @@ public:
         return insert_impl(
             pos, 1,
             [&](split_buffer<value_type, allocator_type&>& sb) {
-                sb.unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+                sb.unchecked_emplace_back(il, std::forward<Args>(args)...);
             },
             [&] {
-                unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+                unchecked_emplace_back(il, std::forward<Args>(args)...);
             },
             [&] {
                 unreachable();
@@ -555,13 +553,13 @@ public:
         return insert_impl(
             pos, 1,
             [&](split_buffer<value_type, allocator_type&>& sb) {
-                sb.unchecked_emplace_back_aux(value);
+                sb.unchecked_emplace_back(value);
             },
             [&] {
-                unchecked_emplace_back_aux(value);
+                unchecked_emplace_back(value);
             },
             [&] {
-                unchecked_emplace_back_aux(*(std::addressof(value) + 1));
+                unchecked_emplace_back(*(std::addressof(value) + 1));
             },
             [&] {
                 return internal_value(value, pos);
@@ -576,13 +574,13 @@ public:
         return insert_impl(
             pos, 1,
             [&](split_buffer<value_type, allocator_type&>& sb) {
-                sb.unchecked_emplace_back_aux(std::move(value));
+                sb.unchecked_emplace_back(std::move(value));
             },
             [&] {
-                unchecked_emplace_back_aux(std::move(value));
+                unchecked_emplace_back(std::move(value));
             },
             [&] {
-                unchecked_emplace_back_aux(std::move(*(std::addressof(value) + 1)));
+                unchecked_emplace_back(std::move(*(std::addressof(value) + 1)));
             },
             [&] {
                 return internal_value(value, pos);
@@ -661,7 +659,7 @@ public:
         const size_type old_size = size();
 
         for (; first != last; ++first) {
-            emplace_back_aux(*first);
+            emplace_back(*first);
         }
 
         std::rotate(begin() + pos_index, begin() + old_size, end());

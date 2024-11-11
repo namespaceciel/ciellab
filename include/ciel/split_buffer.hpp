@@ -72,14 +72,12 @@ private: // private functions
     using base_type::allocator_;
     using base_type::construct;
     using base_type::construct_at_end;
-    using base_type::copy_assign_alloc;
     using base_type::destroy;
     using base_type::end_cap_;
     using base_type::internal_value;
     using base_type::recommend_cap;
     using base_type::reset;
     using base_type::swap_alloc;
-    using base_type::unchecked_emplace_back_aux;
 
 public: // public functions
     // constructor
@@ -151,11 +149,11 @@ private:
 
             } else {
                 for (pointer p = pos - 1; p >= begin_; --p) {
-                    sb.unchecked_emplace_front_aux(ciel::move_if_noexcept(*p));
+                    sb.unchecked_emplace_front(ciel::move_if_noexcept(*p));
                 }
 
                 for (pointer p = pos; p < end_; ++p) {
-                    sb.unchecked_emplace_back_aux(ciel::move_if_noexcept(*p));
+                    sb.unchecked_emplace_back(ciel::move_if_noexcept(*p));
                 }
 
                 clear();
@@ -368,18 +366,18 @@ private:
             if CIEL_UNLIKELY (front_spare() > size()) {
                 value_type tmp(std::forward<Args>(args)...);
                 left_shift_n(std::max<size_type>(front_spare() / 2, 1));
-                unchecked_emplace_back_aux(std::move(tmp));
+                unchecked_emplace_back(std::move(tmp));
 
             } else {
                 split_buffer<value_type, allocator_type&> sb(allocator_());
                 // end_ - begin_cap_ == front_spare() + size()
                 sb.reserve_cap_and_offset_to(recommend_cap(end_ - begin_cap_ + 1), end_ - begin_cap_);
-                sb.unchecked_emplace_back_aux(std::forward<Args>(args)...);
+                sb.unchecked_emplace_back(std::forward<Args>(args)...);
                 swap_out_buffer(std::move(sb), end_);
             }
 
         } else {
-            unchecked_emplace_back_aux(std::forward<Args>(args)...);
+            unchecked_emplace_back(std::forward<Args>(args)...);
         }
     }
 
@@ -390,19 +388,19 @@ private:
             if CIEL_UNLIKELY (back_spare() > size()) {
                 value_type tmp(std::forward<Args>(args)...);
                 right_shift_n(std::max<size_type>(back_spare() / 2, 1));
-                unchecked_emplace_front_aux(std::move(tmp));
+                unchecked_emplace_front(std::move(tmp));
 
             } else {
                 split_buffer<value_type, allocator_type&> sb(allocator_());
                 // end_cap_() - begin_ == back_spare() + size()
                 const size_type new_cap = recommend_cap(end_cap_() - begin_ + 1);
                 sb.reserve_cap_and_offset_to(new_cap, new_cap - (end_cap_() - begin_));
-                sb.unchecked_emplace_front_aux(std::forward<Args>(args)...);
+                sb.unchecked_emplace_front(std::forward<Args>(args)...);
                 swap_out_buffer(std::move(sb), begin_);
             }
 
         } else {
-            unchecked_emplace_front_aux(std::forward<Args>(args)...);
+            unchecked_emplace_front(std::forward<Args>(args)...);
         }
     }
 

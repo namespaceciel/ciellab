@@ -138,7 +138,7 @@ struct sbv_crtp_base {
         CIEL_PRECONDITION(this_()->end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            unchecked_emplace_back_aux();
+            unchecked_emplace_back();
         }
     }
 
@@ -147,7 +147,7 @@ struct sbv_crtp_base {
         CIEL_PRECONDITION(this_()->end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
-            unchecked_emplace_back_aux(value);
+            unchecked_emplace_back(value);
         }
     }
 
@@ -259,7 +259,7 @@ struct sbv_crtp_base {
 
         } else {
             for (; first != last; ++first) {
-                this_()->emplace_back_aux(*first);
+                this_()->emplace_back(*first);
             }
         }
     }
@@ -472,13 +472,13 @@ struct sbv_crtp_base {
 
     void
     push_back(lvalue value) {
-        this_()->emplace_back_aux(value);
+        this_()->emplace_back(value);
     }
 
     template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
     void
     push_back(rvalue value) {
-        this_()->emplace_back_aux(std::move(value));
+        this_()->emplace_back(std::move(value));
     }
 
     template<class... Args>

@@ -6,6 +6,7 @@
 #endif
 
 #include <cassert>
+#include <cstddef>
 #include <type_traits>
 
 // exception
