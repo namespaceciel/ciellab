@@ -184,19 +184,19 @@ private:
         free_node_  = free;
     }
 
-    size_type& size_() noexcept {
+    CIEL_NODISCARD size_type& size_() noexcept {
         return size_node_allocator_.first();
     }
 
-    const size_type& size_() const noexcept {
+    CIEL_NODISCARD const size_type& size_() const noexcept {
         return size_node_allocator_.first();
     }
 
-    node_allocator& allocator_() noexcept {
+    node_allocator& allocator_() noexcept { // NOLINT(modernize-use-nodiscard)
         return size_node_allocator_.second();
     }
 
-    const node_allocator& allocator_() const noexcept {
+    const node_allocator& allocator_() const noexcept { // NOLINT(modernize-use-nodiscard)
         return size_node_allocator_.second();
     }
 
@@ -231,7 +231,7 @@ private:
 
                 CIEL_TRY {
                     node_alloc_traits::construct(allocator_(), construct_place, before_begin.base(), begin.base(),
-                                                 std::forward<Arg>(arg)...);
+                                                 std::forward<Arg>(arg)...); // NOLINT(bugprone-use-after-move)
                     ++size_();
 
                     before_begin.base()->next_ = construct_place;
@@ -444,7 +444,7 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    CIEL_NODISCARD allocator_type get_allocator() const noexcept {
+    allocator_type get_allocator() const noexcept { // NOLINT(modernize-use-nodiscard)
         return allocator_();
     }
 

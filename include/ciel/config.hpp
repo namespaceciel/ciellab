@@ -113,7 +113,7 @@
 #  define CIEL_THROW    throw
 #else
 #  define CIEL_TRY      if (true)
-#  define CIEL_CATCH(x) else
+#  define CIEL_CATCH(x) if (false)
 #  define CIEL_THROW
 #endif
 

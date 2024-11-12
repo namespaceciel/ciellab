@@ -15,7 +15,7 @@
 NAMESPACE_CIEL_BEGIN
 
 #ifdef CIEL_HAS_CXXABI_H
-inline const char* demangle_alloc(const char* name) noexcept {
+CIEL_NODISCARD inline const char* demangle_alloc(const char* name) noexcept {
     size_t size = 0;
     int status  = 0;
     return abi::__cxa_demangle(name, nullptr, &size, &status);
@@ -25,7 +25,7 @@ inline void demangle_free(const char* name) noexcept {
     std::free(const_cast<char*>(name)); // NOLINT(cppcoreguidelines-no-malloc)
 }
 #else
-inline const char* demangle_alloc(const char* name) noexcept {
+CIEL_NODISCARD inline const char* demangle_alloc(const char* name) noexcept {
     return name;
 }
 
@@ -47,14 +47,14 @@ public:
         demangle_free(m_p);
     }
 
-    const char* get() const noexcept {
+    CIEL_NODISCARD const char* get() const noexcept {
         return m_p;
     }
 
 }; // class scoped_demangled_name
 
 #ifdef CIEL_HAS_CXXABI_H
-inline std::string demangle(const char* name) {
+CIEL_NODISCARD inline std::string demangle(const char* name) {
     const scoped_demangled_name demangled_name(name);
     const char* p = demangled_name.get();
     if (!p) {
@@ -63,7 +63,7 @@ inline std::string demangle(const char* name) {
     return p;
 }
 #else
-inline std::string demangle(const char* name) {
+CIEL_NODISCARD inline std::string demangle(const char* name) {
     return name;
 }
 #endif

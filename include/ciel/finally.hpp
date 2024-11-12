@@ -51,7 +51,7 @@ NAMESPACE_CIEL_END
 // Forwarding get the real line number like defer_12.
 #define CIEL_CONCAT_(a, b) a##b
 #define CIEL_CONCAT(a, b)  CIEL_CONCAT_(a, b)
-// NOLINTNEXTLINE(bugprone-macro-parentheses)
+
 #define CIEL_DEFER(x) auto CIEL_CONCAT(defer_, __LINE__) = ciel::make_finally([&] x)
 
 #endif // CIELLAB_INCLUDE_CIEL_FINALLY_HPP_

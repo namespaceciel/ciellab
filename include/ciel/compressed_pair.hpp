@@ -48,11 +48,11 @@ public:
 
     CIEL_DIAGNOSTIC_POP
 
-    reference get() noexcept {
+    CIEL_NODISCARD reference get() noexcept {
         return value_;
     }
 
-    const_reference get() const noexcept {
+    CIEL_NODISCARD const_reference get() const noexcept {
         return value_;
     }
 
@@ -82,11 +82,11 @@ public:
     compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 
-    reference get() noexcept {
+    CIEL_NODISCARD reference get() noexcept {
         return *this;
     }
 
-    const_reference get() const noexcept {
+    CIEL_NODISCARD const_reference get() const noexcept {
         return *this;
     }
 
@@ -113,19 +113,19 @@ public:
         : base1(pc, std::move(first_args), index_sequence_for<Args1...>()),
           base2(pc, std::move(second_args), index_sequence_for<Args2...>()) {}
 
-    typename base1::reference first() noexcept {
+    CIEL_NODISCARD typename base1::reference first() noexcept {
         return static_cast<base1&>(*this).get();
     }
 
-    typename base1::const_reference first() const noexcept {
+    CIEL_NODISCARD typename base1::const_reference first() const noexcept {
         return static_cast<const base1&>(*this).get();
     }
 
-    typename base2::reference second() noexcept {
+    CIEL_NODISCARD typename base2::reference second() noexcept {
         return static_cast<base2&>(*this).get();
     }
 
-    typename base2::const_reference second() const noexcept {
+    CIEL_NODISCARD typename base2::const_reference second() const noexcept {
         return static_cast<const base2&>(*this).get();
     }
 

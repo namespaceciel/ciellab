@@ -14,6 +14,8 @@ clean:
 	rm -rf $(BUILD_DIR)
 .PHONY: clean
 
+# -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
+
 clang_test_build:
 	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
 	cmake --build $(BUILD_DIR)/clang --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
@@ -69,8 +71,3 @@ check_format:
 cc:
 	cmake -S . -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 .PHONY: cc
-
-ct:
-	cmake -S . -B $(BUILD_DIR)/clang-tidy -DCMAKE_CXX_CLANG_TIDY="clang-tidy" && \
-	cmake --build $(BUILD_DIR)/clang-tidy --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB)
-.PHONY: ct

@@ -57,11 +57,11 @@ struct sbv_crtp_base {
         return this_()->end_cap_alloc_.first();
     }
 
-    allocator_type& allocator_() noexcept {
+    allocator_type& allocator_() noexcept { // NOLINT(modernize-use-nodiscard)
         return this_()->end_cap_alloc_.second();
     }
 
-    const allocator_type& allocator_() const noexcept {
+    const allocator_type& allocator_() const noexcept { // NOLINT(modernize-use-nodiscard)
         return this_()->end_cap_alloc_.second();
     }
 
@@ -265,7 +265,7 @@ struct sbv_crtp_base {
         }
     }
 
-    allocator_type get_allocator() const noexcept {
+    allocator_type get_allocator() const noexcept { // NOLINT(modernize-use-nodiscard)
         return allocator_();
     }
 
