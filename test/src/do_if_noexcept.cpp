@@ -24,7 +24,7 @@ struct NonNothrowMove {
     // NOLINTNEXTLINE(modernize-use-equals-default)
     NonNothrowMove(const NonNothrowMove&) {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
+    // NOLINTNEXTLINE(modernize-use-equals-default, performance-noexcept-move-constructor)
     NonNothrowMove(NonNothrowMove&&) {}
 };
 
@@ -32,7 +32,7 @@ struct NonCopy {
     NonCopy()               = default;
     NonCopy(const NonCopy&) = delete;
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
+    // NOLINTNEXTLINE(modernize-use-equals-default, performance-noexcept-move-constructor)
     NonCopy(NonCopy&&) {}
 };
 

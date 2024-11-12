@@ -47,7 +47,7 @@ TEST(atomic_shared_ptr, store_move) {
     ASSERT_EQ(s.use_count(), 2);
 
     p.store(std::move(s2));
-    ASSERT_FALSE(s2);
+    ASSERT_FALSE(s2); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(s2, nullptr);
     ASSERT_EQ(s.use_count(), 2);
 }
@@ -55,7 +55,7 @@ TEST(atomic_shared_ptr, store_move) {
 TEST(atomic_shared_ptr, load) {
     shared_ptr<int> s{new int(5)};
     const atomic_shared_ptr<int> p{std::move(s)};
-    ASSERT_FALSE(s);
+    ASSERT_FALSE(s); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(s, nullptr);
 
     const shared_ptr<int> l = p.load();
@@ -66,7 +66,7 @@ TEST(atomic_shared_ptr, load) {
 TEST(atomic_shared_ptr, exchange) {
     shared_ptr<int> s{new int(5)};
     atomic_shared_ptr<int> p{std::move(s)};
-    ASSERT_FALSE(s);
+    ASSERT_FALSE(s); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(s, nullptr);
 
     shared_ptr<int> s2{new int(42)};
@@ -89,7 +89,7 @@ TEST(atomic_shared_ptr, compare_exchange_weak_true) {
     shared_ptr<int> s2{new int(42)};
     const bool result = p.compare_exchange_weak(s, std::move(s2));
     ASSERT_TRUE(result);
-    ASSERT_FALSE(s2);
+    ASSERT_FALSE(s2); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(s2, nullptr);
 
     const shared_ptr<int> l = p.load();
@@ -122,7 +122,7 @@ TEST(atomic_shared_ptr, compare_exchange_strong_true) {
     shared_ptr<int> s2{new int(42)};
     const bool result = p.compare_exchange_strong(s, std::move(s2));
     ASSERT_TRUE(result);
-    ASSERT_FALSE(s2);
+    ASSERT_FALSE(s2); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(s2, nullptr);
 
     const shared_ptr<int> l = p.load();

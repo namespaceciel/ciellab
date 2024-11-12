@@ -381,8 +381,9 @@ public:
     void reserve(const size_type new_cap) {
         if (new_cap <= capacity()) {
             return;
+        }
 
-        } else if CIEL_UNLIKELY (new_cap > max_size()) {
+        if CIEL_UNLIKELY (new_cap > max_size()) {
             CIEL_THROW_EXCEPTION(std::length_error{"ciel::vector reserve capacity beyond max_size"});
         }
 
@@ -720,19 +721,16 @@ public:
         if (is_range_with_size<R>::value && is_forward_iterator<decltype(rg.begin())>::value) {
             if (std::is_lvalue_reference<R>::value) {
                 return insert(pos, rg.begin(), rg.end(), rg.size());
-
-            } else {
-                return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
             }
 
-        } else {
-            if (std::is_lvalue_reference<R>::value) {
-                return insert(pos, rg.begin(), rg.end());
-
-            } else {
-                return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
-            }
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
         }
+
+        if (std::is_lvalue_reference<R>::value) {
+            return insert(pos, rg.begin(), rg.end());
+        }
+
+        return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
     }
 
 }; // class vector

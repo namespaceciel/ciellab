@@ -50,7 +50,7 @@ TEST(list, constructors_and_destructors) {
     }
 
     list<int> l7(std::move(l6));
-    ASSERT_TRUE(l6.empty());
+    ASSERT_TRUE(l6.empty()); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(l7.size(), 10);
     ASSERT_EQ(*l7.begin(), 0);
     ASSERT_EQ(*--l7.end(), 9);
@@ -63,7 +63,7 @@ TEST(list, constructors_and_destructors) {
     ASSERT_TRUE(l1.empty());
 
     l7 = std::move(l5);
-    ASSERT_TRUE(l5.empty());
+    ASSERT_TRUE(l5.empty()); // NOLINT(bugprone-use-after-move)
     ASSERT_EQ(l7.size(), 10);
     ASSERT_EQ(*l7.begin(), 0);
     ASSERT_EQ(*--l7.end(), 9);

@@ -95,12 +95,14 @@ public:
         store(nullptr);
     }
 
-    void operator=(shared_ptr<T> desired) noexcept {
+    atomic_shared_ptr& operator=(shared_ptr<T> desired) noexcept {
         store(desired);
+        return *this;
     }
 
-    void operator=(nullptr_t) noexcept {
+    atomic_shared_ptr& operator=(nullptr_t) noexcept {
         store(nullptr);
+        return *this;
     }
 
     CIEL_NODISCARD bool is_lock_free() const noexcept {

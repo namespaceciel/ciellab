@@ -72,7 +72,7 @@ TEST(split_buffer, move_constructor_with_allocator) {
         C v1({0, 1, 2, 3, 4});
         const C v2(std::move(v1), Alloc{});
         ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
-        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1}));
+        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1})); // NOLINT(bugprone-use-after-move)
     }
 }
 

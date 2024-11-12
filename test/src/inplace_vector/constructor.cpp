@@ -63,7 +63,7 @@ inline void test_copy_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
-    C v2(v1);
+    C v2(v1); // NOLINT(performance-unnecessary-copy-initialization)
     ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
 }
 
