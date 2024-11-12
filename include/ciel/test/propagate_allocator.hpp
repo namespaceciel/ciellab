@@ -38,29 +38,23 @@ public:
     propagate_allocator(const propagate_allocator<U, POCCAValue, POCMAValue, POCSValue>& that) noexcept
         : id_(that.id_) {}
 
-    // clang-format off
     propagate_allocator& operator=(const propagate_allocator& a) = default;
-    // clang-format on
 
-    CIEL_NODISCARD T*
-    allocate(const size_t n) {
+    CIEL_NODISCARD T* allocate(const size_t n) {
         return std::allocator<T>().allocate(n);
     }
 
-    void
-    deallocate(T* ptr, const size_t n) noexcept {
+    void deallocate(T* ptr, const size_t n) noexcept {
         std::allocator<T>().deallocate(ptr, n);
     }
 
-    CIEL_NODISCARD int
-    id() const noexcept {
+    CIEL_NODISCARD int id() const noexcept {
         return id_;
     }
 
     template<class U>
-    CIEL_NODISCARD friend bool
-    operator==(const propagate_allocator& lhs,
-               const propagate_allocator<U, POCCAValue, POCMAValue, POCSValue>& rhs) noexcept {
+    CIEL_NODISCARD friend bool operator==(
+        const propagate_allocator& lhs, const propagate_allocator<U, POCCAValue, POCMAValue, POCSValue>& rhs) noexcept {
         return !POCCAValue || !POCMAValue || !POCSValue || lhs.id() == rhs.id();
     }
 

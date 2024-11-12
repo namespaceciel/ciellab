@@ -13,8 +13,7 @@ struct integer_sequence {
 
     using value_type = T;
 
-    static constexpr size_t
-    size() noexcept {
+    static constexpr size_t size() noexcept {
         return sizeof...(Ints);
     }
 

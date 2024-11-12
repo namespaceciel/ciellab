@@ -29,8 +29,8 @@ private:
             CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(other) < (1ULL << 48));
         }
 
-        CIEL_NODISCARD friend bool
-        operator==(const counted_control_block& lhs, const counted_control_block& rhs) noexcept {
+        CIEL_NODISCARD friend bool operator==(const counted_control_block& lhs,
+                                              const counted_control_block& rhs) noexcept {
             return lhs.control_block_ == rhs.control_block_ && lhs.local_count_ == rhs.local_count_;
         }
 
@@ -39,8 +39,7 @@ private:
     // TODO: local pointer?
     mutable std::atomic<counted_control_block> counted_control_block_;
 
-    CIEL_NODISCARD counted_control_block
-    increment_local_ref_count() const noexcept {
+    CIEL_NODISCARD counted_control_block increment_local_ref_count() const noexcept {
         counted_control_block old_control_block = counted_control_block_;
         counted_control_block new_control_block{nullptr};
 
@@ -55,8 +54,7 @@ private:
         return new_control_block;
     }
 
-    void
-    decrement_local_ref_count(counted_control_block prev_control_block) const noexcept {
+    void decrement_local_ref_count(counted_control_block prev_control_block) const noexcept {
         CIEL_PRECONDITION(prev_control_block.local_count_ > 0);
 
         counted_control_block old_control_block = counted_control_block_;
@@ -90,34 +88,28 @@ public:
         desired.clear();
     }
 
-    atomic_shared_ptr(const atomic_shared_ptr&) = delete;
-    // clang-format off
+    atomic_shared_ptr(const atomic_shared_ptr&)            = delete;
     atomic_shared_ptr& operator=(const atomic_shared_ptr&) = delete;
-    // clang-format on
 
     ~atomic_shared_ptr() {
         store(nullptr);
     }
 
-    void
-    operator=(shared_ptr<T> desired) noexcept {
+    void operator=(shared_ptr<T> desired) noexcept {
         store(desired);
     }
 
-    void
-    operator=(nullptr_t) noexcept {
+    void operator=(nullptr_t) noexcept {
         store(nullptr);
     }
 
-    CIEL_NODISCARD bool
-    is_lock_free() const noexcept {
+    CIEL_NODISCARD bool is_lock_free() const noexcept {
         CIEL_PRECONDITION(counted_control_block_.is_lock_free() == true);
 
         return counted_control_block_.is_lock_free();
     }
 
-    void
-    store(shared_ptr<T> desired) noexcept {
+    void store(shared_ptr<T> desired) noexcept {
         const counted_control_block new_control_block{desired.control_block_};
         desired.clear();
 
@@ -131,8 +123,7 @@ public:
         }
     }
 
-    CIEL_NODISCARD shared_ptr<T>
-    load() const noexcept {
+    CIEL_NODISCARD shared_ptr<T> load() const noexcept {
         // Atomically increment local ref count, so that store() after this can be safe.
         const counted_control_block cur_control_block = increment_local_ref_count();
 
@@ -153,8 +144,7 @@ public:
         return load();
     }
 
-    CIEL_NODISCARD shared_ptr<T>
-    exchange(shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD shared_ptr<T> exchange(shared_ptr<T> desired) noexcept {
         const counted_control_block new_control_block(desired.control_block_);
         desired.clear();
 
@@ -163,8 +153,7 @@ public:
         return shared_ptr<T>(reinterpret_cast<shared_weak_count*>(old_control_block.control_block_));
     }
 
-    CIEL_NODISCARD bool
-    compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         counted_control_block expected_control_block(expected.control_block_);
         const counted_control_block desired_control_block(desired.control_block_);
 
@@ -182,8 +171,7 @@ public:
         return false;
     }
 
-    CIEL_NODISCARD bool
-    compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
+    CIEL_NODISCARD bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
         const counted_control_block expected_control_block(expected.control_block_);
 
         do {

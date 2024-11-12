@@ -14,8 +14,7 @@ NAMESPACE_CIEL_BEGIN
 // To extract the input iterator `first`
 
 template<class InputIt, class Size, class OutputIt>
-InputIt
-copy_n(InputIt first, Size count, OutputIt result) {
+InputIt copy_n(InputIt first, Size count, OutputIt result) {
     using T = typename std::iterator_traits<InputIt>::value_type;
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
@@ -39,8 +38,7 @@ copy_n(InputIt first, Size count, OutputIt result) {
 }
 
 template<class Alloc, class InputIt, class Size, class OutputIt>
-InputIt
-uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
+InputIt uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
     using T = typename std::iterator_traits<InputIt>::value_type;
     using U = typename std::iterator_traits<OutputIt>::value_type;
 
@@ -63,8 +61,7 @@ uninitialized_copy_n(Alloc& alloc, InputIt first, Size count, OutputIt result) {
 }
 
 template<class Alloc, class InputIt, class OutputIt>
-void
-uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) {
+void uninitialized_copy(Alloc& alloc, InputIt first, InputIt last, OutputIt& result) {
     using T = typename std::iterator_traits<InputIt>::value_type;
     using U = typename std::iterator_traits<OutputIt>::value_type;
 

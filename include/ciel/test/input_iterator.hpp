@@ -24,8 +24,7 @@ public:
 private:
     pointer ptr;
 
-    static value_type
-    invalid() noexcept {
+    static value_type invalid() noexcept {
         return value_type{~0};
     }
 
@@ -35,35 +34,30 @@ public:
     InputIterator(const pointer p) noexcept
         : ptr(p) {}
 
-    void
-    go_next() noexcept {
+    void go_next() noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
         *ptr = invalid();
         ++ptr;
     }
 
-    CIEL_NODISCARD reference
-    operator*() const noexcept {
+    CIEL_NODISCARD reference operator*() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
         return *ptr;
     }
 
-    CIEL_NODISCARD pointer
-    operator->() const noexcept {
+    CIEL_NODISCARD pointer operator->() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
         return ptr;
     }
 
-    CIEL_NODISCARD pointer
-    base() const noexcept {
+    CIEL_NODISCARD pointer base() const noexcept {
         return ptr;
     }
 
-    CIEL_NODISCARD friend bool
-    operator==(const InputIterator& lhs, const InputIterator& rhs) noexcept {
+    CIEL_NODISCARD friend bool operator==(const InputIterator& lhs, const InputIterator& rhs) noexcept {
         return lhs.base() == rhs.base();
     }
 

@@ -4,8 +4,7 @@
 
 #include <iostream>
 
-int
-main(int argc, char** argv) {
+int main(int argc, char** argv) {
     std::cout << "\n==================================================\n"
               << "CIEL_STD_VER: " << CIEL_STD_VER << '\n'
               << std::boolalpha << "CIEL_HAS_EXCEPTIONS: " <<

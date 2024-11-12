@@ -17,18 +17,15 @@ public:
     template<class U>
     different_allocator(different_allocator<U>) noexcept {}
 
-    CIEL_NODISCARD T*
-    allocate(ptrdiff_t n) {
+    CIEL_NODISCARD T* allocate(ptrdiff_t n) {
         return std::allocator<T>().allocate(n);
     }
 
-    void
-    deallocate(T* p, ptrdiff_t n) noexcept {
+    void deallocate(T* p, ptrdiff_t n) noexcept {
         std::allocator<T>().deallocate(p, n);
     }
 
-    CIEL_NODISCARD friend bool
-    operator==(different_allocator, different_allocator) noexcept {
+    CIEL_NODISCARD friend bool operator==(different_allocator, different_allocator) noexcept {
         return false;
     }
 

@@ -51,8 +51,9 @@ TEST(compressed_pair, both_same_empty_bases) {
 
 #ifdef CIEL_HAS_EXCEPTIONS
 TEST(compressed_pair, exception_safety) {
-    using EG = ExceptionGenerator<
-        2, DefaultConstructor | CopyConstructor | MoveConstructor | CopyAssignment | MoveAssignment, false>;
+    using EG =
+        ExceptionGenerator<2, DefaultConstructor | CopyConstructor | MoveConstructor | CopyAssignment | MoveAssignment,
+                           false>;
     EG::reset();
     EG::enabled = true;
 

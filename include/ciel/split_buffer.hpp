@@ -125,10 +125,9 @@ public: // public functions
     // swap
 
 private:
-    void
-    swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
-                    pointer pos) noexcept(is_trivially_relocatable<value_type>::value
-                                          || std::is_nothrow_move_constructible<value_type>::value) {
+    void swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
+                         pointer pos) noexcept(is_trivially_relocatable<value_type>::value
+                                               || std::is_nothrow_move_constructible<value_type>::value) {
         // Used by emplace_front and emplace_back respectively.
         CIEL_PRECONDITION(pos == begin_ || pos == end_);
 
@@ -172,8 +171,7 @@ private:
 
     // Note that this will invalidate iterators.
     template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value> = 0>
-    void
-    left_shift_n(const size_type n) noexcept {
+    void left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
 
         ciel::memmove(ciel::to_address(begin_ - n), ciel::to_address(begin_), sizeof(value_type) * size());
@@ -183,8 +181,7 @@ private:
 
     // Note that this will invalidate iterators.
     template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value> = 0>
-    void
-    left_shift_n(const size_type n) noexcept {
+    void left_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(front_spare() >= n);
 
         const size_type old_size = size();
@@ -245,8 +242,7 @@ private:
 
     // Note that this will invalidate iterators.
     template<class U = value_type, enable_if_t<is_trivially_relocatable<U>::value> = 0>
-    void
-    right_shift_n(const size_type n) noexcept {
+    void right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
 
         ciel::memmove(ciel::to_address(begin_ + n), ciel::to_address(begin_), sizeof(value_type) * size());
@@ -256,8 +252,7 @@ private:
 
     // Note that this will invalidate iterators.
     template<class U = value_type, enable_if_t<!is_trivially_relocatable<U>::value> = 0>
-    void
-    right_shift_n(const size_type n) noexcept {
+    void right_shift_n(const size_type n) noexcept {
         CIEL_PRECONDITION(back_spare() >= n);
 
         const size_type old_size = size();
@@ -314,24 +309,21 @@ private:
         rd.release();
     }
 
-    void
-    do_destroy() noexcept {
+    void do_destroy() noexcept {
         if (begin_cap_) {
             clear();
             alloc_traits::deallocate(allocator_(), begin_cap_, capacity());
         }
     }
 
-    void
-    set_nullptr() noexcept {
+    void set_nullptr() noexcept {
         begin_cap_ = nullptr;
         begin_     = nullptr;
         end_       = nullptr;
         end_cap_() = nullptr;
     }
 
-    void
-    init(const size_type count) {
+    void init(const size_type count) {
         CIEL_PRECONDITION(count != 0);
         CIEL_PRECONDITION(begin_cap_ == nullptr);
         CIEL_PRECONDITION(begin_ == nullptr);
@@ -344,8 +336,7 @@ private:
         end_       = begin_;
     }
 
-    void
-    reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
+    void reserve_cap_and_offset_to(const size_type cap, const size_type offset) {
         CIEL_PRECONDITION(begin_cap_ == nullptr);
         CIEL_PRECONDITION(begin_ == nullptr);
         CIEL_PRECONDITION(end_ == nullptr);
@@ -360,8 +351,7 @@ private:
     }
 
     template<class... Args>
-    void
-    emplace_back_aux(Args&&... args) {
+    void emplace_back_aux(Args&&... args) {
         if (back_spare() == 0) {
             if CIEL_UNLIKELY (front_spare() > size()) {
                 value_type tmp(std::forward<Args>(args)...); // NOLINT(misc-const-correctness)
@@ -382,8 +372,7 @@ private:
     }
 
     template<class... Args>
-    void
-    emplace_front_aux(Args&&... args) {
+    void emplace_front_aux(Args&&... args) {
         if (front_spare() == 0) {
             if CIEL_UNLIKELY (back_spare() > size()) {
                 value_type tmp(std::forward<Args>(args)...); // NOLINT(misc-const-correctness)
@@ -405,8 +394,7 @@ private:
     }
 
     template<class... Args>
-    void
-    unchecked_emplace_front_aux(Args&&... args) {
+    void unchecked_emplace_front_aux(Args&&... args) {
         CIEL_PRECONDITION(begin_cap_ < begin_);
 
         construct(begin_ - 1, std::forward<Args>(args)...);
@@ -525,19 +513,16 @@ public:
         do_destroy();
     }
 
-    split_buffer&
-    operator=(const split_buffer& other) {
+    split_buffer& operator=(const split_buffer& other) {
         return static_cast<base_type&>(*this) = other; // NOLINT(misc-unconventional-assign-operator)
     }
 
-    split_buffer&
-    operator=(split_buffer&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
-                                             || alloc_traits::is_always_equal::value) {
+    split_buffer& operator=(split_buffer&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
+                                                           || alloc_traits::is_always_equal::value) {
         return static_cast<base_type&>(*this) = std::move(other); // NOLINT(misc-unconventional-assign-operator)
     }
 
-    void
-    assign(const size_type count, lvalue value) {
+    void assign(const size_type count, lvalue value) {
         if (back_spare() + size() < count) {
             const auto callback = [&] {
                 if (capacity() >= count) {
@@ -575,8 +560,7 @@ public:
 
 private:
     template<class Iter>
-    void
-    assign(Iter first, Iter last, const size_type count) {
+    void assign(Iter first, Iter last, const size_type count) {
         if (back_spare() + size() < count) {
             if (capacity() >= count) {
                 clear();
@@ -602,22 +586,19 @@ private:
     }
 
 public:
-    CIEL_NODISCARD size_type
-    front_spare() const noexcept {
+    CIEL_NODISCARD size_type front_spare() const noexcept {
         CIEL_PRECONDITION(begin_cap_ <= begin_);
 
         return begin_ - begin_cap_;
     }
 
-    CIEL_NODISCARD size_type
-    back_spare() const noexcept {
+    CIEL_NODISCARD size_type back_spare() const noexcept {
         CIEL_PRECONDITION(end_ <= end_cap_());
 
         return end_cap_() - end_;
     }
 
-    void
-    reserve_front_spare(const size_type new_spare) {
+    void reserve_front_spare(const size_type new_spare) {
         if (new_spare <= front_spare()) {
             return;
         }
@@ -636,8 +617,7 @@ public:
         CIEL_POSTCONDITION(new_spare <= front_spare());
     }
 
-    void
-    reserve_back_spare(const size_type new_spare) {
+    void reserve_back_spare(const size_type new_spare) {
         if (new_spare <= back_spare()) {
             return;
         }
@@ -656,13 +636,11 @@ public:
         CIEL_POSTCONDITION(new_spare <= back_spare());
     }
 
-    CIEL_NODISCARD size_type
-    capacity() const noexcept {
+    CIEL_NODISCARD size_type capacity() const noexcept {
         return end_cap_() - begin_cap_;
     }
 
-    void
-    shrink_to_fit() {
+    void shrink_to_fit() {
         if CIEL_UNLIKELY (size() == capacity()) {
             return;
         }
@@ -683,10 +661,9 @@ public:
     }
 
 private:
-    iterator
-    erase_impl(pointer first, pointer last,
-               const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
-                                                     || std::is_nothrow_move_assignable<value_type>::value) {
+    iterator erase_impl(pointer first, pointer last,
+                        const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
+                                                              || std::is_nothrow_move_assignable<value_type>::value) {
         CIEL_PRECONDITION(last - first == count);
         CIEL_PRECONDITION(count != 0);
 
@@ -744,58 +721,50 @@ private:
 
 public:
     template<class... Args>
-    reference
-    emplace_front(Args&&... args) {
+    reference emplace_front(Args&&... args) {
         emplace_front_aux(std::forward<Args>(args)...);
 
         return front();
     }
 
     template<class U, class... Args>
-    reference
-    emplace_front(std::initializer_list<U> il, Args&&... args) {
+    reference emplace_front(std::initializer_list<U> il, Args&&... args) {
         emplace_front_aux(il, std::forward<Args>(args)...);
 
         return front();
     }
 
-    void
-    push_front(lvalue value) {
+    void push_front(lvalue value) {
         emplace_front(value);
     }
 
     template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
-    void
-    push_front(rvalue value) {
+    void push_front(rvalue value) {
         emplace_front(std::move(value));
     }
 
     template<class... Args>
-    reference
-    unchecked_emplace_front(Args&&... args) {
+    reference unchecked_emplace_front(Args&&... args) {
         unchecked_emplace_front_aux(std::forward<Args>(args)...);
 
         return front();
     }
 
     template<class U, class... Args>
-    reference
-    unchecked_emplace_front(std::initializer_list<U> il, Args&&... args) {
+    reference unchecked_emplace_front(std::initializer_list<U> il, Args&&... args) {
         unchecked_emplace_front_aux(il, std::forward<Args>(args)...);
 
         return front();
     }
 
-    void
-    pop_front() noexcept {
+    void pop_front() noexcept {
         CIEL_PRECONDITION(!empty());
 
         destroy(begin_);
         ++begin_;
     }
 
-    void
-    resize(const size_type count) {
+    void resize(const size_type count) {
         if (size() >= count) {
             end_ = destroy(begin_ + count, end_);
 
@@ -805,8 +774,7 @@ public:
         }
     }
 
-    void
-    resize(const size_type count, lvalue value) {
+    void resize(const size_type count, lvalue value) {
         if (size() >= count) {
             end_ = destroy(begin_ + count, end_);
 
@@ -821,8 +789,7 @@ public:
         }
     }
 
-    void
-    swap(split_buffer& other) noexcept {
+    void swap(split_buffer& other) noexcept {
         using std::swap;
 
         swap(begin_cap_, other.begin_cap_);
@@ -836,8 +803,7 @@ public:
 }; // class split_buffer
 
 template<class T, class Allocator>
-std::ostream&
-operator<<(std::ostream& out, const split_buffer<T, Allocator>& sb) {
+std::ostream& operator<<(std::ostream& out, const split_buffer<T, Allocator>& sb) {
 #ifdef CIEL_HAS_RTTI
     out << ciel::demangle(typeid(sb).name()) << ": ";
 #endif
@@ -858,8 +824,7 @@ struct is_trivially_relocatable<split_buffer<T, Allocator>>
                   is_trivially_relocatable<typename std::allocator_traits<remove_reference_t<Allocator>>::pointer>> {};
 
 template<class T, class Alloc, class U>
-typename split_buffer<T, Alloc>::size_type
-erase(split_buffer<T, Alloc>& c, const U& value) {
+typename split_buffer<T, Alloc>::size_type erase(split_buffer<T, Alloc>& c, const U& value) {
     auto it        = std::remove(c.begin(), c.end(), value);
     const auto res = std::distance(it, c.end());
     c.erase(it, c.end());
@@ -867,8 +832,7 @@ erase(split_buffer<T, Alloc>& c, const U& value) {
 }
 
 template<class T, class Alloc, class Pred>
-typename split_buffer<T, Alloc>::size_type
-erase_if(split_buffer<T, Alloc>& c, Pred pred) {
+typename split_buffer<T, Alloc>::size_type erase_if(split_buffer<T, Alloc>& c, Pred pred) {
     auto it        = std::remove_if(c.begin(), c.end(), pred);
     const auto res = std::distance(it, c.end());
     c.erase(it, c.end());
@@ -887,8 +851,7 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T, class Alloc>
-void
-swap(ciel::split_buffer<T, Alloc>& lhs, ciel::split_buffer<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+void swap(ciel::split_buffer<T, Alloc>& lhs, ciel::split_buffer<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 

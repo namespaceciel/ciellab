@@ -8,8 +8,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_size_impl(::testing::Test*) {
+void test_size_impl(::testing::Test*) {
     C c;
     ASSERT_EQ(c.size(), 0);
 

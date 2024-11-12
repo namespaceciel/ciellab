@@ -14,8 +14,7 @@ NAMESPACE_CIEL_BEGIN
 
 // relocatable_swap
 template<class T>
-void
-relocatable_swap(T& lhs, T& rhs) noexcept {
+void relocatable_swap(T& lhs, T& rhs) noexcept {
     constexpr size_t buffer_bytes = datasizeof<T>::value;
     unsigned char buffer[buffer_bytes];
 
@@ -25,8 +24,7 @@ relocatable_swap(T& lhs, T& rhs) noexcept {
 }
 
 template<class T, size_t N>
-void
-relocatable_swap(T (&lhs)[N], T (&rhs)[N]) noexcept {
+void relocatable_swap(T (&lhs)[N], T (&rhs)[N]) noexcept {
     constexpr size_t buffer_bytes = sizeof(lhs);
     unsigned char buffer[buffer_bytes];
 
@@ -35,8 +33,7 @@ relocatable_swap(T (&lhs)[N], T (&rhs)[N]) noexcept {
     ciel::memcpy(std::addressof(rhs), std::addressof(buffer), buffer_bytes);
 }
 
-inline void
-relocatable_swap(void* f1, void* f2, size_t bytes) noexcept {
+inline void relocatable_swap(void* f1, void* f2, size_t bytes) noexcept {
     constexpr size_t buffer_bytes = 128;
     unsigned char buffer[buffer_bytes];
 
@@ -66,8 +63,7 @@ namespace std {
 
 #if CIEL_STD_VER < 20
 template<class T, ciel::enable_if_t<ciel::is_trivially_relocatable<T>::value> = 0>
-T*
-swap_ranges(T* first1, T* last1, T* first2) noexcept {
+T* swap_ranges(T* first1, T* last1, T* first2) noexcept {
     const size_t N          = last1 - first1;
     const size_t swap_bytes = N * sizeof(T);
 
@@ -78,15 +74,13 @@ swap_ranges(T* first1, T* last1, T* first2) noexcept {
 #else
 template<class T>
     requires ciel::is_trivially_relocatable<T>::value
-void
-swap(T& a, T& b) noexcept {
+void swap(T& a, T& b) noexcept {
     ciel::relocatable_swap(a, b);
 }
 
 template<class T, size_t N>
     requires ciel::is_trivially_relocatable<T>::value
-void
-swap(T (&a)[N], T (&b)[N]) noexcept {
+void swap(T (&a)[N], T (&b)[N]) noexcept {
     ciel::relocatable_swap(a, b);
 }
 
@@ -94,8 +88,7 @@ template<std::contiguous_iterator ForwardIt1, std::contiguous_iterator ForwardIt
          class T = typename std::iterator_traits<ForwardIt1>::value_type,
          class U = typename std::iterator_traits<ForwardIt2>::value_type>
     requires std::is_same_v<T, U> && ciel::is_trivially_relocatable<T>::value
-ForwardIt2
-swap_ranges(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2) noexcept {
+ForwardIt2 swap_ranges(ForwardIt1 first1, ForwardIt1 last1, ForwardIt2 first2) noexcept {
     const size_t N          = last1 - first1;
     const size_t swap_bytes = N * sizeof(T);
 

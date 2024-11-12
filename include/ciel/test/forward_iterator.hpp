@@ -30,31 +30,26 @@ public:
     ForwardIterator(const pointer p) noexcept
         : ptr(p) {}
 
-    void
-    go_next() noexcept {
+    void go_next() noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         ++ptr;
     }
 
-    CIEL_NODISCARD reference
-    operator*() const noexcept {
+    CIEL_NODISCARD reference operator*() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         return *ptr;
     }
 
-    CIEL_NODISCARD pointer
-    operator->() const noexcept {
+    CIEL_NODISCARD pointer operator->() const noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         return ptr;
     }
 
-    CIEL_NODISCARD pointer
-    base() const noexcept {
+    CIEL_NODISCARD pointer base() const noexcept {
         return ptr;
     }
 
-    CIEL_NODISCARD friend bool
-    operator==(const ForwardIterator& lhs, const ForwardIterator& rhs) noexcept {
+    CIEL_NODISCARD friend bool operator==(const ForwardIterator& lhs, const ForwardIterator& rhs) noexcept {
         return lhs.base() == rhs.base();
     }
 

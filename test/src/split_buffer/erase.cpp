@@ -8,8 +8,7 @@ using namespace ciel;
 namespace {
 
 template<class T>
-void
-test_erase_impl(::testing::Test*) {
+void test_erase_impl(::testing::Test*) {
     // erase single
     {
         split_buffer<T> v{0, 1, 2, 3, 4};

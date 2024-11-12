@@ -155,11 +155,9 @@ struct useless_tag {
 }; // struct useless_tag
 
 template<class... Args>
-void
-void_cast(Args&&...) noexcept {}
+void void_cast(Args&&...) noexcept {}
 
-[[noreturn]] inline void
-unreachable() noexcept {
+[[noreturn]] inline void unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
     __assume(false);
 #else                                        // GCC, Clang

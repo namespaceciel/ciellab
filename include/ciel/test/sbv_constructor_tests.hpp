@@ -8,8 +8,7 @@
 #include <array>
 
 template<class C>
-inline void
-test_default_constructor_impl(::testing::Test*) {
+inline void test_default_constructor_impl(::testing::Test*) {
     using Alloc = typename C::allocator_type;
     {
         C c;
@@ -26,8 +25,7 @@ test_default_constructor_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_default_constructor_with_allocator_impl(::testing::Test*) {
+inline void test_default_constructor_with_allocator_impl(::testing::Test*) {
     using Alloc = typename C::allocator_type;
 
     C v(Alloc{});
@@ -36,8 +34,7 @@ test_default_constructor_with_allocator_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_constructor_size_value_impl(::testing::Test*) {
+inline void test_constructor_size_value_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v(3, T{1});
@@ -45,8 +42,7 @@ test_constructor_size_value_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_constructor_size_impl(::testing::Test*) {
+inline void test_constructor_size_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v(3);
@@ -54,8 +50,7 @@ test_constructor_size_impl(::testing::Test*) {
 }
 
 template<class C, class Iter>
-inline void
-test_constructor_iterator_range_impl(::testing::Test*) {
+inline void test_constructor_iterator_range_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     {
@@ -71,8 +66,7 @@ test_constructor_iterator_range_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_copy_constructor_impl(::testing::Test*) {
+inline void test_copy_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
@@ -81,8 +75,7 @@ test_copy_constructor_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_copy_constructor_with_allocator_impl(::testing::Test*) {
+inline void test_copy_constructor_with_allocator_impl(::testing::Test*) {
     using T     = typename C::value_type;
     using Alloc = typename C::allocator_type;
 
@@ -92,8 +85,7 @@ test_copy_constructor_with_allocator_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_move_constructor_impl(::testing::Test*) {
+inline void test_move_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
@@ -102,8 +94,7 @@ test_move_constructor_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_move_constructor_with_allocator_impl(::testing::Test*) {
+inline void test_move_constructor_with_allocator_impl(::testing::Test*) {
     using T     = typename C::value_type;
     using Alloc = typename C::allocator_type;
 
@@ -113,8 +104,7 @@ test_move_constructor_with_allocator_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void
-test_constructor_initializer_list_impl(::testing::Test*) {
+inline void test_constructor_initializer_list_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v({0, 1, 2, 3, 4});

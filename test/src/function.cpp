@@ -8,11 +8,9 @@ using namespace ciel;
 
 namespace {
 
-void
-test1() noexcept {}
+void test1() noexcept {}
 
-int
-test2(double, float, long) noexcept {
+int test2(double, float, long) noexcept {
     return 1;
 }
 

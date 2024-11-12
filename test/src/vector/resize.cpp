@@ -9,8 +9,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_resize_impl(::testing::Test*) {
+void test_resize_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     vector<T> v(100);
@@ -29,8 +28,7 @@ test_resize_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_resize_value_impl(::testing::Test*) {
+void test_resize_value_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     vector<T> v(100);
@@ -52,8 +50,7 @@ test_resize_value_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_resize_self_value_impl(::testing::Test*) {
+void test_resize_self_value_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     {

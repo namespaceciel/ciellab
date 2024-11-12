@@ -26,16 +26,13 @@ public:
         }
     }
 
-    void
-    release() noexcept {
+    void release() noexcept {
         valid_ = false;
     }
 
-    finally(const finally&) = delete;
-    // clang-format off
+    finally(const finally&)            = delete;
     finally& operator=(const finally&) = delete;
     finally& operator=(finally&&)      = delete;
-    // clang-format on
 
 private:
     F f_;
@@ -44,8 +41,7 @@ private:
 }; // class finally
 
 template<class F, class DecayF = decay_t<F>>
-CIEL_NODISCARD finally<DecayF>
-make_finally(F&& f) {
+CIEL_NODISCARD finally<DecayF> make_finally(F&& f) {
     return finally<DecayF>(std::forward<F>(f));
 }
 

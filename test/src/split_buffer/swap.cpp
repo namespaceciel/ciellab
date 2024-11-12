@@ -8,8 +8,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_swap_impl(::testing::Test*, C& lhs, C& rhs) {
+void test_swap_impl(::testing::Test*, C& lhs, C& rhs) {
     const auto lhs_copy = lhs;
     const auto rhs_copy = rhs;
 

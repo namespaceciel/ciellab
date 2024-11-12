@@ -10,26 +10,22 @@
 NAMESPACE_CIEL_BEGIN
 
 struct operator_hijacker {
-    CIEL_NODISCARD bool
-    operator==(const operator_hijacker&) const {
+    CIEL_NODISCARD bool operator==(const operator_hijacker&) const {
         return true;
     }
 
-    CIEL_NODISCARD bool
-    operator<(const operator_hijacker&) const {
+    CIEL_NODISCARD bool operator<(const operator_hijacker&) const {
         return true;
     }
 
-    // clang-format off
     template<class T>
-    friend void operator&(T&&)       = delete;
-    template <class T, class U>
-    friend void operator,(T&&, U&&)  = delete;
+    friend void operator&(T&&) = delete;
+    template<class T, class U>
+    friend void operator,(T&&, U&&) = delete;
     template<class T, class U>
     friend void operator&&(T&&, U&&) = delete;
     template<class T, class U>
     friend void operator||(T&&, U&&) = delete;
-    // clang-format on
 
 }; // struct operator_hijacker
 
@@ -50,8 +46,7 @@ namespace std {
 
 template<>
 struct hash<ciel::operator_hijacker> {
-    CIEL_NODISCARD size_t
-    operator()(ciel::operator_hijacker) const noexcept {
+    CIEL_NODISCARD size_t operator()(ciel::operator_hijacker) const noexcept {
         return 0;
     }
 };

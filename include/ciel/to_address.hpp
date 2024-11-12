@@ -20,8 +20,7 @@ template<class Pointer, class = void>
 struct to_address_helper;
 
 template<class T>
-T*
-to_address(T* p) noexcept {
+T* to_address(T* p) noexcept {
     static_assert(!std::is_function<T>::value, "T is a function type");
     return p;
 }
@@ -63,8 +62,7 @@ to_address(const Pointer& p) noexcept {
 
 template<class Pointer, class>
 struct to_address_helper {
-    static decltype(ciel::to_address(std::declval<const Pointer&>().operator->()))
-    call(const Pointer& p) noexcept {
+    static decltype(ciel::to_address(std::declval<const Pointer&>().operator->())) call(const Pointer& p) noexcept {
         return ciel::to_address(p.operator->());
     }
 };

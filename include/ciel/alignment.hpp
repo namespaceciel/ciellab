@@ -10,8 +10,7 @@ NAMESPACE_CIEL_BEGIN
 
 // is_pow2
 
-CIEL_NODISCARD inline bool
-is_pow2(const size_t x) noexcept {
+CIEL_NODISCARD inline bool is_pow2(const size_t x) noexcept {
     CIEL_PRECONDITION(x != 0);
 
     return (x & (x - 1)) == 0;
@@ -19,8 +18,7 @@ is_pow2(const size_t x) noexcept {
 
 // is_aligned
 
-CIEL_NODISCARD inline bool
-is_aligned(void* ptr, const size_t alignment) noexcept {
+CIEL_NODISCARD inline bool is_aligned(void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
@@ -29,8 +27,7 @@ is_aligned(void* ptr, const size_t alignment) noexcept {
 
 // align_up
 
-CIEL_NODISCARD inline uintptr_t
-align_up(const uintptr_t sz, const size_t alignment) noexcept {
+CIEL_NODISCARD inline uintptr_t align_up(const uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;
@@ -40,8 +37,7 @@ align_up(const uintptr_t sz, const size_t alignment) noexcept {
 
 // align_down
 
-CIEL_NODISCARD inline uintptr_t
-align_down(const uintptr_t sz, const size_t alignment) noexcept {
+CIEL_NODISCARD inline uintptr_t align_down(const uintptr_t sz, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;
@@ -61,8 +57,7 @@ static constexpr size_t max_align =
 
 // is_overaligned_for_new
 
-CIEL_NODISCARD inline bool
-is_overaligned_for_new(const size_t alignment) noexcept {
+CIEL_NODISCARD inline bool is_overaligned_for_new(const size_t alignment) noexcept {
     return alignment > max_align;
 }
 

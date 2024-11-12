@@ -14,8 +14,7 @@ public:
     SimpleLatch(const size_t count_down) noexcept
         : count_down_(count_down) {}
 
-    void
-    arrive_and_wait() noexcept {
+    void arrive_and_wait() noexcept {
         std::unique_lock<std::mutex> lock(mutex_);
 
         if (--count_down_ == 0) {

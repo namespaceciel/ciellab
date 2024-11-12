@@ -8,8 +8,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_empty_impl(::testing::Test*) {
+void test_empty_impl(::testing::Test*) {
     C c;
     ASSERT_TRUE(c.empty());
 

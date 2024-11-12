@@ -30,8 +30,7 @@ struct TriviallyRelocatable {
     TriviallyRelocatable(TriviallyRelocatable&& other) noexcept
         : ptr(ciel::exchange(other.ptr, nullptr)) {}
 
-    TriviallyRelocatable&
-    operator=(TriviallyRelocatable other) noexcept {
+    TriviallyRelocatable& operator=(TriviallyRelocatable other) noexcept {
         swap(other);
         return *this;
     }
@@ -40,8 +39,7 @@ struct TriviallyRelocatable {
         delete ptr;
     }
 
-    void
-    swap(TriviallyRelocatable& other) noexcept {
+    void swap(TriviallyRelocatable& other) noexcept {
         std::swap(ptr, other.ptr);
     }
 
@@ -55,8 +53,7 @@ struct is_trivially_relocatable<TriviallyRelocatable> : std::true_type {};
 NAMESPACE_CIEL_END
 
 template<class Container>
-void
-emplace_back() noexcept {
+void emplace_back() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -65,8 +62,7 @@ emplace_back() noexcept {
 }
 
 template<class Container>
-void
-emplace_back_known_size() noexcept {
+void emplace_back_known_size() noexcept {
     Container c;
     c.reserve(100000);
 
@@ -76,8 +72,7 @@ emplace_back_known_size() noexcept {
 }
 
 template<class Container>
-void
-unchecked_emplace_back() noexcept {
+void unchecked_emplace_back() noexcept {
     Container c;
     c.reserve(100000);
 
@@ -87,8 +82,7 @@ unchecked_emplace_back() noexcept {
 }
 
 template<class Container>
-void
-emplace_front() noexcept {
+void emplace_front() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -97,8 +91,7 @@ emplace_front() noexcept {
 }
 
 template<class Container>
-void
-push_and_pop() noexcept {
+void push_and_pop() noexcept {
     Container c;
 
     for (int i = 0; i < 100000; ++i) {
@@ -110,8 +103,7 @@ push_and_pop() noexcept {
 }
 
 template<class Container, class iterator = typename Container::iterator>
-void
-insert() noexcept {
+void insert() noexcept {
     Container c;
 
     iterator it = c.begin();
@@ -133,8 +125,7 @@ insert() noexcept {
 }
 
 template<class Container, class iterator = typename Container::iterator>
-void
-erase() noexcept {
+void erase() noexcept {
     Container c(1000);
 
     iterator it = c.begin();
@@ -156,8 +147,7 @@ erase() noexcept {
 }
 
 template<class Container>
-void
-few_objects_emplace_back() {
+void few_objects_emplace_back() {
     for (int i = 0; i < 1000; ++i) {
         Container c{50, 123};
 
@@ -168,8 +158,7 @@ few_objects_emplace_back() {
 }
 
 template<class Container>
-void
-pop_and_shrink() {
+void pop_and_shrink() {
     Container c(10000);
 
     for (int i = 0; i < 100; ++i) {

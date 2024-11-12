@@ -18,20 +18,17 @@ private:
 public:
     size_t size_{0};
 
-    CIEL_NODISCARD static HeapMemoryListNode&
-    dummy_head() noexcept {
+    CIEL_NODISCARD static HeapMemoryListNode& dummy_head() noexcept {
         static HeapMemoryListNode instance;
         return instance;
     }
 
-    CIEL_NODISCARD static std::mutex&
-    mutex() noexcept {
+    CIEL_NODISCARD static std::mutex& mutex() noexcept {
         static std::mutex instance;
         return instance;
     }
 
-    void
-    push() noexcept {
+    void push() noexcept {
         CIEL_PRECONDITION(this != &dummy_head());
         CIEL_PRECONDITION(size_ != 0);
 
@@ -43,8 +40,7 @@ public:
         dummy_head().next       = this;
     }
 
-    void
-    pop() noexcept {
+    void pop() noexcept {
         CIEL_PRECONDITION(this != &dummy_head());
         CIEL_PRECONDITION(size_ != 0);
 
@@ -72,19 +68,13 @@ NAMESPACE_CIEL_END
 
 #if !(defined(__clang__) && defined(__linux__)) // linux clang is unhappy about this.
 
-CIEL_NODISCARD void*
-operator new(const size_t);
-CIEL_NODISCARD void*
-operator new[](const size_t);
-void
-operator delete(void*) noexcept;
-void
-operator delete[](void*) noexcept;
+CIEL_NODISCARD void* operator new(const size_t);
+CIEL_NODISCARD void* operator new[](const size_t);
+void operator delete(void*) noexcept;
+void operator delete[](void*) noexcept;
 #  if CIEL_STD_VER >= 14
-void
-operator delete(void*, size_t) noexcept;
-void
-operator delete[](void*, size_t) noexcept;
+void operator delete(void*, size_t) noexcept;
+void operator delete[](void*, size_t) noexcept;
 #  endif
 
 #endif

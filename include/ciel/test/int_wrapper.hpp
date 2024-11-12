@@ -18,16 +18,13 @@ public:
     int_wrapper(const int i = 0) noexcept
         : i_(i) {}
 
-    int_wrapper(const int_wrapper&) = default;
-    // clang-format off
+    int_wrapper(const int_wrapper&)            = default;
     int_wrapper& operator=(const int_wrapper&) = default;
-    // clang-format on
 
     int_wrapper(int_wrapper&& other) noexcept(IsNothrowMovable)
         : i_(ciel::exchange(other.i_, -1)) {}
 
-    int_wrapper&
-    operator=(int_wrapper&& other) noexcept(IsNothrowMovable) {
+    int_wrapper& operator=(int_wrapper&& other) noexcept(IsNothrowMovable) {
         i_ = ciel::exchange(other.i_, -1);
         return *this;
     }
@@ -36,45 +33,38 @@ public:
         i_ = -2;
     }
 
-    int_wrapper&
-    operator++() noexcept {
+    int_wrapper& operator++() noexcept {
         ++i_;
         return *this;
     }
 
-    CIEL_NODISCARD int_wrapper
-    operator++(int) noexcept {
+    CIEL_NODISCARD int_wrapper operator++(int) noexcept {
         auto res = *this;
         ++(*this);
         return res;
     }
 
-    int_wrapper&
-    operator--() noexcept {
+    int_wrapper& operator--() noexcept {
         --i_;
         return *this;
     }
 
-    CIEL_NODISCARD int_wrapper
-    operator--(int) noexcept {
+    CIEL_NODISCARD int_wrapper operator--(int) noexcept {
         auto res = *this;
         --(*this);
         return res;
     }
 
-    int_wrapper&
-    operator+=(const int_wrapper other) noexcept {
+    int_wrapper& operator+=(const int_wrapper other) noexcept {
         i_ += other.i_;
         return *this;
     }
 
-    int_wrapper&
-    operator-=(const int_wrapper other) noexcept {
+    int_wrapper& operator-=(const int_wrapper other) noexcept {
         return (*this) += (-other);
     }
 
-    CIEL_NODISCARD int_wrapper
-    operator-() noexcept {
+    CIEL_NODISCARD int_wrapper operator-() noexcept {
         int_wrapper res(-i_);
         return res;
     }
@@ -84,14 +74,12 @@ public:
         return i_;
     }
 
-    CIEL_NODISCARD friend int_wrapper
-    operator+(int_wrapper lhs, const int_wrapper rhs) noexcept {
+    CIEL_NODISCARD friend int_wrapper operator+(int_wrapper lhs, const int_wrapper rhs) noexcept {
         lhs.i_ += rhs.i_;
         return lhs;
     }
 
-    CIEL_NODISCARD friend int_wrapper
-    operator-(int_wrapper lhs, const int_wrapper rhs) noexcept {
+    CIEL_NODISCARD friend int_wrapper operator-(int_wrapper lhs, const int_wrapper rhs) noexcept {
         lhs.i_ -= rhs.i_;
         return lhs;
     }

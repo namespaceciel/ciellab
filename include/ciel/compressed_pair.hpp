@@ -48,13 +48,11 @@ public:
 
     CIEL_DIAGNOSTIC_POP
 
-    reference
-    get() noexcept {
+    reference get() noexcept {
         return value_;
     }
 
-    const_reference
-    get() const noexcept {
+    const_reference get() const noexcept {
         return value_;
     }
 
@@ -84,13 +82,11 @@ public:
     compressed_pair_elem(std::piecewise_construct_t, std::tuple<Args...> args, index_sequence<Ints...>)
         : value_(std::forward<Args>(std::get<Ints>(args))...) {}
 
-    reference
-    get() noexcept {
+    reference get() noexcept {
         return *this;
     }
 
-    const_reference
-    get() const noexcept {
+    const_reference get() const noexcept {
         return *this;
     }
 
@@ -117,29 +113,24 @@ public:
         : base1(pc, std::move(first_args), index_sequence_for<Args1...>()),
           base2(pc, std::move(second_args), index_sequence_for<Args2...>()) {}
 
-    typename base1::reference
-    first() noexcept {
+    typename base1::reference first() noexcept {
         return static_cast<base1&>(*this).get();
     }
 
-    typename base1::const_reference
-    first() const noexcept {
+    typename base1::const_reference first() const noexcept {
         return static_cast<const base1&>(*this).get();
     }
 
-    typename base2::reference
-    second() noexcept {
+    typename base2::reference second() noexcept {
         return static_cast<base2&>(*this).get();
     }
 
-    typename base2::const_reference
-    second() const noexcept {
+    typename base2::const_reference second() const noexcept {
         return static_cast<const base2&>(*this).get();
     }
 
     // TODO: Since std::is_nothrow_swappable is available in C++17...
-    void
-    swap(compressed_pair& other) noexcept {
+    void swap(compressed_pair& other) noexcept {
         using std::swap;
 
         swap(first(), other.first());
@@ -157,8 +148,7 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T1, class T2>
-void
-swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+void swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 

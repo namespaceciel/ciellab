@@ -24,8 +24,7 @@ struct T3 {
 struct T4 {
     T4(const T4&) noexcept {}
 
-    T4&
-    operator=(const T4&) noexcept {
+    T4& operator=(const T4&) noexcept {
         return *this;
     }
 };
@@ -33,8 +32,7 @@ struct T4 {
 struct T5 {
     T5(T5&&) noexcept {}
 
-    T5&
-    operator=(T5&&) noexcept {
+    T5& operator=(T5&&) noexcept {
         return *this;
     }
 };
@@ -49,8 +47,7 @@ struct T7 {
 
 // NOLINTNEXTLINE(cppcoreguidelines-virtual-class-destructor)
 struct T8 {
-    virtual void
-    f() noexcept {}
+    virtual void f() noexcept {}
 };
 
 struct T9 {
@@ -58,39 +55,31 @@ struct T9 {
 
     T9(T9&&) noexcept {}
 
-    T9&
-    operator=(const T9&) noexcept {
+    T9& operator=(const T9&) noexcept {
         return *this;
     }
 
-    T9&
-    operator=(T9&&) noexcept {
+    T9& operator=(T9&&) noexcept {
         return *this;
     }
 };
 
 struct T10 {
-    T10(const T10&) = delete;
-
     T10(T10&&) noexcept {}
 
-    // clang-format off
-    T10& operator=(const T10&) = delete;
-    // clang-format on
-
-    T10&
-    operator=(T10&&) noexcept {
+    T10& operator=(T10&&) noexcept {
         return *this;
     }
+
+    T10(const T10&)            = delete;
+    T10& operator=(const T10&) = delete;
 };
 
 struct T11 {
-    T11(const T11&) = delete;
-    T11(T11&&)      = delete;
-    // clang-format off
+    T11(const T11&)            = delete;
+    T11(T11&&)                 = delete;
     T11& operator=(const T11&) = delete;
     T11& operator=(T11&&)      = delete;
-    // clang-format on
 };
 
 } // namespace

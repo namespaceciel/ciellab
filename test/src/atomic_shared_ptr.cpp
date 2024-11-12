@@ -233,8 +233,8 @@ TEST(atomic_shared_ptr, concurrent_exchange) {
     }
 
     const size_t total_produced = std::accumulate(local_sums_produced.begin(), local_sums_produced.end(), 0ULL);
-    const size_t total_consumed
-        = std::accumulate(local_sums_consumed.begin(), local_sums_consumed.end(), 0ULL) + *(s.load());
+    const size_t total_consumed =
+        std::accumulate(local_sums_consumed.begin(), local_sums_consumed.end(), 0ULL) + *(s.load());
 
     ASSERT_EQ(total_produced, total_consumed);
 }

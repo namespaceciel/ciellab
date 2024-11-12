@@ -43,32 +43,26 @@ protected:
     ~shared_weak_count() = default;
 
 public:
-    shared_weak_count(const shared_weak_count&) = delete;
-    // clang-format off
+    shared_weak_count(const shared_weak_count&)            = delete;
     shared_weak_count& operator=(const shared_weak_count&) = delete;
-    // clang-format on
 
-    CIEL_NODISCARD size_t
-    use_count() const noexcept {
+    CIEL_NODISCARD size_t use_count() const noexcept {
         return shared_count_.load(std::memory_order_relaxed);
     }
 
-    void
-    shared_add_ref(const size_t count = 1) noexcept {
+    void shared_add_ref(const size_t count = 1) noexcept {
         const size_t previous = shared_count_.fetch_add(count, std::memory_order_relaxed);
 
         CIEL_POSTCONDITION(count == 0 || previous != 0);
     }
 
-    void
-    weak_add_ref() noexcept {
+    void weak_add_ref() noexcept {
         const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
         CIEL_POSTCONDITION(previous != 0);
     }
 
-    void
-    shared_count_release() noexcept {
+    void shared_count_release() noexcept {
         constexpr size_t off = 1;
         // A decrement-release + an acquire fence is recommended by Boost's documentation:
         // https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html
@@ -82,8 +76,7 @@ public:
         }
     }
 
-    void
-    weak_count_release() noexcept {
+    void weak_count_release() noexcept {
         constexpr size_t off = 1;
         // Avoid expensive atomic stores inspired by LLVM:
         // https://github.com/llvm/llvm-project/commit/ac9eec8602786b13a2bea685257d4f25b36030ff
@@ -96,8 +89,7 @@ public:
         }
     }
 
-    CIEL_NODISCARD bool
-    increment_if_not_zero() noexcept {
+    CIEL_NODISCARD bool increment_if_not_zero() noexcept {
         size_t old_count = shared_count_.load(std::memory_order_relaxed);
 
         do {
@@ -110,16 +102,13 @@ public:
         return true;
     }
 
-    CIEL_NODISCARD virtual void*
-    get_deleter(const std::type_info&) noexcept {
+    CIEL_NODISCARD virtual void* get_deleter(const std::type_info&) noexcept {
         return nullptr;
     }
 
-    // clang-format off
-    virtual void dispose() noexcept = 0;
-    virtual void destroy() noexcept = 0;
+    virtual void dispose() noexcept                               = 0;
+    virtual void destroy() noexcept                               = 0;
     CIEL_NODISCARD virtual void* managed_pointer() const noexcept = 0;
-    // clang-format on
 
 }; // class shared_weak_count
 
@@ -140,33 +129,27 @@ private:
 
     compressed_pair<compressed_pair<pointer, deleter_type>, control_block_allocator> compressed_;
 
-    CIEL_NODISCARD pointer
-    ptr_() noexcept {
+    CIEL_NODISCARD pointer ptr_() noexcept {
         return compressed_.first().first();
     }
 
-    CIEL_NODISCARD const_pointer
-    ptr_() const noexcept {
+    CIEL_NODISCARD const_pointer ptr_() const noexcept {
         return compressed_.first().first();
     }
 
-    CIEL_NODISCARD deleter_type&
-    deleter_() noexcept {
+    CIEL_NODISCARD deleter_type& deleter_() noexcept {
         return compressed_.first().second();
     }
 
-    CIEL_NODISCARD const deleter_type&
-    deleter_() const noexcept {
+    CIEL_NODISCARD const deleter_type& deleter_() const noexcept {
         return compressed_.first().second();
     }
 
-    CIEL_NODISCARD control_block_allocator&
-    allocator_() noexcept {
+    CIEL_NODISCARD control_block_allocator& allocator_() noexcept {
         return compressed_.second();
     }
 
-    CIEL_NODISCARD const control_block_allocator&
-    allocator_() const noexcept {
+    CIEL_NODISCARD const control_block_allocator& allocator_() const noexcept {
         return compressed_.second();
     }
 
@@ -175,28 +158,24 @@ public:
         : compressed_(compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {}
 
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD void*
-    get_deleter(const std::type_info& type) noexcept override {
+    CIEL_NODISCARD void* get_deleter(const std::type_info& type) noexcept override {
         return (type == typeid(deleter_type)) ? static_cast<void*>(&deleter_()) : nullptr;
     }
 #endif
 
-    void
-    dispose() noexcept override {
+    void dispose() noexcept override {
         deleter_()(ptr_());
         deleter_().~deleter_type();
     }
 
-    void
-    destroy() noexcept override {
+    void destroy() noexcept override {
         control_block_allocator allocator = std::move(allocator_());
         allocator_().~control_block_allocator();
 
         control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
-    CIEL_NODISCARD void*
-    managed_pointer() const noexcept override {
+    CIEL_NODISCARD void* managed_pointer() const noexcept override {
         return const_cast<void*>(static_cast<const void*>(ptr_()));
     }
 
@@ -218,23 +197,19 @@ private:
 
     compressed_pair<element_type, control_block_allocator> compressed_;
 
-    CIEL_NODISCARD pointer
-    ptr_() noexcept {
+    CIEL_NODISCARD pointer ptr_() noexcept {
         return &(compressed_.first());
     }
 
-    CIEL_NODISCARD const_pointer
-    ptr_() const noexcept {
+    CIEL_NODISCARD const_pointer ptr_() const noexcept {
         return &(compressed_.first());
     }
 
-    CIEL_NODISCARD control_block_allocator&
-    allocator_() noexcept {
+    CIEL_NODISCARD control_block_allocator& allocator_() noexcept {
         return compressed_.second();
     }
 
-    CIEL_NODISCARD const control_block_allocator&
-    allocator_() const noexcept {
+    CIEL_NODISCARD const control_block_allocator& allocator_() const noexcept {
         return compressed_.second();
     }
 
@@ -244,21 +219,18 @@ public:
         : compressed_(std::piecewise_construct, std::forward_as_tuple(std::forward<Args>(args)...),
                       std::forward_as_tuple(std::move(alloc))) {}
 
-    void
-    dispose() noexcept override {
+    void dispose() noexcept override {
         ptr_()->~element_type();
     }
 
-    void
-    destroy() noexcept override {
+    void destroy() noexcept override {
         control_block_allocator allocator = std::move(allocator_());
         allocator_().~control_block_allocator();
 
         control_block_alloc_traits::deallocate(allocator, this, 1);
     }
 
-    CIEL_NODISCARD void*
-    managed_pointer() const noexcept override {
+    CIEL_NODISCARD void* managed_pointer() const noexcept override {
         return const_cast<void*>(static_cast<const void*>(ptr_()));
     }
 
@@ -279,15 +251,13 @@ private:
     template<class>
     friend class atomic_shared_ptr;
     template<class U, class Alloc, class... Args>
-    friend shared_ptr<U>
-    allocate_shared(const Alloc&, Args&&...);
+    friend shared_ptr<U> allocate_shared(const Alloc&, Args&&...);
 
     element_type* ptr_;
     shared_weak_count* control_block_;
 
     template<class Y, class Deleter, class Allocator>
-    CIEL_NODISCARD shared_weak_count*
-    alloc_control_block(Y* ptr, Deleter&& dlt, Allocator&& alloc) {
+    CIEL_NODISCARD shared_weak_count* alloc_control_block(Y* ptr, Deleter&& dlt, Allocator&& alloc) {
         using alloc_traits               = std::allocator_traits<Allocator>;
         using control_block_type         = control_block_with_pointer<Y, Deleter, Allocator>;
         using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_type>;
@@ -311,8 +281,7 @@ private:
     // Serves for enable_shared_from_this.
     template<class Now, class Original,
              enable_if_t<std::is_convertible<Original*, const enable_shared_from_this<Now>*>::value> = 0>
-    void
-    enable_weak_this(const enable_shared_from_this<Now>* now_ptr, Original* original_ptr) noexcept {
+    void enable_weak_this(const enable_shared_from_this<Now>* now_ptr, Original* original_ptr) noexcept {
         using RawNow = remove_cv_t<Now>;
 
         // If now_ptr is not initialized, let it points to the right control block.
@@ -321,12 +290,10 @@ private:
         }
     }
 
-    void
-    enable_weak_this(...) noexcept {}
+    void enable_weak_this(...) noexcept {}
 
     // Only be used by atomic_shared_ptr.
-    void
-    clear() noexcept {
+    void clear() noexcept {
         ptr_           = nullptr;
         control_block_ = nullptr;
     }
@@ -482,121 +449,102 @@ public:
         }
     }
 
-    shared_ptr&
-    operator=(const shared_ptr& r) noexcept {
+    shared_ptr& operator=(const shared_ptr& r) noexcept {
         shared_ptr(r).swap(*this);
         return *this;
     }
 
     template<class Y>
-    shared_ptr&
-    operator=(const shared_ptr<Y>& r) noexcept {
+    shared_ptr& operator=(const shared_ptr<Y>& r) noexcept {
         shared_ptr(r).swap(*this);
         return *this;
     }
 
-    shared_ptr&
-    operator=(shared_ptr&& r) noexcept {
+    shared_ptr& operator=(shared_ptr&& r) noexcept {
         shared_ptr(std::move(r)).swap(*this);
         return *this;
     }
 
     template<class Y>
-    shared_ptr&
-    operator=(shared_ptr<Y>&& r) noexcept {
+    shared_ptr& operator=(shared_ptr<Y>&& r) noexcept {
         shared_ptr(std::move(r)).swap(*this);
         return *this;
     }
 
     template<class Y, class Deleter>
-    shared_ptr&
-    operator=(std::unique_ptr<Y, Deleter>&& r) {
+    shared_ptr& operator=(std::unique_ptr<Y, Deleter>&& r) {
         shared_ptr(std::move(r)).swap(*this);
         return *this;
     }
 
-    void
-    reset() noexcept {
+    void reset() noexcept {
         shared_ptr().swap(*this);
     }
 
     template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
-    void
-    reset(Y* ptr) {
+    void reset(Y* ptr) {
         shared_ptr(ptr).swap(*this);
     }
 
     template<class Y, class Deleter, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
-    void
-    reset(Y* ptr, Deleter d) {
+    void reset(Y* ptr, Deleter d) {
         shared_ptr(ptr, std::move(d)).swap(*this);
     }
 
     template<class Y, class Deleter, class Alloc, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
-    void
-    reset(Y* ptr, Deleter d, Alloc alloc) {
+    void reset(Y* ptr, Deleter d, Alloc alloc) {
         shared_ptr(ptr, std::move(d), std::move(alloc)).swap(*this);
     }
 
-    void
-    swap(shared_ptr& r) noexcept {
+    void swap(shared_ptr& r) noexcept {
         using std::swap;
 
         swap(ptr_, r.ptr_);
         swap(control_block_, r.control_block_);
     }
 
-    CIEL_NODISCARD element_type*
-    get() const noexcept {
+    CIEL_NODISCARD element_type* get() const noexcept {
         return ptr_;
     }
 
-    CIEL_NODISCARD T&
-    operator*() const noexcept {
+    CIEL_NODISCARD T& operator*() const noexcept {
         CIEL_PRECONDITION(*this);
 
         return *get();
     }
 
-    CIEL_NODISCARD T*
-    operator->() const noexcept {
+    CIEL_NODISCARD T* operator->() const noexcept {
         CIEL_PRECONDITION(*this);
 
         return get();
     }
 
-    CIEL_NODISCARD element_type&
-    operator[](const size_t idx) const {
+    CIEL_NODISCARD element_type& operator[](const size_t idx) const {
         static_assert(std::is_array<T>::value, "ciel::shared_ptr::operator[] is valid only when T is array");
 
         return get()[idx];
     }
 
-    CIEL_NODISCARD size_t
-    use_count() const noexcept {
+    CIEL_NODISCARD size_t use_count() const noexcept {
         return control_block_ != nullptr ? control_block_->use_count() : 0;
     }
 
-    CIEL_NODISCARD explicit
-    operator bool() const noexcept {
+    CIEL_NODISCARD explicit operator bool() const noexcept {
         return get() != nullptr;
     }
 
     template<class Y>
-    CIEL_NODISCARD bool
-    owner_before(const shared_ptr<Y>& other) const noexcept {
+    CIEL_NODISCARD bool owner_before(const shared_ptr<Y>& other) const noexcept {
         return control_block_ < other.control_block_;
     }
 
     template<class Y>
-    CIEL_NODISCARD bool
-    owner_before(const weak_ptr<Y>& other) const noexcept {
+    CIEL_NODISCARD bool owner_before(const weak_ptr<Y>& other) const noexcept {
         return control_block_ < other.control_block_;
     }
 
     template<class D>
-    CIEL_NODISCARD D*
-    get_deleter() const noexcept {
+    CIEL_NODISCARD D* get_deleter() const noexcept {
 #ifdef CIEL_HAS_RTTI
         return control_block_ ? static_cast<D*>(control_block_->get_deleter(typeid(remove_cv_t<D>))) : nullptr;
 #else
@@ -610,26 +558,22 @@ template<class T>
 struct is_trivially_relocatable<shared_ptr<T>> : std::true_type {};
 
 template<class T, class U>
-CIEL_NODISCARD bool
-operator==(const shared_ptr<T>& lhs, const shared_ptr<U>& rhs) noexcept {
+CIEL_NODISCARD bool operator==(const shared_ptr<T>& lhs, const shared_ptr<U>& rhs) noexcept {
     return lhs.get() == rhs.get();
 }
 
 template<class T>
-CIEL_NODISCARD bool
-operator==(const shared_ptr<T>& lhs, nullptr_t) noexcept {
+CIEL_NODISCARD bool operator==(const shared_ptr<T>& lhs, nullptr_t) noexcept {
     return !lhs;
 }
 
 template<class T>
-CIEL_NODISCARD bool
-operator==(nullptr_t, const shared_ptr<T>& rhs) noexcept {
+CIEL_NODISCARD bool operator==(nullptr_t, const shared_ptr<T>& rhs) noexcept {
     return !rhs;
 }
 
 template<class Deleter, class T>
-CIEL_NODISCARD Deleter*
-get_deleter(const shared_ptr<T>& p) noexcept {
+CIEL_NODISCARD Deleter* get_deleter(const shared_ptr<T>& p) noexcept {
     return p.template get_deleter<Deleter>();
 }
 
@@ -702,41 +646,35 @@ public:
         }
     }
 
-    weak_ptr&
-    operator=(const weak_ptr& r) noexcept {
+    weak_ptr& operator=(const weak_ptr& r) noexcept {
         weak_ptr(r).swap(*this);
         return *this;
     }
 
     template<class Y>
-    weak_ptr&
-    operator=(const weak_ptr<Y>& r) noexcept {
+    weak_ptr& operator=(const weak_ptr<Y>& r) noexcept {
         weak_ptr(r).swap(*this);
         return *this;
     }
 
     template<class Y>
-    weak_ptr&
-    operator=(const shared_ptr<Y>& r) noexcept {
+    weak_ptr& operator=(const shared_ptr<Y>& r) noexcept {
         weak_ptr(r).swap(*this);
         return *this;
     }
 
-    weak_ptr&
-    operator=(weak_ptr&& r) noexcept {
+    weak_ptr& operator=(weak_ptr&& r) noexcept {
         weak_ptr(std::move(r)).swap(*this);
         return *this;
     }
 
     template<class Y>
-    weak_ptr&
-    operator=(weak_ptr<Y>&& r) noexcept {
+    weak_ptr& operator=(weak_ptr<Y>&& r) noexcept {
         weak_ptr(std::move(r)).swap(*this);
         return *this;
     }
 
-    void
-    reset() noexcept {
+    void reset() noexcept {
         if (control_block_ != nullptr) {
             control_block_->weak_count_release();
 
@@ -745,26 +683,22 @@ public:
         }
     }
 
-    void
-    swap(weak_ptr& r) noexcept {
+    void swap(weak_ptr& r) noexcept {
         using std::swap;
 
         swap(ptr_, r.ptr_);
         swap(control_block_, r.control_block_);
     }
 
-    CIEL_NODISCARD size_t
-    use_count() const noexcept {
+    CIEL_NODISCARD size_t use_count() const noexcept {
         return control_block_ != nullptr ? control_block_->use_count() : 0;
     }
 
-    CIEL_NODISCARD bool
-    expired() const noexcept {
+    CIEL_NODISCARD bool expired() const noexcept {
         return use_count() == 0;
     }
 
-    CIEL_NODISCARD shared_ptr<T>
-    lock() const noexcept {
+    CIEL_NODISCARD shared_ptr<T> lock() const noexcept {
         if (control_block_ == nullptr) {
             return shared_ptr<T>();
         }
@@ -774,14 +708,12 @@ public:
     }
 
     template<class Y>
-    CIEL_NODISCARD bool
-    owner_before(const weak_ptr<Y>& other) const noexcept {
+    CIEL_NODISCARD bool owner_before(const weak_ptr<Y>& other) const noexcept {
         return control_block_ < other.control_block_;
     }
 
     template<class Y>
-    CIEL_NODISCARD bool
-    owner_before(const shared_ptr<Y>& other) const noexcept {
+    CIEL_NODISCARD bool owner_before(const shared_ptr<Y>& other) const noexcept {
         return control_block_ < other.control_block_;
     }
 
@@ -801,34 +733,28 @@ private:
     mutable weak_ptr<T> weak_this_;
 
 protected:
-    enable_shared_from_this()                               = default;
-    enable_shared_from_this(const enable_shared_from_this&) = default;
-    ~enable_shared_from_this()                              = default;
-    // clang-format off
+    enable_shared_from_this()                                          = default;
+    enable_shared_from_this(const enable_shared_from_this&)            = default;
+    ~enable_shared_from_this()                                         = default;
     enable_shared_from_this& operator=(const enable_shared_from_this&) = default;
-    // clang-format on
 
 public:
     template<class>
     friend class shared_ptr;
 
-    CIEL_NODISCARD shared_ptr<T>
-    shared_from_this() {
+    CIEL_NODISCARD shared_ptr<T> shared_from_this() {
         return shared_ptr<T>(weak_this_);
     }
 
-    CIEL_NODISCARD shared_ptr<const T>
-    shared_from_this() const {
+    CIEL_NODISCARD shared_ptr<const T> shared_from_this() const {
         return shared_ptr<const T>(weak_this_);
     }
 
-    CIEL_NODISCARD weak_ptr<T>
-    weak_from_this() noexcept {
+    CIEL_NODISCARD weak_ptr<T> weak_from_this() noexcept {
         return weak_this_;
     }
 
-    CIEL_NODISCARD weak_ptr<const T>
-    weak_from_this() const noexcept {
+    CIEL_NODISCARD weak_ptr<const T> weak_from_this() const noexcept {
         return weak_this_;
     }
 
@@ -838,8 +764,7 @@ template<class T>
 struct is_trivially_relocatable<enable_shared_from_this<T>> : std::true_type {};
 
 template<class T, class Alloc, class... Args>
-shared_ptr<T>
-allocate_shared(const Alloc& alloc, Args&&... args) {
+shared_ptr<T> allocate_shared(const Alloc& alloc, Args&&... args) {
     static_assert(std::is_same<T, typename Alloc::value_type>::value, "");
 
     using control_block_type = control_block_with_instance<T, Alloc>;
@@ -855,8 +780,7 @@ allocate_shared(const Alloc& alloc, Args&&... args) {
         alloc_deleter(std::allocator<control_block_type> a)
             : alloc_(std::move(a)) {}
 
-        void
-        operator()(control_block_type* ptr) noexcept {
+        void operator()(control_block_type* ptr) noexcept {
             alloc_traits::deallocate(alloc_, ptr, 1);
         }
 
@@ -871,8 +795,7 @@ allocate_shared(const Alloc& alloc, Args&&... args) {
 }
 
 template<class T, class... Args>
-shared_ptr<T>
-make_shared(Args&&... args) {
+shared_ptr<T> make_shared(Args&&... args) {
     return ciel::allocate_shared<T>(std::allocator<T>(), std::forward<Args>(args)...);
 }
 
@@ -881,14 +804,12 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T>
-void
-swap(ciel::shared_ptr<T>& lhs, ciel::shared_ptr<T>& rhs) noexcept {
+void swap(ciel::shared_ptr<T>& lhs, ciel::shared_ptr<T>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
 template<class T>
-void
-swap(ciel::weak_ptr<T>& lhs, ciel::weak_ptr<T>& rhs) noexcept {
+void swap(ciel::weak_ptr<T>& lhs, ciel::weak_ptr<T>& rhs) noexcept {
     lhs.swap(rhs);
 }
 

@@ -16,11 +16,9 @@ struct Allocator {
     using value_type = T;
 
     template<class... Args>
-    void
-    construct(T*, Args&&...) const noexcept {}
+    void construct(T*, Args&&...) const noexcept {}
 
-    void
-    destroy(T*) const noexcept {}
+    void destroy(T*) const noexcept {}
 };
 
 } // namespace

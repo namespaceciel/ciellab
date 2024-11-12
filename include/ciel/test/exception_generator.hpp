@@ -38,13 +38,11 @@ class ExceptionGeneratorName {
 public:
     static bool enabled;
 
-    static void
-    reset() noexcept {
+    static void reset() noexcept {
         counter = 0;
     }
 
-    static void
-    throw_exception() {
+    static void throw_exception() {
         reset();
         throw 0;
     }
@@ -79,8 +77,7 @@ public:
         ptr = ciel::exchange(other.ptr, nullptr);
     }
 
-    ExceptionGeneratorName&
-    operator=(const ExceptionGeneratorName& other) {
+    ExceptionGeneratorName& operator=(const ExceptionGeneratorName& other) {
         if (ValidOnCopyAssignment && enabled) {
             if (++counter == ThrowOn) {
                 throw_exception();
@@ -92,8 +89,7 @@ public:
         return *this;
     }
 
-    ExceptionGeneratorName&
-    operator=(ExceptionGeneratorName&& other) noexcept(IsNothrowMovable) {
+    ExceptionGeneratorName& operator=(ExceptionGeneratorName&& other) noexcept(IsNothrowMovable) {
         if (ValidOnMoveAssignment && !IsNothrowMovable && enabled) {
             if (++counter == ThrowOn) {
                 throw_exception();
@@ -112,8 +108,7 @@ public:
         }
     }
 
-    CIEL_NODISCARD explicit
-    operator size_t() const noexcept {
+    CIEL_NODISCARD explicit operator size_t() const noexcept {
         return ptr ? *ptr : 0;
     }
 };

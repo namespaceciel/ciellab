@@ -9,8 +9,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_emplace_back_impl(::testing::Test*) {
+void test_emplace_back_impl(::testing::Test*) {
     constexpr int N = 64;
 
     C v;
@@ -26,8 +25,7 @@ test_emplace_back_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_emplace_back_self_reference_impl(::testing::Test*) {
+void test_emplace_back_self_reference_impl(::testing::Test*) {
     C v{0, 1, 2, 3, 4};
 
     v.resize(v.capacity(), 123);

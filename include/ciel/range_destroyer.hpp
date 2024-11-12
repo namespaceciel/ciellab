@@ -28,13 +28,11 @@ private:
     pointer begin_;
     compressed_pair<pointer, Allocator> end_alloc_;
 
-    CIEL_NODISCARD pointer&
-    end_() noexcept {
+    CIEL_NODISCARD pointer& end_() noexcept {
         return end_alloc_.first();
     }
 
-    allocator_type&
-    allocator_() noexcept {
+    allocator_type& allocator_() noexcept {
         return end_alloc_.second();
     }
 
@@ -45,10 +43,8 @@ public:
     range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
         : begin_{begin}, end_alloc_{end, alloc} {}
 
-    range_destroyer(const range_destroyer&) = delete;
-    // clang-format off
+    range_destroyer(const range_destroyer&)            = delete;
     range_destroyer& operator=(const range_destroyer&) = delete;
-    // clang-format on
 
     ~range_destroyer() {
         CIEL_PRECONDITION(begin_ <= end_());
@@ -58,28 +54,23 @@ public:
         }
     }
 
-    void
-    advance_forward() noexcept {
+    void advance_forward() noexcept {
         ++end_();
     }
 
-    void
-    advance_forward(const ptrdiff_t n) noexcept {
+    void advance_forward(const ptrdiff_t n) noexcept {
         end_() += n;
     }
 
-    void
-    advance_backward() noexcept {
+    void advance_backward() noexcept {
         --begin_;
     }
 
-    void
-    advance_backward(const ptrdiff_t n) noexcept {
+    void advance_backward(const ptrdiff_t n) noexcept {
         begin_ -= n;
     }
 
-    void
-    release() noexcept {
+    void release() noexcept {
         end_() = begin_;
     }
 
@@ -98,25 +89,18 @@ private:
 public:
     range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
 
-    range_destroyer(const range_destroyer&) = delete;
-    // clang-format off
+    range_destroyer(const range_destroyer&)            = delete;
     range_destroyer& operator=(const range_destroyer&) = delete;
-    // clang-format on
 
-    void
-    advance_forward() noexcept {}
+    void advance_forward() noexcept {}
 
-    void
-    advance_forward(ptrdiff_t) noexcept {}
+    void advance_forward(ptrdiff_t) noexcept {}
 
-    void
-    advance_backward() noexcept {}
+    void advance_backward() noexcept {}
 
-    void
-    advance_backward(ptrdiff_t) noexcept {}
+    void advance_backward(ptrdiff_t) noexcept {}
 
-    void
-    release() noexcept {}
+    void release() noexcept {}
 
 }; // class range_destroyer
 

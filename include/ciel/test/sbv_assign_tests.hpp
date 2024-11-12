@@ -11,16 +11,14 @@
 #include <array>
 
 template<class C>
-inline void
-test_operator_copy_impl(::testing::Test*, C& lhs, C& rhs) {
+inline void test_operator_copy_impl(::testing::Test*, C& lhs, C& rhs) {
     rhs = lhs;
     ASSERT_EQ(lhs, rhs);
     ASSERT_EQ(lhs.get_allocator(), rhs.get_allocator());
 }
 
 template<class C>
-inline void
-test_operator_move_impl(::testing::Test*, C& lhs, C& rhs) {
+inline void test_operator_move_impl(::testing::Test*, C& lhs, C& rhs) {
     const auto temp = lhs;
     rhs             = std::move(lhs);
     ASSERT_EQ(temp, rhs);
@@ -28,8 +26,7 @@ test_operator_move_impl(::testing::Test*, C& lhs, C& rhs) {
 }
 
 template<class Iter, class C>
-inline void
-test_assign_iterator_range_impl(::testing::Test*, const C& c) {
+inline void test_assign_iterator_range_impl(::testing::Test*, const C& c) {
     using T = typename C::value_type;
 
     {
@@ -47,8 +44,7 @@ test_assign_iterator_range_impl(::testing::Test*, const C& c) {
 }
 
 template<class C>
-inline void
-test_assign_size_value_impl(::testing::Test*, C& v) {
+inline void test_assign_size_value_impl(::testing::Test*, C& v) {
     using T = typename C::value_type;
 
     v.assign(5, 6);

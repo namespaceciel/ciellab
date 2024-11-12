@@ -11,8 +11,7 @@ NAMESPACE_CIEL_BEGIN
 
 // memcpy
 
-inline void
-memcpy(void* dest, const void* src, const size_t count) noexcept {
+inline void memcpy(void* dest, const void* src, const size_t count) noexcept {
     CIEL_PRECONDITION(dest != nullptr);
     CIEL_PRECONDITION(src != nullptr);
     CIEL_PRECONDITION((uintptr_t)dest + count <= (uintptr_t)src || (uintptr_t)src + count <= (uintptr_t)dest);
@@ -22,8 +21,7 @@ memcpy(void* dest, const void* src, const size_t count) noexcept {
 
 // memmove
 
-inline void
-memmove(void* dest, const void* src, const size_t count) noexcept {
+inline void memmove(void* dest, const void* src, const size_t count) noexcept {
     CIEL_PRECONDITION(dest != nullptr);
     CIEL_PRECONDITION(src != nullptr);
 

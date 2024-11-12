@@ -4,8 +4,7 @@
 
 #if !(defined(__clang__) && defined(__linux__)) // linux clang is unhappy about this.
 
-CIEL_NODISCARD void*
-operator new(const size_t count) {
+CIEL_NODISCARD void* operator new(const size_t count) {
     const size_t extra = ciel::align_up(sizeof(ciel::HeapMemoryListNode), ciel::max_align);
     CIEL_POSTCONDITION(extra >= ciel::max_align);
     CIEL_POSTCONDITION(extra % ciel::max_align == 0);
@@ -25,13 +24,11 @@ operator new(const size_t count) {
     return ptr;
 }
 
-CIEL_NODISCARD void*
-operator new[](const size_t count) {
+CIEL_NODISCARD void* operator new[](const size_t count) {
     return operator new(count);
 }
 
-void
-operator delete(void* ptr) noexcept {
+void operator delete(void* ptr) noexcept {
     if (ptr == nullptr) {
         return;
     }
@@ -49,19 +46,16 @@ operator delete(void* ptr) noexcept {
     std::free(ptr); // NOLINT(cppcoreguidelines-no-malloc)
 }
 
-void
-operator delete[](void* ptr) noexcept {
+void operator delete[](void* ptr) noexcept {
     return operator delete(ptr);
 }
 
 #  if CIEL_STD_VER >= 14
-void
-operator delete(void* ptr, size_t) noexcept {
+void operator delete(void* ptr, size_t) noexcept {
     return operator delete(ptr);
 }
 
-void
-operator delete[](void* ptr, size_t) noexcept {
+void operator delete[](void* ptr, size_t) noexcept {
     return operator delete(ptr);
 }
 #  endif

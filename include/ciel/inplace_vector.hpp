@@ -93,12 +93,10 @@ struct maybe_has_trivial_copy_constructor : inplace_vector_storage<T, Capacity, 
         self.construct_at_end(other.begin(), other.end());
     }
 
-    maybe_has_trivial_copy_constructor()                                     = default;
-    maybe_has_trivial_copy_constructor(maybe_has_trivial_copy_constructor&&) = default;
-    // clang-format off
+    maybe_has_trivial_copy_constructor()                                                     = default;
+    maybe_has_trivial_copy_constructor(maybe_has_trivial_copy_constructor&&)                 = default;
     maybe_has_trivial_copy_constructor& operator=(const maybe_has_trivial_copy_constructor&) = default;
     maybe_has_trivial_copy_constructor& operator=(maybe_has_trivial_copy_constructor&&)      = default;
-    // clang-format on
 
 }; // struct maybe_has_trivial_copy_constructor
 
@@ -122,12 +120,10 @@ struct maybe_has_trivial_move_constructor : maybe_has_trivial_copy_constructor<T
         self.construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
     }
 
-    maybe_has_trivial_move_constructor()                                          = default;
-    maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&) = default;
-    // clang-format off
+    maybe_has_trivial_move_constructor()                                                     = default;
+    maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&)            = default;
     maybe_has_trivial_move_constructor& operator=(const maybe_has_trivial_move_constructor&) = default;
     maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&)      = default;
-    // clang-format on
 
 }; // struct maybe_has_trivial_move_constructor
 
@@ -148,12 +144,10 @@ struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
         static_cast<D&&>(o).size_ = 0;
     }
 
-    maybe_has_trivial_move_constructor()                                          = default;
-    maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&) = default;
-    // clang-format off
+    maybe_has_trivial_move_constructor()                                                     = default;
+    maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&)            = default;
     maybe_has_trivial_move_constructor& operator=(const maybe_has_trivial_move_constructor&) = default;
     maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&)      = default;
-    // clang-format on
 
 }; // struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
 
@@ -178,12 +172,10 @@ struct maybe_has_trivial_copy_assignment : maybe_has_trivial_move_constructor<T,
         return *this;
     }
 
-    maybe_has_trivial_copy_assignment()                                         = default;
-    maybe_has_trivial_copy_assignment(const maybe_has_trivial_copy_assignment&) = default;
-    maybe_has_trivial_copy_assignment(maybe_has_trivial_copy_assignment&&)      = default;
-    // clang-format off
+    maybe_has_trivial_copy_assignment()                                               = default;
+    maybe_has_trivial_copy_assignment(const maybe_has_trivial_copy_assignment&)       = default;
+    maybe_has_trivial_copy_assignment(maybe_has_trivial_copy_assignment&&)            = default;
     maybe_has_trivial_copy_assignment& operator=(maybe_has_trivial_copy_assignment&&) = default;
-    // clang-format on
 
 }; // struct maybe_has_trivial_copy_assignment
 
@@ -214,12 +206,10 @@ struct maybe_has_trivial_move_assignment : maybe_has_trivial_copy_assignment<T, 
         return *this;
     }
 
-    maybe_has_trivial_move_assignment()                                         = default;
-    maybe_has_trivial_move_assignment(const maybe_has_trivial_move_assignment&) = default;
-    maybe_has_trivial_move_assignment(maybe_has_trivial_move_assignment&&)      = default;
-    // clang-format off
+    maybe_has_trivial_move_assignment()                                                    = default;
+    maybe_has_trivial_move_assignment(const maybe_has_trivial_move_assignment&)            = default;
+    maybe_has_trivial_move_assignment(maybe_has_trivial_move_assignment&&)                 = default;
     maybe_has_trivial_move_assignment& operator=(const maybe_has_trivial_move_assignment&) = default;
-    // clang-format on
 
 }; // struct maybe_has_trivial_move_assignment
 
@@ -234,8 +224,7 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
     : maybe_has_trivial_copy_assignment<T, Capacity, D> {
     using maybe_has_trivial_copy_assignment<T, Capacity, D>::maybe_has_trivial_copy_assignment;
 
-    maybe_has_trivial_move_assignment&
-    operator=(maybe_has_trivial_move_assignment&& o) noexcept {
+    maybe_has_trivial_move_assignment& operator=(maybe_has_trivial_move_assignment&& o) noexcept {
         if CIEL_UNLIKELY (this == std::addressof(o)) {
             return *this;
         }
@@ -246,12 +235,10 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
         return *this;
     }
 
-    maybe_has_trivial_move_assignment()                                         = default;
-    maybe_has_trivial_move_assignment(const maybe_has_trivial_move_assignment&) = default;
-    maybe_has_trivial_move_assignment(maybe_has_trivial_move_assignment&&)      = default;
-    // clang-format off
+    maybe_has_trivial_move_assignment()                                                    = default;
+    maybe_has_trivial_move_assignment(const maybe_has_trivial_move_assignment&)            = default;
+    maybe_has_trivial_move_assignment(maybe_has_trivial_move_assignment&&)                 = default;
     maybe_has_trivial_move_assignment& operator=(const maybe_has_trivial_move_assignment&) = default;
-    // clang-format on
 
 }; // struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
 
@@ -290,38 +277,31 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
-    CIEL_NODISCARD pointer
-    begin_() noexcept {
+    CIEL_NODISCARD pointer begin_() noexcept {
         return this->data_;
     }
 
-    CIEL_NODISCARD const_pointer
-    begin_() const noexcept {
+    CIEL_NODISCARD const_pointer begin_() const noexcept {
         return this->data_;
     }
 
-    CIEL_NODISCARD pointer
-    end_() noexcept {
+    CIEL_NODISCARD pointer end_() noexcept {
         return begin_() + size();
     }
 
-    CIEL_NODISCARD const_pointer
-    end_() const noexcept {
+    CIEL_NODISCARD const_pointer end_() const noexcept {
         return begin_() + size();
     }
 
-    CIEL_NODISCARD pointer
-    end_cap_() noexcept {
+    CIEL_NODISCARD pointer end_cap_() noexcept {
         return begin_() + capacity();
     }
 
-    CIEL_NODISCARD const_pointer
-    end_cap_() const noexcept {
+    CIEL_NODISCARD const_pointer end_cap_() const noexcept {
         return begin_() + capacity();
     }
 
-    void
-    construct_at_end(const size_type n) {
+    void construct_at_end(const size_type n) {
         CIEL_PRECONDITION(size() + n <= capacity());
 
         for (size_type i = 0; i < n; ++i) {
@@ -330,8 +310,7 @@ private:
         }
     }
 
-    void
-    construct_at_end(const size_type n, const value_type& value) {
+    void construct_at_end(const size_type n, const value_type& value) {
         CIEL_PRECONDITION(size() + n <= capacity());
 
         for (size_type i = 0; i < n; ++i) {
@@ -341,8 +320,7 @@ private:
     }
 
     template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
-    void
-    construct_at_end(Iter first, Iter last) {
+    void construct_at_end(Iter first, Iter last) {
         CIEL_PRECONDITION(size() + std::distance(first, last) <= capacity());
 
         using U = typename std::iterator_traits<Iter>::value_type;
@@ -363,8 +341,7 @@ private:
         }
     }
 
-    void
-    destroy(pointer p) noexcept {
+    void destroy(pointer p) noexcept {
         CIEL_PRECONDITION(begin_() <= p);
         CIEL_PRECONDITION(p < end_());
 
@@ -372,8 +349,7 @@ private:
         --this->size_;
     }
 
-    void
-    destroy(pointer begin, pointer end) noexcept {
+    void destroy(pointer begin, pointer end) noexcept {
         CIEL_PRECONDITION(begin <= end);
         CIEL_PRECONDITION(begin_() <= begin);
         CIEL_PRECONDITION(end <= end_());
@@ -385,8 +361,7 @@ private:
     }
 
     template<class... Args>
-    void
-    emplace_back_aux(Args&&... args) {
+    void emplace_back_aux(Args&&... args) {
         if (size() == capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -395,8 +370,7 @@ private:
     }
 
     template<class... Args>
-    void
-    unchecked_emplace_back_aux(Args&&... args) {
+    void unchecked_emplace_back_aux(Args&&... args) {
         CIEL_PRECONDITION(size() < capacity());
 
         ::new (end_()) value_type(std::forward<Args>(args)...);
@@ -404,8 +378,7 @@ private:
     }
 
     template<class Iter>
-    void
-    assign(Iter first, Iter last, const size_type count) {
+    void assign(Iter first, Iter last, const size_type count) {
         if (capacity() < count) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -492,19 +465,15 @@ public:
     inplace_vector(std::initializer_list<value_type> init)
         : inplace_vector(init.begin(), init.end()) {}
 
-    // clang-format off
     inplace_vector& operator=(const inplace_vector& other) = default;
     inplace_vector& operator=(inplace_vector&& other)      = default;
-    // clang-format on
 
-    inplace_vector&
-    operator=(std::initializer_list<value_type> ilist) {
+    inplace_vector& operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
-    void
-    assign(const size_type count, const value_type& value) {
+    void assign(const size_type count, const value_type& value) {
         if (capacity() < count) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -521,16 +490,14 @@ public:
     }
 
     template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
-    void
-    assign(Iter first, Iter last) {
+    void assign(Iter first, Iter last) {
         const size_type count = std::distance(first, last);
 
         assign(first, last, count);
     }
 
     template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
-    void
-    assign(Iter first, Iter last) {
+    void assign(Iter first, Iter last) {
         clear();
 
         for (; first != last; ++first) {
@@ -538,14 +505,12 @@ public:
         }
     }
 
-    void
-    assign(std::initializer_list<value_type> ilist) {
+    void assign(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end(), ilist.size());
     }
 
     template<class R, enable_if_t<is_range<R>::value> = 0>
-    void
-    assign_range(R&& rg) {
+    void assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
                 assign(rg.begin(), rg.end(), rg.size());
@@ -564,8 +529,7 @@ public:
         }
     }
 
-    CIEL_NODISCARD reference
-    at(const size_type pos) {
+    CIEL_NODISCARD reference at(const size_type pos) {
         if CIEL_UNLIKELY (pos >= size()) {
             CIEL_THROW_EXCEPTION(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
         }
@@ -573,8 +537,7 @@ public:
         return begin_()[pos];
     }
 
-    CIEL_NODISCARD const_reference
-    at(const size_type pos) const {
+    CIEL_NODISCARD const_reference at(const size_type pos) const {
         if CIEL_UNLIKELY (pos >= size()) {
             CIEL_THROW_EXCEPTION(std::out_of_range("pos is not within the range of ciel::inplace_vector"));
         }
@@ -582,140 +545,115 @@ public:
         return begin_()[pos];
     }
 
-    CIEL_NODISCARD reference
-    operator[](const size_type pos) {
+    CIEL_NODISCARD reference operator[](const size_type pos) {
         CIEL_PRECONDITION(pos < size());
 
         return begin_()[pos];
     }
 
-    CIEL_NODISCARD const_reference
-    operator[](const size_type pos) const {
+    CIEL_NODISCARD const_reference operator[](const size_type pos) const {
         CIEL_PRECONDITION(pos < size());
 
         return begin_()[pos];
     }
 
-    CIEL_NODISCARD reference
-    front() {
+    CIEL_NODISCARD reference front() {
         CIEL_PRECONDITION(!empty());
 
         return begin_()[0];
     }
 
-    CIEL_NODISCARD const_reference
-    front() const {
+    CIEL_NODISCARD const_reference front() const {
         CIEL_PRECONDITION(!empty());
 
         return begin_()[0];
     }
 
-    CIEL_NODISCARD reference
-    back() {
+    CIEL_NODISCARD reference back() {
         CIEL_PRECONDITION(!empty());
 
         return *(end_() - 1);
     }
 
-    CIEL_NODISCARD const_reference
-    back() const {
+    CIEL_NODISCARD const_reference back() const {
         CIEL_PRECONDITION(!empty());
 
         return *(end_() - 1);
     }
 
-    CIEL_NODISCARD T*
-    data() noexcept {
+    CIEL_NODISCARD T* data() noexcept {
         return begin_();
     }
 
-    CIEL_NODISCARD const T*
-    data() const noexcept {
+    CIEL_NODISCARD const T* data() const noexcept {
         return begin_();
     }
 
-    CIEL_NODISCARD iterator
-    begin() noexcept {
+    CIEL_NODISCARD iterator begin() noexcept {
         return iterator(begin_());
     }
 
-    CIEL_NODISCARD const_iterator
-    begin() const noexcept {
+    CIEL_NODISCARD const_iterator begin() const noexcept {
         return const_iterator(begin_());
     }
 
-    CIEL_NODISCARD const_iterator
-    cbegin() const noexcept {
+    CIEL_NODISCARD const_iterator cbegin() const noexcept {
         return begin();
     }
 
-    CIEL_NODISCARD iterator
-    end() noexcept {
+    CIEL_NODISCARD iterator end() noexcept {
         return iterator(end_());
     }
 
-    CIEL_NODISCARD const_iterator
-    end() const noexcept {
+    CIEL_NODISCARD const_iterator end() const noexcept {
         return const_iterator(end_());
     }
 
-    CIEL_NODISCARD const_iterator
-    cend() const noexcept {
+    CIEL_NODISCARD const_iterator cend() const noexcept {
         return end();
     }
 
-    CIEL_NODISCARD reverse_iterator
-    rbegin() noexcept {
+    CIEL_NODISCARD reverse_iterator rbegin() noexcept {
         return reverse_iterator(end());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    rbegin() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator rbegin() const noexcept {
         return const_reverse_iterator(end());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    crbegin() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator crbegin() const noexcept {
         return rbegin();
     }
 
-    CIEL_NODISCARD reverse_iterator
-    rend() noexcept {
+    CIEL_NODISCARD reverse_iterator rend() noexcept {
         return reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    rend() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator rend() const noexcept {
         return const_reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    crend() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator crend() const noexcept {
         return rend();
     }
 
-    CIEL_NODISCARD bool
-    empty() const noexcept {
+    CIEL_NODISCARD bool empty() const noexcept {
         return size() == 0;
     }
 
-    CIEL_NODISCARD size_type
-    size() const noexcept {
+    CIEL_NODISCARD size_type size() const noexcept {
         return this->size_;
     }
 
-    CIEL_NODISCARD static constexpr size_type
-    max_size() noexcept {
+    CIEL_NODISCARD static constexpr size_type max_size() noexcept {
         return Capacity;
     }
 
-    CIEL_NODISCARD static constexpr size_type
-    capacity() noexcept {
+    CIEL_NODISCARD static constexpr size_type capacity() noexcept {
         return Capacity;
     }
 
-    void
-    resize(const size_type count) {
+    void resize(const size_type count) {
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -728,8 +666,7 @@ public:
         construct_at_end(count - size());
     }
 
-    void
-    resize(const size_type count, const value_type& value) {
+    void resize(const size_type count, const value_type& value) {
         if CIEL_UNLIKELY (count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
@@ -742,58 +679,49 @@ public:
         construct_at_end(count - size(), value);
     }
 
-    static void
-    reserve(const size_type new_cap) {
+    static void reserve(const size_type new_cap) {
         if (new_cap > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
         }
     }
 
-    static void
-    shrink_to_fit() noexcept {}
+    static void shrink_to_fit() noexcept {}
 
     // TODO: insert, insert_range, emplace
 
     template<class... Args>
-    reference
-    emplace_back(Args&&... args) {
+    reference emplace_back(Args&&... args) {
         emplace_back_aux(std::forward<Args>(args)...);
         return back();
     }
 
     template<class U, class... Args>
-    reference
-    emplace_back(std::initializer_list<U> il, Args&&... args) {
+    reference emplace_back(std::initializer_list<U> il, Args&&... args) {
         emplace_back_aux(il, std::forward<Args>(args)...);
         return back();
     }
 
     template<class... Args>
-    reference
-    unchecked_emplace_back(Args&&... args) {
+    reference unchecked_emplace_back(Args&&... args) {
         unchecked_emplace_back_aux(std::forward<Args>(args)...);
         return back();
     }
 
     template<class U, class... Args>
-    reference
-    unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
+    reference unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
         unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
         return back();
     }
 
-    void
-    push_back(const value_type& value) {
+    void push_back(const value_type& value) {
         emplace_back(value);
     }
 
-    void
-    push_back(value_type&& value) {
+    void push_back(value_type&& value) {
         emplace_back(std::move(value));
     }
 
-    pointer
-    try_push_back(const value_type& value) {
+    pointer try_push_back(const value_type& value) {
         if (size() == capacity()) {
             return nullptr;
         }
@@ -801,8 +729,7 @@ public:
         return std::addressof(unchecked_emplace_back(value));
     }
 
-    pointer
-    try_push_back(value_type&& value) {
+    pointer try_push_back(value_type&& value) {
         if (size() == capacity()) {
             return nullptr;
         }
@@ -810,18 +737,15 @@ public:
         return std::addressof(unchecked_emplace_back(std::move(value)));
     }
 
-    reference
-    unchecked_push_back(const value_type& value) {
+    reference unchecked_push_back(const value_type& value) {
         return unchecked_emplace_back(value);
     }
 
-    reference
-    unchecked_push_back(value_type&& value) {
+    reference unchecked_push_back(value_type&& value) {
         return unchecked_emplace_back(std::move(value));
     }
 
-    void
-    pop_back() noexcept {
+    void pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
         destroy(end_() - 1);
@@ -829,16 +753,14 @@ public:
 
     // TODO: append_range, try_append_range
 
-    void
-    clear() noexcept {
+    void clear() noexcept {
         destroy(begin_(), end_());
     }
 
 private:
-    iterator
-    erase_impl(pointer first, pointer last,
-               const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
-                                                     || std::is_nothrow_move_assignable<value_type>::value) {
+    iterator erase_impl(pointer first, pointer last,
+                        const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
+                                                              || std::is_nothrow_move_assignable<value_type>::value) {
         CIEL_PRECONDITION(last - first == count);
         CIEL_PRECONDITION(count != 0);
 
@@ -867,8 +789,7 @@ private:
     }
 
 public:
-    iterator
-    erase(const_iterator p) {
+    iterator erase(const_iterator p) {
         const pointer pos = begin_() + (p - begin());
         CIEL_PRECONDITION(begin_() <= pos);
         CIEL_PRECONDITION(pos < end_());
@@ -876,8 +797,7 @@ public:
         return erase_impl(pos, pos + 1, 1);
     }
 
-    iterator
-    erase(const_iterator f, const_iterator l) {
+    iterator erase(const_iterator f, const_iterator l) {
         const pointer first = begin_() + (f - begin());
         const pointer last  = begin_() + (l - begin());
         CIEL_PRECONDITION(begin_() <= first);
@@ -893,15 +813,13 @@ public:
     }
 
     template<class U = inplace_vector, enable_if_t<is_trivially_relocatable<U>::value> = 0>
-    void
-    swap(inplace_vector& other) noexcept {
+    void swap(inplace_vector& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
     template<class U = inplace_vector, enable_if_t<!is_trivially_relocatable<U>::value> = 0>
-    void
-    swap(inplace_vector& other) noexcept(std::is_nothrow_move_constructible<T>::value
-                                         && std::is_nothrow_move_assignable<T>::value) {
+    void swap(inplace_vector& other) noexcept(std::is_nothrow_move_constructible<T>::value
+                                              && std::is_nothrow_move_assignable<T>::value) {
         inplace_vector* smaller = this;
         inplace_vector* bigger  = std::addressof(other);
         auto smaller_size       = smaller->size_;
@@ -927,8 +845,7 @@ template<class T, size_t Capacity>
 struct is_trivially_relocatable<inplace_vector<T, Capacity>> : is_trivially_relocatable<T> {};
 
 template<class T, size_t N, class U = T>
-typename inplace_vector<T, N>::size_type
-erase(inplace_vector<T, N>& c, const U& value) {
+typename inplace_vector<T, N>::size_type erase(inplace_vector<T, N>& c, const U& value) {
     auto it = std::remove(c.begin(), c.end(), value);
     auto r  = std::distance(it, c.end());
     c.erase(it, c.end());
@@ -936,8 +853,7 @@ erase(inplace_vector<T, N>& c, const U& value) {
 }
 
 template<class T, size_t N, class Pred>
-typename inplace_vector<T, N>::size_type
-erase_if(inplace_vector<T, N>& c, Pred pred) {
+typename inplace_vector<T, N>::size_type erase_if(inplace_vector<T, N>& c, Pred pred) {
     auto it = std::remove_if(c.begin(), c.end(), pred);
     auto r  = std::distance(it, c.end());
     c.erase(it, c.end());
@@ -949,8 +865,8 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T, size_t Capacity>
-void
-swap(ciel::inplace_vector<T, Capacity>& lhs, ciel::inplace_vector<T, Capacity>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+void swap(ciel::inplace_vector<T, Capacity>& lhs,
+          ciel::inplace_vector<T, Capacity>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 

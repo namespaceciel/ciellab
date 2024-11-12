@@ -9,8 +9,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_emplace_lvalue_impl(::testing::Test*) {
+void test_emplace_lvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     const T value(5);
@@ -43,8 +42,7 @@ test_emplace_lvalue_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_emplace_self_lvalue_impl(::testing::Test*) {
+void test_emplace_self_lvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion
@@ -82,8 +80,7 @@ test_emplace_self_lvalue_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_emplace_rvalue_impl(::testing::Test*) {
+void test_emplace_rvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion
@@ -114,8 +111,7 @@ test_emplace_rvalue_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_emplace_self_rvalue_impl(::testing::Test*) {
+void test_emplace_self_rvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion

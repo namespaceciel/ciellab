@@ -9,8 +9,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_reserve_impl(::testing::Test*) {
+void test_reserve_impl(::testing::Test*) {
     {
         C v;
         v.reserve(10);
@@ -31,8 +30,7 @@ test_reserve_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_reserve_data_validity_impl(::testing::Test*) {
+void test_reserve_data_validity_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     vector<T> v{0, 1, 2, 3, 4};

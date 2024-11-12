@@ -45,8 +45,7 @@ TEST(shared_ptr, move_assign) {
 TEST(shared_ptr, alias_move_constructor) {
     class Base {
     public:
-        virtual std::string
-        str() const noexcept {
+        virtual std::string str() const noexcept {
             return "Base";
         }
 
@@ -57,8 +56,7 @@ TEST(shared_ptr, alias_move_constructor) {
 
     class Derived final : public Base {
     public:
-        std::string
-        str() const noexcept override {
+        std::string str() const noexcept override {
             return "Derived";
         }
 

@@ -14,8 +14,7 @@ using namespace ciel;
 namespace {
 
 template<class C>
-void
-test_insert_size_value_impl(::testing::Test*) {
+void test_insert_size_value_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     const T value(5);
@@ -56,8 +55,7 @@ test_insert_size_value_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_insert_size_self_value_impl(::testing::Test*) {
+void test_insert_size_self_value_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion
@@ -110,8 +108,7 @@ test_insert_size_self_value_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_insert_lvalue_impl(::testing::Test*) {
+void test_insert_lvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     const T value(5);
@@ -144,8 +141,7 @@ test_insert_lvalue_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_insert_self_lvalue_impl(::testing::Test*) {
+void test_insert_self_lvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion
@@ -183,8 +179,7 @@ test_insert_self_lvalue_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_insert_rvalue_impl(::testing::Test*) {
+void test_insert_rvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion
@@ -215,8 +210,7 @@ test_insert_rvalue_impl(::testing::Test*) {
 }
 
 template<class C>
-void
-test_insert_self_rvalue_impl(::testing::Test*) {
+void test_insert_self_rvalue_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     // expansion
@@ -262,8 +256,7 @@ test_insert_self_rvalue_impl(::testing::Test*) {
 }
 
 template<class C, class Iter>
-void
-test_insert_iterator_range_impl(::testing::Test*) {
+void test_insert_iterator_range_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     {

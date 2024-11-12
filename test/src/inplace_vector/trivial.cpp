@@ -17,13 +17,11 @@ struct NotTrivial {
     // NOLINTNEXTLINE([modernize-use-equals-default)
     NotTrivial(NotTrivial&&) noexcept {}
 
-    NotTrivial&
-    operator=(const NotTrivial&) noexcept {
+    NotTrivial& operator=(const NotTrivial&) noexcept {
         return *this;
     }
 
-    NotTrivial&
-    operator=(NotTrivial&&) noexcept {
+    NotTrivial& operator=(NotTrivial&&) noexcept {
         return *this;
     }
 
@@ -36,13 +34,11 @@ struct NotTriviallyAssignable {
     NotTriviallyAssignable(const NotTriviallyAssignable&) = default;
     NotTriviallyAssignable(NotTriviallyAssignable&&)      = default;
 
-    NotTriviallyAssignable&
-    operator=(const NotTriviallyAssignable&) noexcept {
+    NotTriviallyAssignable& operator=(const NotTriviallyAssignable&) noexcept {
         return *this;
     }
 
-    NotTriviallyAssignable&
-    operator=(NotTriviallyAssignable&&) noexcept {
+    NotTriviallyAssignable& operator=(NotTriviallyAssignable&&) noexcept {
         return *this;
     }
 };

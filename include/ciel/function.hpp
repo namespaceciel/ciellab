@@ -30,29 +30,25 @@ class func_base;
 template<class R, class... Args>
 class func_base<R(Args...)> {
 public:
-    func_base(const func_base&) = delete;
-    func_base(func_base&&)      = delete;
-    // clang-format off
+    func_base(const func_base&)            = delete;
+    func_base(func_base&&)                 = delete;
     func_base& operator=(const func_base&) = delete;
     func_base& operator=(func_base&&)      = delete;
-    // clang-format on
 
 protected:
     func_base()  = default;
     ~func_base() = default;
 
 public:
-    // clang-format off
-    CIEL_NODISCARD virtual func_base* clone() const = 0;
-    virtual void clone_to(void*) const = 0;
-    virtual void destroy() noexcept = 0;
-    virtual void destroy_and_deallocate() noexcept = 0;
-    virtual R operator()(Args&&...) const = 0;
+    CIEL_NODISCARD virtual func_base* clone() const                                 = 0;
+    virtual void clone_to(void*) const                                              = 0;
+    virtual void destroy() noexcept                                                 = 0;
+    virtual void destroy_and_deallocate() noexcept                                  = 0;
+    virtual R operator()(Args&&...) const                                           = 0;
     CIEL_NODISCARD virtual const void* target(const std::type_info&) const noexcept = 0;
 #ifdef CIEL_HAS_RTTI
     CIEL_NODISCARD virtual const std::type_info& target_type() const noexcept = 0;
 #endif
-    // clang-format on
 
 }; // class func_base<R(Args...)>
 
@@ -62,12 +58,10 @@ class func;
 template<class F, class R, class... Args>
 class func<F, R(Args...)> final : public func_base<R(Args...)> {
 public:
-    func(const func&) = delete;
-    func(func&&)      = delete;
-    // clang-format off
+    func(const func&)            = delete;
+    func(func&&)                 = delete;
     func& operator=(const func&) = delete;
     func& operator=(func&&)      = delete;
-    // clang-format on
 
 private:
     F f_;
@@ -80,8 +74,7 @@ public:
         : f_(std::move(f)) {}
 
     // When callable object is large.
-    CIEL_NODISCARD func_base<R(Args...)>*
-    clone() const override {
+    CIEL_NODISCARD func_base<R(Args...)>* clone() const override {
         func* res = ciel::allocate<func>(1);
 
         CIEL_TRY {
@@ -96,31 +89,26 @@ public:
     }
 
     // When stored object is large.
-    void
-    destroy_and_deallocate() noexcept override {
+    void destroy_and_deallocate() noexcept override {
         this->~func();
         ciel::deallocate<func>(this);
     }
 
     // When callable object is small, construct on other's buffer_.
-    void
-    clone_to(void* buffer) const override {
+    void clone_to(void* buffer) const override {
         ::new (buffer) func(f_);
     }
 
     // When stored object is small and stored on buffer_.
-    void
-    destroy() noexcept override {
+    void destroy() noexcept override {
         this->~func();
     }
 
-    R
-    operator()(Args&&... args) const override {
+    R operator()(Args&&... args) const override {
         return f_(std::forward<Args>(args)...);
     }
 
-    CIEL_NODISCARD const void*
-    target(const std::type_info& ti) const noexcept override {
+    CIEL_NODISCARD const void* target(const std::type_info& ti) const noexcept override {
         CIEL_UNUSED(ti);
 
         if (true
@@ -135,8 +123,7 @@ public:
     }
 
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD const std::type_info&
-    target_type() const noexcept override {
+    CIEL_NODISCARD const std::type_info& target_type() const noexcept override {
         return typeid(F);
     }
 #endif
@@ -171,8 +158,7 @@ private:
         Large
     };
 
-    CIEL_NODISCARD state
-    check_state() const noexcept {
+    CIEL_NODISCARD state check_state() const noexcept {
         if (f_ == 1) {
             return state::Small;
         }
@@ -180,18 +166,15 @@ private:
         return f_ == 0 ? state::Null : state::Large;
     }
 
-    CIEL_NODISCARD base_type*
-    stack_ptr() const noexcept {
+    CIEL_NODISCARD base_type* stack_ptr() const noexcept {
         return ciel::buffer_cast<base_type*>(&buffer_);
     }
 
-    CIEL_NODISCARD base_type*
-    heap_ptr() const noexcept {
+    CIEL_NODISCARD base_type* heap_ptr() const noexcept {
         return (base_type*)f_;
     }
 
-    CIEL_NODISCARD base_type*
-    ptr() const noexcept {
+    CIEL_NODISCARD base_type* ptr() const noexcept {
         if (f_ == 1) {
             return stack_ptr();
         }
@@ -199,8 +182,7 @@ private:
         return heap_ptr();
     }
 
-    void
-    clear() noexcept {
+    void clear() noexcept {
         switch (check_state()) {
             case state::Null :
                 return;
@@ -215,26 +197,22 @@ private:
     }
 
     template<class F>
-    CIEL_NODISCARD static bool
-    not_null(const F&) noexcept {
+    CIEL_NODISCARD static bool not_null(const F&) noexcept {
         return true;
     }
 
     template<class F>
-    CIEL_NODISCARD static bool
-    not_null(F* ptr) noexcept {
+    CIEL_NODISCARD static bool not_null(F* ptr) noexcept {
         return ptr;
     }
 
     template<class Ret, class Class>
-    CIEL_NODISCARD static bool
-    not_null(Ret Class::* ptr) noexcept {
+    CIEL_NODISCARD static bool not_null(Ret Class::* ptr) noexcept {
         return ptr;
     }
 
     template<class F>
-    CIEL_NODISCARD static bool
-    not_null(const function<F>& f) noexcept {
+    CIEL_NODISCARD static bool not_null(const function<F>& f) noexcept {
         return static_cast<bool>(f);
     }
 
@@ -310,8 +288,7 @@ public:
         clear();
     }
 
-    void
-    assign(const function& other) {
+    void assign(const function& other) {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
             return;
         }
@@ -330,8 +307,7 @@ public:
         }
     }
 
-    void
-    assign(function&& other) noexcept {
+    void assign(function&& other) noexcept {
         if CIEL_UNLIKELY (this == std::addressof(other)) {
             return;
         }
@@ -351,14 +327,12 @@ public:
         }
     }
 
-    void
-    assign(nullptr_t) noexcept {
+    void assign(nullptr_t) noexcept {
         clear();
     }
 
     template<class F, class DecayF = decay_t<F>>
-    void
-    assign(F&& f) {
+    void assign(F&& f) {
         clear();
 
         using func_type = details::func<DecayF, R(Args...)>;
@@ -386,8 +360,7 @@ public:
 
     template<class F, class DecayF = decay_t<F>,
              enable_if_t<sizeof(DecayF) <= sizeof(void*) * 3 && alignof(void*) % alignof(DecayF) == 0> = 0>
-    void
-    assign(assume_trivially_relocatable_t, F&& f) {
+    void assign(assume_trivially_relocatable_t, F&& f) {
         clear();
 
         using func_type = details::func<DecayF, R(Args...)>;
@@ -398,43 +371,36 @@ public:
         }
     }
 
-    function&
-    operator=(const function& other) {
+    function& operator=(const function& other) {
         assign(other);
         return *this;
     }
 
-    function&
-    operator=(function&& other) noexcept {
+    function& operator=(function&& other) noexcept {
         assign(std::move(other));
         return *this;
     }
 
-    function&
-    operator=(nullptr_t) noexcept {
+    function& operator=(nullptr_t) noexcept {
         clear();
         return *this;
     }
 
     template<class F>
-    function&
-    operator=(F&& f) {
+    function& operator=(F&& f) {
         assign(std::forward<F>(f));
         return *this;
     }
 
-    void
-    swap(function& other) noexcept {
+    void swap(function& other) noexcept {
         ciel::relocatable_swap(*this, other);
     }
 
-    CIEL_NODISCARD explicit
-    operator bool() const noexcept {
+    CIEL_NODISCARD explicit operator bool() const noexcept {
         return f_ != 0;
     }
 
-    R
-    operator()(Args... args) const {
+    R operator()(Args... args) const {
         const base_type* p = ptr();
 
         if CIEL_UNLIKELY (p == nullptr) {
@@ -445,8 +411,7 @@ public:
     }
 
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD const std::type_info&
-    target_type() const noexcept {
+    CIEL_NODISCARD const std::type_info& target_type() const noexcept {
         const base_type* p = ptr();
 
         if (p == nullptr) {
@@ -458,8 +423,7 @@ public:
 #endif
 
     template<class T>
-    CIEL_NODISCARD T*
-    target() noexcept {
+    CIEL_NODISCARD T* target() noexcept {
 #ifdef CIEL_HAS_RTTI
         const base_type* p = ptr();
 
@@ -474,8 +438,7 @@ public:
     }
 
     template<class T>
-    CIEL_NODISCARD const T*
-    target() const noexcept {
+    CIEL_NODISCARD const T* target() const noexcept {
 #ifdef CIEL_HAS_RTTI
         const base_type* p = ptr();
 
@@ -497,8 +460,7 @@ template<class R, class... Args>
 struct is_trivially_relocatable<function<R(Args...)>> : std::true_type {};
 
 template<class R, class... ArgTypes>
-CIEL_NODISCARD bool
-operator==(const function<R(ArgTypes...)>& f, nullptr_t) noexcept {
+CIEL_NODISCARD bool operator==(const function<R(ArgTypes...)>& f, nullptr_t) noexcept {
     return !f;
 }
 
@@ -517,8 +479,7 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class R, class... Args>
-void
-swap(ciel::function<R(Args...)>& lhs, ciel::function<R(Args...)>& rhs) noexcept {
+void swap(ciel::function<R(Args...)>& lhs, ciel::function<R(Args...)>& rhs) noexcept {
     lhs.swap(rhs);
 }
 

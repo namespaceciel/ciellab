@@ -30,8 +30,7 @@ struct list_node_base {
     list_node_base(list_node_base* p, list_node_base* n) noexcept
         : prev_(p), next_(n) {}
 
-    void
-    clear() noexcept {
+    void clear() noexcept {
         prev_ = this;
         next_ = this;
     }
@@ -65,13 +64,11 @@ private:
     base_node_type* it_;
 
 public:
-    void
-    go_next() noexcept {
+    void go_next() noexcept {
         it_ = it_->next_;
     }
 
-    void
-    go_prev() noexcept {
+    void go_prev() noexcept {
         it_ = it_->prev_;
     }
 
@@ -91,47 +88,38 @@ public:
 
     ~list_iterator() = default;
 
-    // clang-format off
     list_iterator& operator=(const list_iterator&) = default;
     list_iterator& operator=(list_iterator&&)      = default;
-    // clang-format on
 
-    CIEL_NODISCARD list_iterator
-    next() const noexcept {
+    CIEL_NODISCARD list_iterator next() const noexcept {
         return list_iterator(it_->next_);
     }
 
-    CIEL_NODISCARD list_iterator
-    prev() const noexcept {
+    CIEL_NODISCARD list_iterator prev() const noexcept {
         return list_iterator(it_->prev_);
     }
 
-    CIEL_NODISCARD reference
-    operator*() const noexcept {
+    CIEL_NODISCARD reference operator*() const noexcept {
         return static_cast<node_type*>(it_)->value_;
     }
 
-    CIEL_NODISCARD pointer
-    operator->() const noexcept {
+    CIEL_NODISCARD pointer operator->() const noexcept {
         return &static_cast<node_type*>(it_)->value_;
     }
 
-    CIEL_NODISCARD base_node_type*
-    base() const noexcept {
+    CIEL_NODISCARD base_node_type* base() const noexcept {
         return it_;
     }
 
-    CIEL_NODISCARD explicit
-    operator bool() const noexcept {
+    CIEL_NODISCARD explicit operator bool() const noexcept {
         return it_ != nullptr;
     }
 
 }; // class list_iterator
 
 template<class T, class Pointer1, class Pointer2, class Reference1, class Reference2>
-CIEL_NODISCARD bool
-operator==(const list_iterator<T, Pointer1, Reference1>& lhs,
-           const list_iterator<T, Pointer2, Reference2>& rhs) noexcept {
+CIEL_NODISCARD bool operator==(const list_iterator<T, Pointer1, Reference1>& lhs,
+                               const list_iterator<T, Pointer2, Reference2>& rhs) noexcept {
     return lhs.base() == rhs.base();
 }
 
@@ -162,8 +150,7 @@ private:
     node_type* free_node_;
     compressed_pair<size_type, node_allocator> size_node_allocator_;
 
-    void
-    do_destroy() noexcept {
+    void do_destroy() noexcept {
         iterator it      = begin();
         const iterator e = end();
 
@@ -181,8 +168,7 @@ private:
         }
     }
 
-    node_type*
-    get_one_free_node() {
+    node_type* get_one_free_node() {
         if (free_node_) {
             node_type* res = free_node_;
             free_node_     = static_cast<node_type*>(free_node_->next_);
@@ -193,34 +179,28 @@ private:
         return node_alloc_traits::allocate(allocator_(), 1);
     }
 
-    void
-    store_one_free_node(node_type* free) noexcept {
+    void store_one_free_node(node_type* free) noexcept {
         free->next_ = free_node_;
         free_node_  = free;
     }
 
-    size_type&
-    size_() noexcept {
+    size_type& size_() noexcept {
         return size_node_allocator_.first();
     }
 
-    const size_type&
-    size_() const noexcept {
+    const size_type& size_() const noexcept {
         return size_node_allocator_.first();
     }
 
-    node_allocator&
-    allocator_() noexcept {
+    node_allocator& allocator_() noexcept {
         return size_node_allocator_.second();
     }
 
-    const node_allocator&
-    allocator_() const noexcept {
+    const node_allocator& allocator_() const noexcept {
         return size_node_allocator_.second();
     }
 
-    iterator
-    alloc_range_destroy(iterator begin, iterator end) noexcept {
+    iterator alloc_range_destroy(iterator begin, iterator end) noexcept {
         iterator loop               = begin;
         const iterator before_begin = begin.prev();
 
@@ -241,8 +221,7 @@ private:
 
     // insert before begin
     template<class... Arg>
-    iterator
-    alloc_range_construct_n(iterator begin, const size_type n, Arg&&... arg) {
+    iterator alloc_range_construct_n(iterator begin, const size_type n, Arg&&... arg) {
         iterator before_begin                = begin.prev();
         const iterator original_before_begin = before_begin;
 
@@ -273,8 +252,7 @@ private:
     }
 
     template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
-    iterator
-    alloc_range_construct(iterator begin, Iter first, Iter last) {
+    iterator alloc_range_construct(iterator begin, Iter first, Iter last) {
         iterator before_begin                = begin.prev();
         const iterator original_before_begin = before_begin;
 
@@ -374,8 +352,7 @@ public:
         do_destroy();
     }
 
-    list&
-    operator=(const list& other) {
+    list& operator=(const list& other) {
         if CIEL_UNLIKELY (this == addressof(other)) {
             return *this;
         }
@@ -395,8 +372,7 @@ public:
         return *this;
     }
 
-    list&
-    operator=(list&& other) noexcept(alloc_traits::is_always_equal::value) {
+    list& operator=(list&& other) noexcept(alloc_traits::is_always_equal::value) {
         if CIEL_UNLIKELY (this == addressof(other)) {
             return *this;
         }
@@ -426,14 +402,12 @@ public:
         return *this;
     }
 
-    list&
-    operator=(std::initializer_list<value_type> ilist) {
+    list& operator=(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
         return *this;
     }
 
-    void
-    assign(size_type count, const value_type& value) {
+    void assign(size_type count, const value_type& value) {
         iterator it      = begin();
         const iterator e = end();
 
@@ -450,8 +424,7 @@ public:
     }
 
     template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
-    void
-    assign(Iter first, Iter last) {
+    void assign(Iter first, Iter last) {
         iterator it      = begin();
         const iterator e = end();
 
@@ -467,214 +440,175 @@ public:
         }
     }
 
-    void
-    assign(std::initializer_list<value_type> ilist) {
+    void assign(std::initializer_list<value_type> ilist) {
         assign(ilist.begin(), ilist.end());
     }
 
-    CIEL_NODISCARD allocator_type
-    get_allocator() const noexcept {
+    CIEL_NODISCARD allocator_type get_allocator() const noexcept {
         return allocator_();
     }
 
-    CIEL_NODISCARD reference
-    front() {
+    CIEL_NODISCARD reference front() {
         CIEL_PRECONDITION(!empty());
 
         return *begin();
     }
 
-    CIEL_NODISCARD const_reference
-    front() const {
+    CIEL_NODISCARD const_reference front() const {
         CIEL_PRECONDITION(!empty());
 
         return *begin();
     }
 
-    CIEL_NODISCARD reference
-    back() {
+    CIEL_NODISCARD reference back() {
         CIEL_PRECONDITION(!empty());
 
         return *(--end());
     }
 
-    CIEL_NODISCARD const_reference
-    back() const {
+    CIEL_NODISCARD const_reference back() const {
         CIEL_PRECONDITION(!empty());
 
         return *(--end());
     }
 
-    CIEL_NODISCARD iterator
-    begin() noexcept {
+    CIEL_NODISCARD iterator begin() noexcept {
         return iterator(end_node_.next_);
     }
 
-    CIEL_NODISCARD const_iterator
-    begin() const noexcept {
+    CIEL_NODISCARD const_iterator begin() const noexcept {
         return const_iterator(end_node_.next_);
     }
 
-    CIEL_NODISCARD const_iterator
-    cbegin() const noexcept {
+    CIEL_NODISCARD const_iterator cbegin() const noexcept {
         return begin();
     }
 
-    CIEL_NODISCARD iterator
-    end() noexcept {
+    CIEL_NODISCARD iterator end() noexcept {
         return iterator(&end_node_);
     }
 
-    CIEL_NODISCARD const_iterator
-    end() const noexcept {
+    CIEL_NODISCARD const_iterator end() const noexcept {
         return const_iterator(&end_node_);
     }
 
-    CIEL_NODISCARD const_iterator
-    cend() const noexcept {
+    CIEL_NODISCARD const_iterator cend() const noexcept {
         return end();
     }
 
-    CIEL_NODISCARD reverse_iterator
-    rbegin() noexcept {
+    CIEL_NODISCARD reverse_iterator rbegin() noexcept {
         return reverse_iterator(end());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    rbegin() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator rbegin() const noexcept {
         return const_reverse_iterator(end());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    crbegin() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator crbegin() const noexcept {
         return rbegin();
     }
 
-    CIEL_NODISCARD reverse_iterator
-    rend() noexcept {
+    CIEL_NODISCARD reverse_iterator rend() noexcept {
         return reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    rend() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator rend() const noexcept {
         return const_reverse_iterator(begin());
     }
 
-    CIEL_NODISCARD const_reverse_iterator
-    crend() const noexcept {
+    CIEL_NODISCARD const_reverse_iterator crend() const noexcept {
         return rend();
     }
 
-    CIEL_NODISCARD bool
-    empty() const noexcept {
+    CIEL_NODISCARD bool empty() const noexcept {
         return size_() == 0;
     }
 
-    CIEL_NODISCARD size_type
-    size() const noexcept {
+    CIEL_NODISCARD size_type size() const noexcept {
         return size_();
     }
 
-    CIEL_NODISCARD size_type
-    max_size() const noexcept {
+    CIEL_NODISCARD size_type max_size() const noexcept {
         return node_alloc_traits::max_size(allocator_());
     }
 
-    void
-    clear() noexcept {
+    void clear() noexcept {
         alloc_range_destroy(begin(), end());
     }
 
-    iterator
-    insert(iterator pos, const T& value) {
+    iterator insert(iterator pos, const T& value) {
         return alloc_range_construct_n(pos, 1, value);
     }
 
-    iterator
-    insert(iterator pos, T&& value) {
+    iterator insert(iterator pos, T&& value) {
         return alloc_range_construct_n(pos, 1, std::move(value));
     }
 
-    iterator
-    insert(iterator pos, const size_type count, const T& value) {
+    iterator insert(iterator pos, const size_type count, const T& value) {
         return alloc_range_construct_n(pos, count, value);
     }
 
     template<class Iter, enable_if_t<is_input_iterator<Iter>::value> = 0>
-    iterator
-    insert(iterator pos, Iter first, Iter last) {
+    iterator insert(iterator pos, Iter first, Iter last) {
         return alloc_range_construct(pos, first, last);
     }
 
-    iterator
-    insert(iterator pos, std::initializer_list<value_type> ilist) {
+    iterator insert(iterator pos, std::initializer_list<value_type> ilist) {
         return alloc_range_construct(pos, ilist.begin(), ilist.end());
     }
 
     template<class... Args>
-    iterator
-    emplace(iterator pos, Args&&... args) {
+    iterator emplace(iterator pos, Args&&... args) {
         return alloc_range_construct_n(pos, 1, std::forward<Args>(args)...);
     }
 
-    iterator
-    erase(iterator pos) {
+    iterator erase(iterator pos) {
         return alloc_range_destroy(pos, pos.next());
     }
 
-    iterator
-    erase(iterator first, iterator last) {
+    iterator erase(iterator first, iterator last) {
         return alloc_range_destroy(first, last);
     }
 
-    void
-    push_back(const value_type& value) {
+    void push_back(const value_type& value) {
         emplace_back(value);
     }
 
-    void
-    push_back(value_type&& value) {
+    void push_back(value_type&& value) {
         emplace_back(std::move(value));
     }
 
     template<class... Args>
-    reference
-    emplace_back(Args&&... args) {
+    reference emplace_back(Args&&... args) {
         return *alloc_range_construct_n(end(), 1, std::forward<Args>(args)...);
     }
 
-    void
-    pop_back() noexcept {
+    void pop_back() noexcept {
         CIEL_PRECONDITION(!empty());
 
         alloc_range_destroy(end().prev(), end());
     }
 
-    void
-    push_front(const value_type& value) {
+    void push_front(const value_type& value) {
         emplace_front(value);
     }
 
-    void
-    push_front(value_type&& value) {
+    void push_front(value_type&& value) {
         emplace_front(std::move(value));
     }
 
     template<class... Args>
-    reference
-    emplace_front(Args&&... args) {
+    reference emplace_front(Args&&... args) {
         return *alloc_range_construct_n(begin(), 1, std::forward<Args>(args)...);
     }
 
-    void
-    pop_front() noexcept {
+    void pop_front() noexcept {
         CIEL_PRECONDITION(!empty());
 
         alloc_range_destroy(begin(), begin().next());
     }
 
-    void
-    resize(const size_type count) {
+    void resize(const size_type count) {
         if (size() >= count) {
             const iterator tmp = std::prev(end(), size() - count);
             alloc_range_destroy(tmp, end());
@@ -684,8 +618,7 @@ public:
         }
     }
 
-    void
-    resize(const size_type count, const value_type& value) {
+    void resize(const size_type count, const value_type& value) {
         if (size() >= count) {
             const iterator tmp = std::prev(end(), size() - count);
             alloc_range_destroy(tmp, end());
@@ -695,8 +628,7 @@ public:
         }
     }
 
-    void
-    swap(list& other) noexcept(alloc_traits::is_always_equal::value) {
+    void swap(list& other) noexcept(alloc_traits::is_always_equal::value) {
         using std::swap;
 
         swap(end_node_, other.end_node_);
@@ -728,8 +660,7 @@ NAMESPACE_CIEL_END
 namespace std {
 
 template<class T, class Alloc>
-void
-swap(ciel::list<T, Alloc>& lhs, ciel::list<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+void swap(ciel::list<T, Alloc>& lhs, ciel::list<T, Alloc>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 
