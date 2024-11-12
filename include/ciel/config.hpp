@@ -169,7 +169,7 @@ NAMESPACE_CIEL_END
 
 // unused
 // simple (void) cast won't stop gcc
-#define CIEL_UNUSED(x) ciel::void_cast(x)
+#define CIEL_UNUSED(...) ciel::void_cast(__VA_ARGS__)
 
 // assume
 #if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
