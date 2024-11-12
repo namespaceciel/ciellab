@@ -230,9 +230,6 @@ template<class T>
 using decay_t = typename std::decay<T>::type;
 
 template<class T>
-using remove_reference_t = typename std::remove_reference<T>::type;
-
-template<class T>
 using add_lvalue_reference_t = typename std::add_lvalue_reference<T>::type;
 
 template<class T>
@@ -245,16 +242,28 @@ template<class T>
 using remove_extent_t = typename std::remove_extent<T>::type;
 
 template<class T>
-using remove_cv_t = typename std::remove_cv<T>::type;
-
-template<class T>
 using remove_const_t = typename std::remove_const<T>::type;
 
 template<class T>
 using remove_volatile_t = typename std::remove_volatile<T>::type;
 
 template<class T>
+using remove_cv_t = typename std::remove_cv<T>::type;
+
+template<class T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+
+template<class T>
 using remove_cvref_t = remove_cv_t<remove_reference_t<T>>;
+
+template<class T>
+using add_const_t = typename std::add_const<T>::type;
+
+template<class T>
+using add_volatile_t = typename std::add_volatile<T>::type;
+
+template<class T>
+using add_cv_t = typename std::add_cv<T>::type;
 
 NAMESPACE_CIEL_END
 

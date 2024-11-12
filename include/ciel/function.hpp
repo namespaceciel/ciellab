@@ -2,7 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_FUNCTION_HPP_
 
 #include <ciel/aligned_storage.hpp>
-#include <ciel/buffer_cast.hpp>
+#include <ciel/as_const.hpp>
 #include <ciel/compare.hpp>
 #include <ciel/config.hpp>
 #include <ciel/cstring.hpp>
@@ -40,14 +40,14 @@ protected:
     ~func_base() = default;
 
 public:
-    CIEL_NODISCARD virtual func_base* clone() const                                 = 0;
-    virtual void clone_to(void*) const                                              = 0;
-    virtual void destroy() noexcept                                                 = 0;
-    virtual void destroy_and_deallocate() noexcept                                  = 0;
-    virtual R operator()(Args&&...) const                                           = 0;
-    CIEL_NODISCARD virtual const void* target(const std::type_info&) const noexcept = 0;
+    CIEL_NODISCARD virtual func_base* clone() const = 0;
+    virtual void clone_to(void*) const              = 0;
+    virtual void destroy() noexcept                 = 0;
+    virtual void destroy_and_deallocate() noexcept  = 0;
+    virtual R operator()(Args&&...) const           = 0;
 #ifdef CIEL_HAS_RTTI
-    CIEL_NODISCARD virtual const std::type_info& target_type() const noexcept = 0;
+    CIEL_NODISCARD virtual const void* target(const std::type_info&) const noexcept = 0;
+    CIEL_NODISCARD virtual const std::type_info& target_type() const noexcept       = 0;
 #endif
 
 }; // class func_base<R(Args...)>
@@ -108,21 +108,15 @@ public:
         return f_(std::forward<Args>(args)...);
     }
 
-    CIEL_NODISCARD const void* target(const std::type_info& ti) const noexcept override {
-        CIEL_UNUSED(ti);
-
-        if (true
 #ifdef CIEL_HAS_RTTI
-            && ti == typeid(F)
-#endif
-        ) {
+    CIEL_NODISCARD const void* target(const std::type_info& ti) const noexcept override {
+        if (ti == typeid(F)) {
             return std::addressof(f_);
         }
 
         return nullptr;
     }
 
-#ifdef CIEL_HAS_RTTI
     CIEL_NODISCARD const std::type_info& target_type() const noexcept override {
         return typeid(F);
     }
@@ -167,11 +161,11 @@ private:
     }
 
     CIEL_NODISCARD base_type* stack_ptr() const noexcept {
-        return ciel::buffer_cast<base_type*>(&buffer_);
+        return const_cast<base_type*>(reinterpret_cast<const base_type*>(std::addressof(buffer_)));
     }
 
     CIEL_NODISCARD base_type* heap_ptr() const noexcept {
-        return (base_type*)f_;
+        return reinterpret_cast<base_type*>(f_);
     }
 
     CIEL_NODISCARD base_type* ptr() const noexcept {
@@ -226,7 +220,7 @@ public:
             case state::Null :
                 break;
             case state::Small :
-                other.stack_ptr()->clone_to(&buffer_);
+                other.stack_ptr()->clone_to(std::addressof(buffer_));
                 f_ = 1;
                 break;
             case state::Large :
@@ -239,7 +233,7 @@ public:
             case state::Null :
                 break;
             case state::Small :
-                ciel::memcpy(&buffer_, &other.buffer_, sizeof(buffer_type));
+                ciel::memcpy(std::addressof(buffer_), std::addressof(other.buffer_), sizeof(buffer_type));
                 other.f_ = 0;
                 f_       = 1;
                 break;
@@ -299,7 +293,7 @@ public:
             case state::Null :
                 break;
             case state::Small :
-                other.stack_ptr()->clone_to(&buffer_);
+                other.stack_ptr()->clone_to(std::addressof(buffer_));
                 f_ = 1;
                 break;
             case state::Large :
@@ -318,7 +312,7 @@ public:
             case state::Null :
                 break;
             case state::Small :
-                ciel::memcpy(&buffer_, &other.buffer_, sizeof(buffer_type));
+                ciel::memcpy(std::addressof(buffer_), std::addressof(other.buffer_), sizeof(buffer_type));
                 other.f_ = 0;
                 f_       = 1;
                 break;
@@ -424,17 +418,7 @@ public:
 
     template<class T>
     CIEL_NODISCARD T* target() noexcept {
-#ifdef CIEL_HAS_RTTI
-        const base_type* p = ptr();
-
-        if (p == nullptr) {
-            return nullptr;
-        }
-
-        return const_cast<T*>(static_cast<const T*>(p->target(typeid(T))));
-#else
-        return nullptr;
-#endif
+        return const_cast<T*>(ciel::as_const(*this).target());
     }
 
     template<class T>

@@ -14,7 +14,8 @@ NAMESPACE_CIEL_BEGIN
 inline void memcpy(void* dest, const void* src, const size_t count) noexcept {
     CIEL_PRECONDITION(dest != nullptr);
     CIEL_PRECONDITION(src != nullptr);
-    CIEL_PRECONDITION((uintptr_t)dest + count <= (uintptr_t)src || (uintptr_t)src + count <= (uintptr_t)dest);
+    CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(dest) + count <= reinterpret_cast<uintptr_t>(src)
+                      || reinterpret_cast<uintptr_t>(src) + count <= reinterpret_cast<uintptr_t>(dest));
 
     std::memcpy(dest, src, count);
 }
