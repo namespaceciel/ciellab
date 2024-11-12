@@ -4,7 +4,7 @@ required_version=19
 
 echo "Checking if clang-format is installed and exactly at version ${required_version}..."
 
-clang-format --version || (echo "clang-format is not installed." && exit 1)
+clang-format --version || { echo "clang-format is not installed." && exit 1; }
 
 current_version=$(clang-format --version | sed -E 's/[^0-9]*([0-9]+).*/\1/' | head -n1)
 
