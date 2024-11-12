@@ -61,11 +61,11 @@ benchmark: clang_benchmark_build gcc_benchmark_build clang_benchmark_run gcc_ben
 .PHONY: benchmark
 
 format:
-	./format.sh run
+	./format.sh run $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src
 .PHONY: format
 
 check_format:
-	./format.sh check
+	./format.sh check $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src
 .PHONY: check_format
 
 cc:
