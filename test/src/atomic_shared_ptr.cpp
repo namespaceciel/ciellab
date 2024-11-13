@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/atomic_shared_ptr.hpp>
+#include <ciel/experimental/atomic_shared_ptr.hpp>
 #include <ciel/shared_ptr.hpp>
 #include <ciel/test/simple_latch.hpp>
 
