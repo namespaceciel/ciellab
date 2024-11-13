@@ -487,7 +487,7 @@ private:
 public:
     template<class... Args>
     iterator emplace(const_iterator p, Args&&... args) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
         return insert_impl(
             pos, 1,
@@ -507,7 +507,7 @@ public:
 
     template<class U, class... Args>
     iterator emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
         return insert_impl(
             pos, 1,
@@ -551,7 +551,7 @@ public:
 
     template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
     iterator insert(const_iterator p, rvalue value) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
         return insert_impl(
             pos, 1,
@@ -570,7 +570,7 @@ public:
     }
 
     iterator insert(const_iterator p, size_type count, lvalue value) {
-        pointer pos = begin_ + (p - begin());
+        const pointer pos = begin_ + (p - begin());
 
         if CIEL_UNLIKELY (count == 0) {
             return iterator(pos);

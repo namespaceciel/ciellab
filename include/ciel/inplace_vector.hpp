@@ -277,6 +277,23 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
+    static constexpr bool should_pass_by_value =
+        std::is_trivially_copyable<value_type>::value && sizeof(value_type) <= 16;
+    using lvalue = conditional_t<should_pass_by_value, value_type, const value_type&>;
+    using rvalue = conditional_t<should_pass_by_value, value_type, value_type&&>;
+
+    CIEL_NODISCARD bool internal_value(const value_type& value, pointer begin) const noexcept {
+        if (should_pass_by_value) {
+            return false;
+        }
+
+        if CIEL_UNLIKELY (begin <= std::addressof(value) && std::addressof(value) < end_()) {
+            return true;
+        }
+
+        return false;
+    }
+
     CIEL_NODISCARD pointer begin_() noexcept {
         return this->data_;
     }
@@ -339,6 +356,13 @@ private:
                 ++this->size_;
             }
         }
+    }
+
+    template<class... Args>
+    void construct(pointer p, Args&&... args) {
+        CIEL_PRECONDITION(size() < capacity());
+
+        ::new (p) value_type(std::forward<Args>(args)...);
     }
 
     void destroy(pointer p) noexcept {
@@ -687,7 +711,226 @@ public:
 
     static void shrink_to_fit() noexcept {}
 
-    // TODO: insert, insert_range, emplace
+private:
+    template<class AppendCallback, class InsertCallback, class IsInternalValueCallback>
+    iterator insert_impl(pointer pos, const size_type count, AppendCallback&& append_callback,
+                         InsertCallback&& insert_callback, IsInternalValueCallback&& is_internal_value_callback) {
+        CIEL_PRECONDITION(begin_() <= pos);
+        CIEL_PRECONDITION(pos <= end_());
+        CIEL_PRECONDITION(count != 0);
+
+        const size_type pos_index = pos - begin_();
+
+        if (size() + count > capacity()) {
+            CIEL_THROW_EXCEPTION(std::bad_alloc{});
+
+        } else if (pos == end_()) { // equal to emplace_back
+            append_callback();
+
+        } else {
+            const bool is_internal_value = is_internal_value_callback();
+
+            range_destroyer<value_type> rd{end_() + count, end_() + count};
+            // ------------------------------------
+            // begin                  pos       end
+            //                       ----------
+            //                       first last
+            //                       |  count |
+            // relocate [pos, end) count units later
+            // ----------------------          --------------
+            // begin             new_end       pos    |   end
+            //                       ----------       |
+            //                       first last      range_destroyer in case of exceptions
+            //                       |  count |
+            const size_type pos_end_dis = end_() - pos;
+
+            if (is_trivially_relocatable<value_type>::value) {
+                ciel::memmove(pos + count, pos, sizeof(value_type) * pos_end_dis);
+                this->size_ -= pos_end_dis;
+                rd.advance_backward(pos_end_dis);
+
+            } else {
+                for (pointer p = end_() - 1; p >= pos; --p) {
+                    construct(p + count, std::move(*p));
+                    destroy(p);
+                    rd.advance_backward();
+                }
+            }
+            // ----------------------------------------------
+            // begin             first        last        end
+            //                                 pos
+            //                               new_end
+            if (is_internal_value) {
+                insert_callback();
+
+            } else {
+                append_callback();
+            }
+
+            this->size_ += pos_end_dis;
+            rd.release();
+        }
+
+        return begin() + pos_index;
+    }
+
+public:
+    template<class... Args>
+    iterator emplace(const_iterator p, Args&&... args) {
+        const pointer pos = begin_() + (p - begin());
+
+        return insert_impl(
+            pos, 1,
+            [&] {
+                unchecked_emplace_back(std::forward<Args>(args)...);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
+    }
+
+    template<class U, class... Args>
+    iterator emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
+        const pointer pos = begin_() + (p - begin());
+
+        return insert_impl(
+            pos, 1,
+            [&] {
+                unchecked_emplace_back(il, std::forward<Args>(args)...);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
+    }
+
+    template<class U, enable_if_t<std::is_same<remove_cvref_t<U>, value_type>::value> = 0>
+    iterator emplace(const_iterator p, U&& value) {
+        return insert(p, std::forward<U>(value));
+    }
+
+    iterator insert(const_iterator p, lvalue value) {
+        const pointer pos = begin_() + (p - begin());
+
+        return insert_impl(
+            pos, 1,
+            [&] {
+                unchecked_emplace_back(value);
+            },
+            [&] {
+                unchecked_emplace_back(*(std::addressof(value) + 1));
+            },
+            [&] {
+                return internal_value(value, pos);
+            });
+    }
+
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
+    iterator insert(const_iterator p, rvalue value) {
+        const pointer pos = begin_() + (p - begin());
+
+        return insert_impl(
+            pos, 1,
+            [&] {
+                unchecked_emplace_back(std::move(value));
+            },
+            [&] {
+                unchecked_emplace_back(std::move(*(std::addressof(value) + 1)));
+            },
+            [&] {
+                return internal_value(value, pos);
+            });
+    }
+
+    iterator insert(const_iterator p, size_type count, lvalue value) {
+        const pointer pos = begin_() + (p - begin());
+
+        if CIEL_UNLIKELY (count == 0) {
+            return iterator(pos);
+        }
+
+        return insert_impl(
+            pos, count,
+            [&] {
+                construct_at_end(count, value);
+            },
+            [&] {
+                construct_at_end(count, *(std::addressof(value) + count));
+            },
+            [&] {
+                return internal_value(value, pos);
+            });
+    }
+
+private:
+    template<class Iter>
+    iterator insert(const_iterator p, Iter first, Iter last, size_type count) {
+        const pointer pos = begin_() + (p - begin());
+
+        if CIEL_UNLIKELY (count == 0) {
+            return iterator(pos);
+        }
+
+        return insert_impl(
+            pos, count,
+            [&] {
+                construct_at_end(first, last);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
+    }
+
+public:
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
+    iterator insert(const_iterator pos, Iter first, Iter last) {
+        return insert(pos, first, last, std::distance(first, last));
+    }
+
+    iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) {
+        return insert(pos, ilist.begin(), ilist.end(), ilist.size());
+    }
+
+    // Construct them all at the end at first, then rotate them to the right place.
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
+    iterator insert(const_iterator p, Iter first, Iter last) {
+        const pointer pos = begin_() + (p - begin());
+
+        const auto pos_index     = pos - begin();
+        const size_type old_size = size();
+
+        for (; first != last; ++first) {
+            emplace_back(*first);
+        }
+
+        std::rotate(begin() + pos_index, begin() + old_size, end());
+        return begin() + pos_index;
+    }
+
+    template<class R, enable_if_t<is_range<R>::value> = 0>
+    iterator insert_range(const_iterator pos, R&& rg) {
+        if (is_range_with_size<R>::value && is_forward_iterator<decltype(rg.begin())>::value) {
+            if (std::is_lvalue_reference<R>::value) {
+                return insert(pos, rg.begin(), rg.end(), rg.size());
+            }
+
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+        }
+
+        if (std::is_lvalue_reference<R>::value) {
+            return insert(pos, rg.begin(), rg.end());
+        }
+
+        return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+    }
 
     template<class... Args>
     reference emplace_back(Args&&... args) {

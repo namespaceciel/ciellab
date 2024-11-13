@@ -1,6 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TEST_RANDOM_ACCESS_ITERATOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_TEST_RANDOM_ACCESS_ITERATOR_HPP_
 
+#include <ciel/compare.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/iterator_base.hpp>
 

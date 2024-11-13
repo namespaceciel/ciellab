@@ -13,7 +13,7 @@ NAMESPACE_CIEL_BEGIN
 
 // Destroy ranges in destructor for exception handling.
 // Note that Allocator can be reference type.
-template<class T, class Allocator, bool = std::is_trivially_destructible<T>::value>
+template<class T, class Allocator = std::allocator<T>, bool = std::is_trivially_destructible<T>::value>
 class range_destroyer {
     static_assert(!std::is_rvalue_reference<Allocator>::value, "");
 
@@ -39,7 +39,7 @@ public:
     range_destroyer(pointer begin, pointer end, allocator_type& alloc) noexcept
         : begin_{begin}, end_alloc_{end, alloc} {}
 
-    range_destroyer(pointer begin, pointer end, const allocator_type& alloc) noexcept
+    range_destroyer(pointer begin, pointer end, const allocator_type& alloc = allocator_type{}) noexcept
         : begin_{begin}, end_alloc_{end, alloc} {}
 
     range_destroyer(const range_destroyer&)            = delete;
@@ -86,7 +86,7 @@ private:
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
 public:
-    range_destroyer(pointer, pointer, const allocator_type&) noexcept {}
+    range_destroyer(pointer, pointer, const allocator_type& = allocator_type{}) noexcept {}
 
     range_destroyer(const range_destroyer&)            = delete;
     range_destroyer& operator=(const range_destroyer&) = delete;
