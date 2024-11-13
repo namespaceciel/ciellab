@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_INPUT_ITERATOR_HPP_
-#define CIELLAB_INCLUDE_CIEL_INPUT_ITERATOR_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_TEST_INPUT_ITERATOR_HPP_
+#define CIELLAB_INCLUDE_CIEL_TEST_INPUT_ITERATOR_HPP_
 
 #include <ciel/config.hpp>
 #include <ciel/iterator_base.hpp>
@@ -72,4 +72,4 @@ static_assert(std::input_iterator<InputIterator<int>>);
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_INPUT_ITERATOR_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_TEST_INPUT_ITERATOR_HPP_

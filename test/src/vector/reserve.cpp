@@ -4,7 +4,6 @@
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/vector.hpp>
 
-#include <cstddef>
 #include <initializer_list>
 
 using namespace ciel;
@@ -62,6 +61,7 @@ TEST(vector, reserve_data_validity) {
 
 #ifdef CIEL_HAS_EXCEPTIONS
 #  include <algorithm>
+#  include <cstddef>
 #  include <stdexcept>
 
 TEST(vector, reserve_beyond_max_size) {

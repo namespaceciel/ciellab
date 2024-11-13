@@ -1,3 +1,6 @@
+#ifndef CIELLAB_INCLUDE_CIEL_TEST_SBV_ASSIGN_TESTS_HPP_
+#define CIELLAB_INCLUDE_CIEL_TEST_SBV_ASSIGN_TESTS_HPP_
+
 #include <gtest/gtest.h>
 
 #include <ciel/test/fancy_allocator.hpp>
@@ -50,3 +53,5 @@ inline void test_assign_size_value_impl(::testing::Test*, C& v) {
     v.assign(5, 6);
     ASSERT_EQ(v, std::initializer_list<T>({6, 6, 6, 6, 6}));
 }
+
+#endif // CIELLAB_INCLUDE_CIEL_TEST_SBV_ASSIGN_TESTS_HPP_

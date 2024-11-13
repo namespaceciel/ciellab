@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_MEMORY_LEAK_CHECK_HPP_
-#define CIELLAB_INCLUDE_CIEL_MEMORY_LEAK_CHECK_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_TEST_MEMORY_LEAK_CHECK_HPP_
+#define CIELLAB_INCLUDE_CIEL_TEST_MEMORY_LEAK_CHECK_HPP_
 
 #include <ciel/config.hpp>
 #include <ciel/memory.hpp>
@@ -79,4 +79,4 @@ void operator delete[](void*, size_t) noexcept;
 
 #endif
 
-#endif // CIELLAB_INCLUDE_CIEL_MEMORY_LEAK_CHECK_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_TEST_MEMORY_LEAK_CHECK_HPP_

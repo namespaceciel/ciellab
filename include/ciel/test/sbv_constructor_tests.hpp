@@ -1,3 +1,6 @@
+#ifndef CIELLAB_INCLUDE_CIEL_TEST_SBV_CONSTRUCTOR_TESTS_HPP_
+#define CIELLAB_INCLUDE_CIEL_TEST_SBV_CONSTRUCTOR_TESTS_HPP_
+
 #include <gtest/gtest.h>
 
 #include <ciel/test/forward_iterator.hpp>
@@ -110,3 +113,5 @@ inline void test_constructor_initializer_list_impl(::testing::Test*) {
     C v({0, 1, 2, 3, 4});
     ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
 }
+
+#endif // CIELLAB_INCLUDE_CIEL_TEST_SBV_CONSTRUCTOR_TESTS_HPP_

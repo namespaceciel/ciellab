@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_INT_WRAPPER_HPP_
-#define CIELLAB_INCLUDE_CIEL_INT_WRAPPER_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_TEST_INT_WRAPPER_HPP_
+#define CIELLAB_INCLUDE_CIEL_TEST_INT_WRAPPER_HPP_
 
 #include <ciel/config.hpp>
 #include <ciel/exchange.hpp>
@@ -101,4 +101,4 @@ struct is_trivially_relocatable<TRInt> : std::true_type {};
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_INT_WRAPPER_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_TEST_INT_WRAPPER_HPP_

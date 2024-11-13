@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_FORWARD_ITERATOR_HPP_
-#define CIELLAB_INCLUDE_CIEL_FORWARD_ITERATOR_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_TEST_FORWARD_ITERATOR_HPP_
+#define CIELLAB_INCLUDE_CIEL_TEST_FORWARD_ITERATOR_HPP_
 
 #include <ciel/config.hpp>
 #include <ciel/iterator_base.hpp>
@@ -64,4 +64,4 @@ static_assert(std::forward_iterator<ForwardIterator<int>>);
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_FORWARD_ITERATOR_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_TEST_FORWARD_ITERATOR_HPP_
