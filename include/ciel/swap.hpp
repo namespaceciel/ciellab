@@ -1,10 +1,10 @@
 #ifndef CIELLAB_INCLUDE_CIEL_SWAP_HPP_
 #define CIELLAB_INCLUDE_CIEL_SWAP_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/cstring.hpp>
-#include <ciel/datasizeof.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/cstring.hpp>
+#include <ciel/core/datasizeof.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
 
 #include <iterator>
 #include <memory>

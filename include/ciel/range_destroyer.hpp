@@ -1,10 +1,9 @@
 #ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 #define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
+#include <ciel/core/compressed_pair.hpp>
+#include <ciel/core/config.hpp>
 #include <ciel/to_address.hpp>
-#include <ciel/void_t.hpp>
 
 #include <cstddef>
 #include <memory>

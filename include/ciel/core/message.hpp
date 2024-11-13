@@ -1,7 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_CORE_MESSAGE_HPP_
 #define CIELLAB_INCLUDE_CIEL_CORE_MESSAGE_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <array>
 #include <cstddef>
@@ -49,6 +49,11 @@ private:
 
     template<class Int, enable_if_t<std::is_integral<Int>::value> = 0>
     void append(Int value) noexcept {
+        if (value == 0) {
+            append('0');
+            return;
+        }
+
         std::array<char, 20> temp{}; // Enough to hold the longest 64 bit decimal number.
         size_t p = 0;
 

@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
-#define CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_INTEGER_SEQUENCE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_INTEGER_SEQUENCE_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <cstddef>
 
@@ -73,4 +73,4 @@ using index_sequence_for = make_index_sequence<sizeof...(T)>;
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_INTEGER_SEQUENCE_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_INTEGER_SEQUENCE_HPP_

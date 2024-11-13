@@ -2,11 +2,11 @@
 #define CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_LIST_HPP_
 
 #include <ciel/compare.hpp>
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
-#include <ciel/iterator_base.hpp>
-#include <ciel/iterator_category.hpp>
+#include <ciel/core/compressed_pair.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/iterator_base.hpp>
+#include <ciel/core/iterator_category.hpp>
 
 #include <algorithm>
 #include <cstddef>

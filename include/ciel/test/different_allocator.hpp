@@ -1,7 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TEST_DIFFERENT_ALLOCATOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_TEST_DIFFERENT_ALLOCATOR_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <memory>
 

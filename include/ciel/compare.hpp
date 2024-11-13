@@ -1,8 +1,8 @@
 #ifndef CIELLAB_INCLUDE_CIEL_COMPARE_HPP_
 #define CIELLAB_INCLUDE_CIEL_COMPARE_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/is_range.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/is_range.hpp>
 
 #include <algorithm>
 

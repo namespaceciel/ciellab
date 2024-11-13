@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_CSTRING_HPP_
-#define CIELLAB_INCLUDE_CIEL_CSTRING_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_CSTRING_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_CSTRING_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -31,4 +31,4 @@ inline void memmove(void* dest, const void* src, const size_t count) noexcept {
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_CSTRING_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_CSTRING_HPP_

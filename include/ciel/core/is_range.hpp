@@ -1,8 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_IS_RANGE_HPP_
-#define CIELLAB_INCLUDE_CIEL_IS_RANGE_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_IS_RANGE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_IS_RANGE_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/void_t.hpp>
+#include <ciel/core/config.hpp>
 
 #include <type_traits>
 #include <utility>
@@ -36,4 +35,4 @@ static constexpr from_range_t from_range;
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_IS_RANGE_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_IS_RANGE_HPP_

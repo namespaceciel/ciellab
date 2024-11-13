@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
-#define CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_MOVE_PROXY_HPP_
+#define CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_MOVE_PROXY_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <type_traits>
 #include <utility>
@@ -32,4 +32,4 @@ private:
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_MOVE_PROXY_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_MOVE_PROXY_HPP_

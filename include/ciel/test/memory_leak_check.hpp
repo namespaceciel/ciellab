@@ -1,7 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TEST_MEMORY_LEAK_CHECK_HPP_
 #define CIELLAB_INCLUDE_CIEL_TEST_MEMORY_LEAK_CHECK_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 #include <ciel/memory.hpp>
 
 #include <cstddef>

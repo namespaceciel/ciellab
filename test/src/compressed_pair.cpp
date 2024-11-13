@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/compressed_pair.hpp>
+#include <ciel/core/compressed_pair.hpp>
 
 using namespace ciel;
 
@@ -49,7 +49,7 @@ TEST(compressed_pair, both_same_empty_bases) {
 }
 
 #ifdef CIEL_HAS_EXCEPTIONS
-#  include <ciel/config.hpp>
+#  include <ciel/core/config.hpp>
 #  include <ciel/test/exception_generator.hpp>
 
 TEST(compressed_pair, exception_safety) {

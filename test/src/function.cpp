@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 #include <ciel/function.hpp>
 
 #include <deque>

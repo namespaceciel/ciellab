@@ -1,8 +1,8 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TO_ADDRESS_HPP_
 #define CIELLAB_INCLUDE_CIEL_TO_ADDRESS_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/logical.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/logical.hpp>
 
 #include <memory>
 #include <type_traits>

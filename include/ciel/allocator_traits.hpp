@@ -1,9 +1,8 @@
 #ifndef CIELLAB_INCLUDE_CIEL_ALLOCATOR_TRAITS_HPP_
 #define CIELLAB_INCLUDE_CIEL_ALLOCATOR_TRAITS_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/logical.hpp>
-#include <ciel/void_t.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/logical.hpp>
 
 #include <memory>
 #include <type_traits>

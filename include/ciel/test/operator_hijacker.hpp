@@ -1,7 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TEST_OPERATOR_HIJACKER_HPP_
 #define CIELLAB_INCLUDE_CIEL_TEST_OPERATOR_HIJACKER_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <cstddef>
 #include <functional>

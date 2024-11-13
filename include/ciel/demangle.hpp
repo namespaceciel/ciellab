@@ -1,7 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_DEMANGLE_HPP_
 #define CIELLAB_INCLUDE_CIEL_DEMANGLE_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <cstddef>
 #include <cstdlib>

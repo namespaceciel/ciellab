@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_IS_FINAL_HPP_
-#define CIELLAB_INCLUDE_CIEL_IS_FINAL_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_IS_FINAL_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_IS_FINAL_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <type_traits>
 
@@ -25,4 +25,4 @@ struct is_final;
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_IS_FINAL_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_IS_FINAL_HPP_

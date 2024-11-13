@@ -2,8 +2,8 @@
 #define CIELLAB_INCLUDE_CIEL_OBSERVER_PTR_HPP_
 
 #include <ciel/compare.hpp>
-#include <ciel/config.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
 
 #include <functional>
 #include <type_traits>

@@ -1,15 +1,15 @@
 #ifndef CIELLAB_INCLUDE_CIEL_FUNCTION_HPP_
 #define CIELLAB_INCLUDE_CIEL_FUNCTION_HPP_
 
-#include <ciel/aligned_storage.hpp>
-#include <ciel/as_const.hpp>
 #include <ciel/compare.hpp>
-#include <ciel/config.hpp>
-#include <ciel/cstring.hpp>
-#include <ciel/exchange.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/aligned_storage.hpp>
+#include <ciel/core/as_const.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/cstring.hpp>
+#include <ciel/core/exchange.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/strip_signature.hpp>
 #include <ciel/memory.hpp>
-#include <ciel/strip_signature.hpp>
 #include <ciel/swap.hpp>
 
 #include <cstddef>

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/finally.hpp>
+#include <ciel/core/finally.hpp>
 
 TEST(finally, defer) {
     bool deferCalled = false;

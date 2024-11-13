@@ -2,12 +2,12 @@
 #define CIELLAB_INCLUDE_CIEL_INPLACE_VECTOR_HPP_
 
 #include <ciel/compare.hpp>
-#include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
-#include <ciel/cstring.hpp>
-#include <ciel/is_range.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
-#include <ciel/iterator_category.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/cstring.hpp>
+#include <ciel/core/is_range.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/iterator_category.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/swap.hpp>
 

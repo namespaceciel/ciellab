@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/do_if_noexcept.hpp>
+#include <ciel/core/do_if_noexcept.hpp>
 
 #include <type_traits>
 #include <utility>

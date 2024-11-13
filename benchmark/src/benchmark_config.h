@@ -3,9 +3,9 @@
 
 #include <benchmark/benchmark.h>
 
-#include <ciel/config.hpp>
-#include <ciel/exchange.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/exchange.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
 
 #include <algorithm>
 #include <random>

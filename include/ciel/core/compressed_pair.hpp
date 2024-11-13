@@ -1,10 +1,10 @@
-#ifndef CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
-#define CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_COMPRESSED_PAIR_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_COMPRESSED_PAIR_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/integer_sequence.hpp>
-#include <ciel/is_final.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/integer_sequence.hpp>
+#include <ciel/core/is_final.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
 
 #include <tuple>
 #include <type_traits>
@@ -154,4 +154,4 @@ void swap(ciel::compressed_pair<T1, T2>& lhs, ciel::compressed_pair<T1, T2>& rhs
 
 } // namespace std
 
-#endif // CIELLAB_INCLUDE_CIEL_COMPRESSED_PAIR_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_COMPRESSED_PAIR_HPP_

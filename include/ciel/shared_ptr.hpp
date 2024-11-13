@@ -1,11 +1,11 @@
 #ifndef CIELLAB_INCLUDE_CIEL_SHARED_PTR_HPP_
 #define CIELLAB_INCLUDE_CIEL_SHARED_PTR_HPP_
 
-#include <ciel/aligned_storage.hpp>
 #include <ciel/compare.hpp>
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/aligned_storage.hpp>
+#include <ciel/core/compressed_pair.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
 
 #include <atomic>
 #include <memory>

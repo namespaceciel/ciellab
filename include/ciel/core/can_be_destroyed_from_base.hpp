@@ -1,8 +1,8 @@
-#ifndef CIELLAB_INCLUDE_CIEL_CAN_BE_DESTROYED_FROM_BASE_HPP_
-#define CIELLAB_INCLUDE_CIEL_CAN_BE_DESTROYED_FROM_BASE_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_CAN_BE_DESTROYED_FROM_BASE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_CAN_BE_DESTROYED_FROM_BASE_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/logical.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/logical.hpp>
 
 #include <type_traits>
 
@@ -15,4 +15,4 @@ struct can_be_destroyed_from_base
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_CAN_BE_DESTROYED_FROM_BASE_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_CAN_BE_DESTROYED_FROM_BASE_HPP_

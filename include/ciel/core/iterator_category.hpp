@@ -1,8 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_ITERATOR_CATEGORY_HPP_
-#define CIELLAB_INCLUDE_CIEL_ITERATOR_CATEGORY_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_ITERATOR_CATEGORY_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_ITERATOR_CATEGORY_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/void_t.hpp>
+#include <ciel/core/config.hpp>
 
 #include <iterator>
 #include <type_traits>
@@ -55,4 +54,4 @@ struct is_contiguous_iterator<std::move_iterator<T>> : is_contiguous_iterator<T>
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_ITERATOR_CATEGORY_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_ITERATOR_CATEGORY_HPP_

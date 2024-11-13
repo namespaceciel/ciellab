@@ -1,9 +1,9 @@
 #ifndef CIELLAB_INCLUDE_CIEL_COPY_N_HPP_
 #define CIELLAB_INCLUDE_CIEL_COPY_N_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/cstring.hpp>
-#include <ciel/iterator_category.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/cstring.hpp>
+#include <ciel/core/iterator_category.hpp>
 #include <ciel/to_address.hpp>
 
 #include <iterator>

@@ -3,15 +3,15 @@
 
 #include <ciel/allocator_traits.hpp>
 #include <ciel/compare.hpp>
-#include <ciel/compressed_pair.hpp>
-#include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
-#include <ciel/cstring.hpp>
+#include <ciel/core/compressed_pair.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/cstring.hpp>
+#include <ciel/core/do_if_noexcept.hpp>
+#include <ciel/core/is_range.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/iterator_category.hpp>
 #include <ciel/demangle.hpp>
-#include <ciel/do_if_noexcept.hpp>
-#include <ciel/is_range.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
-#include <ciel/iterator_category.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/sbv_crtp_base.hpp>
 #include <ciel/split_buffer.hpp>

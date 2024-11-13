@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
-#define CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_CONFIG_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_CONFIG_HPP_
 
 #if !defined(__cplusplus) || (__cplusplus < 201103L)
 #  error "Please use C++ with standard of at least 11"
@@ -10,6 +10,7 @@
 #include <type_traits>
 
 // exception
+
 #ifdef __cpp_exceptions
 #  define CIEL_HAS_EXCEPTIONS
 #endif
@@ -17,26 +18,29 @@
 #ifdef CIEL_HAS_EXCEPTIONS
 #  define CIEL_THROW_EXCEPTION(e) throw e
 #else
-#  include <exception>
-#  include <iostream>
-#  define CIEL_THROW_EXCEPTION(e)        \
-      do {                               \
-          std::cerr << e.what() << "\n"; \
-          std::terminate();              \
+#  include <cstdio>
+#  include <cstdlib>
+#  define CIEL_THROW_EXCEPTION(e)                 \
+      do {                                        \
+          std::fprintf(stderr, "%s\n", e.what()); \
+          std::abort();                           \
       } while (false)
 #endif
 
 // rtti
+
 #ifdef __cpp_rtti
 #  define CIEL_HAS_RTTI
 #endif
 
 // debug_mode
+
 #ifndef NDEBUG
 #  define CIEL_IS_DEBUGGING
 #endif
 
 // standard_version
+
 #if __cplusplus <= 201103L
 #  define CIEL_STD_VER 11
 #elif __cplusplus <= 201402L
@@ -52,6 +56,7 @@
 #endif
 
 // constexpr
+
 #if CIEL_STD_VER >= 14
 #  define CIEL_CONSTEXPR_SINCE_CXX14 constexpr
 #else
@@ -77,6 +82,7 @@
 #endif
 
 // nodiscard
+
 #if CIEL_STD_VER >= 17
 #  define CIEL_NODISCARD [[nodiscard]]
 #elif (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__) // clang, icc, clang-cl
@@ -90,6 +96,7 @@
 #endif
 
 // likely, unlikely
+
 #if CIEL_STD_VER >= 20 || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
 #  define CIEL_LIKELY(x)   (x) [[likely]]
 #  define CIEL_UNLIKELY(x) (x) [[unlikely]]
@@ -102,11 +109,13 @@
 #endif
 
 // __has_builtin
+
 #ifndef __has_builtin
 #  define __has_builtin(x) false
 #endif
 
 // try catch throw
+
 #ifdef CIEL_HAS_EXCEPTIONS
 #  define CIEL_TRY      try
 #  define CIEL_CATCH(x) catch (x)
@@ -117,10 +126,13 @@
 #  define CIEL_THROW
 #endif
 
+// to_string
+
 #define CIEL_TO_STRING2(x) #x
 #define CIEL_TO_STRING(x)  CIEL_TO_STRING2(x)
 
 // compiler diagnostic ignored
+
 #if defined(__clang__)
 #  define CIEL_DIAGNOSTIC_PUSH               _Pragma("clang diagnostic push")
 #  define CIEL_DIAGNOSTIC_POP                _Pragma("clang diagnostic pop")
@@ -139,6 +151,7 @@
 #endif
 
 // namespace ciel
+
 #define NAMESPACE_CIEL_BEGIN namespace ciel {
 #define NAMESPACE_CIEL_END   } // namespace ciel
 
@@ -148,14 +161,20 @@ using std::size_t;
 
 NAMESPACE_CIEL_BEGIN
 
+// useless_tag
+
 struct useless_tag {
     template<class... Args>
     useless_tag(Args&&...) noexcept {}
 
 }; // struct useless_tag
 
+// void_cast
+
 template<class... Args>
 void void_cast(Args&&...) noexcept {}
+
+// unreachable
 
 [[noreturn]] inline void unreachable() noexcept {
 #if defined(_MSC_VER) && !defined(__clang__) // MSVC
@@ -169,9 +188,11 @@ NAMESPACE_CIEL_END
 
 // unused
 // simple (void) cast won't stop gcc
+
 #define CIEL_UNUSED(...) ciel::void_cast(__VA_ARGS__)
 
 // assume
+
 #if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
 #  define CIEL_ASSUME(cond) [[assume(cond)]]
 #elif defined(__clang__)
@@ -189,6 +210,7 @@ NAMESPACE_CIEL_END
 #endif
 
 // assert
+
 #ifdef CIEL_IS_DEBUGGING
 #  define CIEL_ASSERT(cond) assert(cond)
 #elif defined(__clang__)
@@ -204,21 +226,12 @@ NAMESPACE_CIEL_END
 #define CIEL_PRECONDITION(cond)  CIEL_ASSERT(static_cast<bool>(cond))
 #define CIEL_POSTCONDITION(cond) CIEL_ASSERT(static_cast<bool>(cond))
 
-// deduction guide for initializer_list
-#if CIEL_STD_VER >= 17
-#  include <initializer_list>
-
-namespace std {
-
-template<class T>
-initializer_list(initializer_list<T>) -> initializer_list<T>;
-
-} // namespace std
-#endif
-
 NAMESPACE_CIEL_BEGIN
 
 // alias for type_traits
+
+template<class...>
+using void_t = void;
 
 template<bool B, class T, class F>
 using conditional_t = typename std::conditional<B, T, F>::type;
@@ -267,4 +280,4 @@ using add_cv_t = typename std::add_cv<T>::type;
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_CONFIG_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_CONFIG_HPP_

@@ -21,6 +21,10 @@ TEST(message, text_with_integer) {
                   0);
     }
     {
+        const message_builder<128> mb("Test integer: {}. Is this correct?", 0);
+        ASSERT_EQ(std::strcmp(mb.get(), "Test integer: 0. Is this correct?"), 0);
+    }
+    {
         const message_builder<25> mb("Test integer: {}. Is this correct?", std::numeric_limits<int64_t>::max());
         ASSERT_EQ(std::strcmp(mb.get(), "Test integer: 9223372036"), 0);
     }

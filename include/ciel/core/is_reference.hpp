@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_IS_REFERENCE_HPP_
-#define CIELLAB_INCLUDE_CIEL_IS_REFERENCE_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_IS_REFERENCE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_IS_REFERENCE_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <type_traits>
 
@@ -31,4 +31,4 @@ struct is_const_reference
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_IS_REFERENCE_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_IS_REFERENCE_HPP_

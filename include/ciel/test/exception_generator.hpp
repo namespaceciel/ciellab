@@ -1,9 +1,9 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TEST_EXCEPTION_GENERATOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_TEST_EXCEPTION_GENERATOR_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/exchange.hpp>
-#include <ciel/is_trivially_relocatable.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/exchange.hpp>
+#include <ciel/core/is_trivially_relocatable.hpp>
 
 #include <type_traits>
 

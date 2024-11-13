@@ -1,7 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_TEST_SIMPLE_LATCH_HPP_
 #define CIELLAB_INCLUDE_CIEL_TEST_SIMPLE_LATCH_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <condition_variable>
 #include <cstddef>

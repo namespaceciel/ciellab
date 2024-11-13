@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/is_nullable.hpp>
+#include <ciel/core/is_nullable.hpp>
 
 #include <memory>
 

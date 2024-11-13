@@ -1,8 +1,8 @@
-#ifndef CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
-#define CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_FINALLY_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_FINALLY_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/exchange.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/exchange.hpp>
 
 #include <utility>
 
@@ -54,4 +54,4 @@ NAMESPACE_CIEL_END
 
 #define CIEL_DEFER(x) auto CIEL_CONCAT(defer_, __LINE__) = ciel::make_finally([&] x)
 
-#endif // CIELLAB_INCLUDE_CIEL_FINALLY_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_FINALLY_HPP_

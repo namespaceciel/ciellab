@@ -2,9 +2,9 @@
 #define CIELLAB_INCLUDE_CIEL_SBV_CRTP_BASE_HPP_
 
 #include <ciel/allocator_traits.hpp>
-#include <ciel/config.hpp>
 #include <ciel/copy_n.hpp>
-#include <ciel/is_range.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/is_range.hpp>
 #include <ciel/to_address.hpp>
 
 #include <algorithm>

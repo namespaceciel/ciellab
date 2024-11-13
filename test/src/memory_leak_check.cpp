@@ -1,7 +1,7 @@
 #if !(defined(__clang__) && defined(__linux__)) // linux clang is unhappy about this.
 
-#  include <ciel/alignment.hpp>
-#  include <ciel/config.hpp>
+#  include <ciel/core/alignment.hpp>
+#  include <ciel/core/config.hpp>
 #  include <ciel/test/memory_leak_check.hpp>
 
 #  include <cstddef>

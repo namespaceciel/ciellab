@@ -2,7 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_TEST_FANCY_ALLOCATOR_HPP_
 
 #include <ciel/compare.hpp>
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <cstddef>
 #include <cstring>

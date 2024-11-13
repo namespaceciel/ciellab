@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/can_be_destroyed_from_base.hpp>
+#include <ciel/core/can_be_destroyed_from_base.hpp>
 
 using namespace ciel;
 

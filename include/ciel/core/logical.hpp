@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_LOGICAL_HPP_
-#define CIELLAB_INCLUDE_CIEL_LOGICAL_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_LOGICAL_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_LOGICAL_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <type_traits>
 
@@ -15,7 +15,7 @@ struct conjunction : std::true_type {};
 
 // Otherwise, derive from the first false template member (if all true, choose the last one).
 template<class B1, class... Bn>
-struct conjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), conjunction<Bn...>, B1>::type {};
+struct conjunction<B1, Bn...> : conditional_t<static_cast<bool>(B1::value), conjunction<Bn...>, B1> {};
 
 // disjunction
 
@@ -23,7 +23,7 @@ template<class...>
 struct disjunction : std::false_type {};
 
 template<class B1, class... Bn>
-struct disjunction<B1, Bn...> : std::conditional<static_cast<bool>(B1::value), B1, disjunction<Bn...>>::type {};
+struct disjunction<B1, Bn...> : conditional_t<static_cast<bool>(B1::value), B1, disjunction<Bn...>> {};
 
 // negation
 
@@ -32,4 +32,4 @@ struct negation : std::integral_constant<bool, !static_cast<bool>(B::value)> {};
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_LOGICAL_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_LOGICAL_HPP_

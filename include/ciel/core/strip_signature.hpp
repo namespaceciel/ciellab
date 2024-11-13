@@ -1,11 +1,11 @@
-#ifndef CIELLAB_INCLUDE_CIEL_STRIP_SIGNATURE_HPP_
-#define CIELLAB_INCLUDE_CIEL_STRIP_SIGNATURE_HPP_
-
-#include <ciel/config.hpp>
-
-NAMESPACE_CIEL_BEGIN
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_STRIP_SIGNATURE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_STRIP_SIGNATURE_HPP_
 
 #if CIEL_STD_VER >= 17
+
+#  include <ciel/core/config.hpp>
+
+NAMESPACE_CIEL_BEGIN
 
 template<class>
 struct strip_signature;
@@ -93,8 +93,8 @@ struct strip_signature<R (Class::*)(Args...) const volatile & noexcept> {
 template<class F>
 using strip_signature_t = typename strip_signature<F>::type;
 
-#endif
-
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_STRIP_SIGNATURE_HPP_
+#endif
+
+#endif // CIELLAB_INCLUDE_CIEL_CORE_STRIP_SIGNATURE_HPP_

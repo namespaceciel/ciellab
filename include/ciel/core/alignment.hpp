@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_ALIGNMENT_HPP_
-#define CIELLAB_INCLUDE_CIEL_ALIGNMENT_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_ALIGNMENT_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_ALIGNMENT_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -63,4 +63,4 @@ CIEL_NODISCARD inline bool is_overaligned_for_new(const size_t alignment) noexce
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_ALIGNMENT_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_ALIGNMENT_HPP_

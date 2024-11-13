@@ -1,8 +1,8 @@
-#ifndef CIELLAB_INCLUDE_CIEL_DO_IF_NOEXCEPT_HPP_
-#define CIELLAB_INCLUDE_CIEL_DO_IF_NOEXCEPT_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_DO_IF_NOEXCEPT_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_DO_IF_NOEXCEPT_HPP_
 
-#include <ciel/config.hpp>
-#include <ciel/logical.hpp>
+#include <ciel/core/config.hpp>
+#include <ciel/core/logical.hpp>
 
 #include <type_traits>
 #include <utility>
@@ -33,4 +33,4 @@ forward_if_noexcept(T&& x) noexcept {
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_DO_IF_NOEXCEPT_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_DO_IF_NOEXCEPT_HPP_

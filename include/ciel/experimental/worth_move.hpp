@@ -1,7 +1,7 @@
-#ifndef CIELLAB_INCLUDE_CIEL_WORTH_MOVE_HPP_
-#define CIELLAB_INCLUDE_CIEL_WORTH_MOVE_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_WORTH_MOVE_HPP_
+#define CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_WORTH_MOVE_HPP_
 
-#include <ciel/config.hpp>
+#include <ciel/core/config.hpp>
 
 #include <type_traits>
 
@@ -43,4 +43,4 @@ struct worth_move_assigning {
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_WORTH_MOVE_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_WORTH_MOVE_HPP_

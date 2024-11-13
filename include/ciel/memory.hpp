@@ -1,8 +1,8 @@
 #ifndef CIELLAB_INCLUDE_CIEL_MEMORY_HPP_
 #define CIELLAB_INCLUDE_CIEL_MEMORY_HPP_
 
-#include <ciel/alignment.hpp>
-#include <ciel/config.hpp>
+#include <ciel/core/alignment.hpp>
+#include <ciel/core/config.hpp>
 
 #include <new>
 
