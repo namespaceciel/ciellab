@@ -13,7 +13,7 @@ if [ "${current_version}" -ne "${required_version}" ]; then
     exit 1
 fi
 
-REPO_ROOT_DIR="."
+REPO_ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLANG_FORMAT_FILE="${REPO_ROOT_DIR}/.clang-format"
 
 if [ ! -f "${CLANG_FORMAT_FILE}" ]; then
