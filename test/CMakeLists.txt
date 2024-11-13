@@ -15,6 +15,7 @@ set(SOURCES
     src/function.cpp
     src/is_nullable.cpp
     src/list.cpp
+    src/message.cpp
     src/observer_ptr.cpp
     src/shared_ptr.cpp
     src/worth_move.cpp
