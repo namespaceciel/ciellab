@@ -2,6 +2,8 @@
 
 #include <ciel/allocator_traits.hpp>
 
+#include <memory>
+
 using namespace ciel;
 
 namespace {

@@ -1,11 +1,13 @@
-#include <gtest/gtest.h>
+#ifdef CIEL_HAS_EXCEPTIONS
 
-#include <ciel/test/exception_generator.hpp>
-#include <ciel/vector.hpp>
+#  include <gtest/gtest.h>
+
+#  include <ciel/test/exception_generator.hpp>
+#  include <ciel/vector.hpp>
+
+#  include <cstddef>
 
 using namespace ciel;
-
-#ifdef CIEL_HAS_EXCEPTIONS
 
 TEST(vector_exception_safety, push_back_in_capacity) {
     using EG    = ExceptionGenerator<1, DefaultConstructor | CopyConstructor, true>;

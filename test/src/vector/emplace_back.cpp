@@ -4,6 +4,8 @@
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/vector.hpp>
 
+#include <initializer_list>
+
 using namespace ciel;
 
 namespace {

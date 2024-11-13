@@ -1,10 +1,14 @@
 #include <gtest/gtest.h>
 
 #include <ciel/atomic_shared_ptr.hpp>
+#include <ciel/shared_ptr.hpp>
 #include <ciel/test/simple_latch.hpp>
 
+#include <cstddef>
+#include <cstdlib>
 #include <numeric>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace ciel;

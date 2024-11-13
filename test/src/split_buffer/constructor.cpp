@@ -3,7 +3,15 @@
 #include <ciel/split_buffer.hpp>
 #include <ciel/test/different_allocator.hpp>
 #include <ciel/test/fancy_allocator.hpp>
+#include <ciel/test/forward_iterator.hpp>
+#include <ciel/test/input_iterator.hpp>
+#include <ciel/test/int_wrapper.hpp>
+#include <ciel/test/random_access_iterator.hpp>
 #include <ciel/test/sbv_constructor_tests.hpp>
+
+#include <cstddef>
+#include <initializer_list>
+#include <utility>
 
 using namespace ciel;
 

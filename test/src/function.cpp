@@ -1,8 +1,15 @@
 #include <gtest/gtest.h>
 
+#include <ciel/config.hpp>
 #include <ciel/function.hpp>
 
 #include <deque>
+#include <type_traits>
+#include <utility>
+#include <vector>
+#ifdef CIEL_HAS_EXCEPTIONS
+#  include <functional>
+#endif
 
 using namespace ciel;
 

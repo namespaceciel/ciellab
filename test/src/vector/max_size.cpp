@@ -2,6 +2,10 @@
 
 #include <ciel/vector.hpp>
 
+#include <cstddef>
+#include <limits>
+#include <memory>
+
 using namespace ciel;
 
 TEST(vector, max_size) {

@@ -3,6 +3,8 @@
 #include <ciel/inplace_vector.hpp>
 #include <ciel/test/int_wrapper.hpp>
 
+#include <initializer_list>
+
 using namespace ciel;
 
 namespace {

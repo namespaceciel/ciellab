@@ -2,7 +2,9 @@
 
 #include <ciel/observer_ptr.hpp>
 
+#include <functional>
 #include <memory>
+#include <utility>
 
 using namespace ciel;
 

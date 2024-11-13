@@ -2,6 +2,8 @@
 
 #include <ciel/inplace_vector.hpp>
 
+#include <type_traits>
+
 using namespace ciel;
 
 namespace {

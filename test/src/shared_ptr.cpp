@@ -1,9 +1,13 @@
 #include <gtest/gtest.h>
 
+#include <ciel/config.hpp>
 #include <ciel/shared_ptr.hpp>
 #include <ciel/test/simple_latch.hpp>
 
+#include <cstddef>
+#include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace ciel;

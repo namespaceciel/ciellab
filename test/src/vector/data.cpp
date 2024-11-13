@@ -4,6 +4,8 @@
 #include <ciel/test/operator_hijacker.hpp>
 #include <ciel/vector.hpp>
 
+#include <memory>
+
 using namespace ciel;
 
 TEST(vector, data) {

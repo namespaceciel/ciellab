@@ -4,6 +4,8 @@
 #include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/operator_hijacker.hpp>
 
+#include <memory>
+
 using namespace ciel;
 
 TEST(split_buffer, data) {

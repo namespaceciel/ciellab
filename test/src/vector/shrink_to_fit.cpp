@@ -3,6 +3,8 @@
 #include <ciel/test/fancy_allocator.hpp>
 #include <ciel/vector.hpp>
 
+#include <cstddef>
+
 using namespace ciel;
 
 TEST(vector, shrink_to_fit) {

@@ -1,19 +1,21 @@
 #include <gtest/gtest.h>
 
 #include <ciel/inplace_vector.hpp>
-#include <ciel/test/different_allocator.hpp>
-#include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/forward_iterator.hpp>
 #include <ciel/test/input_iterator.hpp>
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/test/random_access_iterator.hpp>
 
 #include <array>
+#include <cstddef>
+#include <initializer_list>
 
 using namespace ciel;
 
+namespace {
+
 template<class C>
-inline void test_default_constructor_impl(::testing::Test*) {
+void test_default_constructor_impl(::testing::Test*) {
     {
         C c;
         ASSERT_TRUE(c.empty());
@@ -27,7 +29,7 @@ inline void test_default_constructor_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void test_constructor_size_value_impl(::testing::Test*) {
+void test_constructor_size_value_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v(3, T{1});
@@ -35,7 +37,7 @@ inline void test_constructor_size_value_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void test_constructor_size_impl(::testing::Test*) {
+void test_constructor_size_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v(3);
@@ -43,7 +45,7 @@ inline void test_constructor_size_impl(::testing::Test*) {
 }
 
 template<class C, class Iter>
-inline void test_constructor_iterator_range_impl(::testing::Test*) {
+void test_constructor_iterator_range_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     {
@@ -59,7 +61,7 @@ inline void test_constructor_iterator_range_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void test_copy_constructor_impl(::testing::Test*) {
+void test_copy_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
@@ -68,7 +70,7 @@ inline void test_copy_constructor_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void test_move_constructor_impl(::testing::Test*) {
+void test_move_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
@@ -77,12 +79,14 @@ inline void test_move_constructor_impl(::testing::Test*) {
 }
 
 template<class C>
-inline void test_constructor_initializer_list_impl(::testing::Test*) {
+void test_constructor_initializer_list_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v({0, 1, 2, 3, 4});
     ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
 }
+
+} // namespace
 
 TEST(inplace_vector, default_constructor) {
     test_default_constructor_impl<inplace_vector<Int, 8>>(this);

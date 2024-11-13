@@ -4,6 +4,8 @@
 #include <ciel/test/fancy_allocator.hpp>
 #include <ciel/test/int_wrapper.hpp>
 
+#include <initializer_list>
+
 using namespace ciel;
 
 namespace {

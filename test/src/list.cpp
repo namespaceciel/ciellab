@@ -2,6 +2,9 @@
 
 #include <ciel/list.hpp>
 
+#include <initializer_list>
+#include <utility>
+
 using namespace ciel;
 
 TEST(list, constructors_and_destructors) {

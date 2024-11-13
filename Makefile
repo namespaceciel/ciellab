@@ -14,7 +14,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 .PHONY: clean
 
-# -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
+# -DCMAKE_CXX_CLANG_TIDY="clang-tidy;--fix"
 
 clang_test_build:
 	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \

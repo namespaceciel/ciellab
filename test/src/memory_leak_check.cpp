@@ -1,5 +1,10 @@
+#include <ciel/alignment.hpp>
+#include <ciel/config.hpp>
 #include <ciel/test/memory_leak_check.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <new>
 
 #if !(defined(__clang__) && defined(__linux__)) // linux clang is unhappy about this.

@@ -8,6 +8,8 @@
 #include <ciel/vector.hpp>
 
 #include <array>
+#include <initializer_list>
+#include <type_traits>
 
 using namespace ciel;
 

@@ -3,6 +3,8 @@
 #include <ciel/split_buffer.hpp>
 #include <ciel/test/int_wrapper.hpp>
 
+#include <initializer_list>
+
 using namespace ciel;
 
 namespace {
