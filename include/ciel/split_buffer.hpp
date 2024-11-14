@@ -8,6 +8,7 @@
 #include <ciel/core/config.hpp>
 #include <ciel/core/cstring.hpp>
 #include <ciel/core/do_if_noexcept.hpp>
+#include <ciel/core/exchange.hpp>
 #include <ciel/core/is_range.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/iterator_category.hpp>
@@ -453,22 +454,18 @@ public:
         : split_buffer(other.begin(), other.end(), alloc) {}
 
     split_buffer(split_buffer&& other) noexcept
-        : begin_cap_(other.begin_cap_),
-          begin_(other.begin_),
-          end_(other.end_),
-          end_cap_alloc_(other.end_cap_(), std::move(other.allocator_())) {
-        other.set_nullptr();
-    }
+        : begin_cap_(ciel::exchange(other.begin_cap_, nullptr)),
+          begin_(ciel::exchange(other.begin_, nullptr)),
+          end_(ciel::exchange(other.end_, nullptr)),
+          end_cap_alloc_(ciel::exchange(other.end_cap_(), nullptr), std::move(other.allocator_())) {}
 
     split_buffer(split_buffer&& other, const allocator_type& alloc)
         : split_buffer(alloc) {
         if (allocator_() == other.get_allocator()) {
-            begin_cap_ = other.begin_cap_;
-            begin_     = other.begin_;
-            end_       = other.end_;
-            end_cap_() = other.end_cap_();
-
-            other.set_nullptr();
+            begin_cap_ = ciel::exchange(other.begin_cap_, nullptr);
+            begin_     = ciel::exchange(other.begin_, nullptr);
+            end_       = ciel::exchange(other.end_, nullptr);
+            end_cap_() = ciel::exchange(other.end_cap_(), nullptr);
 
         } else if (other.size() > 0) {
             init(other.size());
