@@ -15,18 +15,6 @@
 #  define CIEL_HAS_EXCEPTIONS
 #endif
 
-#ifdef CIEL_HAS_EXCEPTIONS
-#  define CIEL_THROW_EXCEPTION(e) throw e
-#else
-#  include <cstdio>
-#  include <cstdlib>
-#  define CIEL_THROW_EXCEPTION(e)                 \
-      do {                                        \
-          std::fprintf(stderr, "%s\n", e.what()); \
-          std::abort();                           \
-      } while (false)
-#endif
-
 // rtti
 
 #ifdef __cpp_rtti

@@ -5,6 +5,7 @@
 #include <ciel/copy_n.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/is_range.hpp>
+#include <ciel/core/message.hpp>
 #include <ciel/to_address.hpp>
 
 #include <algorithm>

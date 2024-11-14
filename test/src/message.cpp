@@ -33,3 +33,12 @@ TEST(message, text_with_integer) {
         ASSERT_EQ(std::strcmp(mb.get(), "Test integer: -922337203"), 0);
     }
 }
+
+TEST(message, print) {
+    {
+        std::array<char, 64> buf;
+        ciel::print(buf.data(), "This is {} testing!", "message.hpp");
+        ASSERT_EQ(std::strcmp(buf.data(), "This is message.hpp testing!"), 0);
+    }
+    { ciel::println("This is {} testing!", "message.hpp"); }
+}

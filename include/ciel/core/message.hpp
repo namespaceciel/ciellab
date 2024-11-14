@@ -2,9 +2,11 @@
 #define CIELLAB_INCLUDE_CIEL_CORE_MESSAGE_HPP_
 
 #include <ciel/core/config.hpp>
+#include <ciel/core/cstring.hpp>
 
 #include <array>
 #include <cstddef>
+#include <cstdio>
 #include <type_traits>
 #include <utility>
 
@@ -17,6 +19,18 @@ private:
 
     std::array<char, BufferSize> buffer_{};
     size_t end_{0};
+
+public:
+    template<class... Args>
+    message_builder(const char* msg, Args... args) noexcept {
+        append(msg, args...);
+
+        CIEL_POSTCONDITION(buffer_.back() == '\0');
+        CIEL_POSTCONDITION(buffer_[size()] == '\0');
+    }
+
+    message_builder(const message_builder&)            = delete;
+    message_builder& operator=(const message_builder&) = delete;
 
     void append(const char* msg) noexcept {
         for (const char* s = msg; *s != 0; ++s) {
@@ -77,22 +91,57 @@ private:
         }
     }
 
-public:
-    template<class... Args>
-    message_builder(const char* msg, Args... args) noexcept {
-        append(msg, args...);
-
-        CIEL_POSTCONDITION(buffer_.back() == '\0');
-    }
-
-    message_builder(const message_builder&)            = delete;
-    message_builder& operator=(const message_builder&) = delete;
-
     CIEL_NODISCARD const char* get() const noexcept {
         return buffer_.data();
     }
 
+    // '\0' doesn't count.
+    CIEL_NODISCARD size_t size() const noexcept {
+        return end_;
+    }
+
 }; // class message_builder
+
+template<size_t BufferSize = 512, class... Args>
+void print(std::FILE* stream, const char* msg, Args... args) noexcept {
+    message_builder<BufferSize> mb(msg, args...);
+    CIEL_UNUSED(std::fprintf(stream, "%s", mb.get()));
+}
+
+template<size_t BufferSize = 512, class... Args>
+void print(const char* msg, Args... args) noexcept {
+    print<BufferSize>(stdout, msg, args...);
+}
+
+template<size_t BufferSize = 512, class... Args>
+void print(char* buffer, const char* msg, Args... args) noexcept {
+    message_builder<BufferSize> mb(msg, args...);
+    ciel::memmove(buffer, mb.get(), mb.size() + 1);
+}
+
+template<size_t BufferSize = 512, class... Args>
+void println(std::FILE* stream, const char* msg, Args... args) noexcept {
+    message_builder<BufferSize> mb(msg, args...);
+    mb.append('\n');
+    CIEL_UNUSED(std::fprintf(stream, "%s", mb.get()));
+}
+
+template<size_t BufferSize = 512, class... Args>
+void println(const char* msg, Args... args) noexcept {
+    println<BufferSize>(stdout, msg, args...);
+}
+
+#ifdef CIEL_HAS_EXCEPTIONS
+#  define CIEL_THROW_EXCEPTION(e) throw e
+#else
+#  include <cstdlib>
+#  define CIEL_THROW_EXCEPTION(e)                \
+      do {                                       \
+          ciel::println(stderr, "{}", e.what()); \
+          CIEL_UNUSED(std::fflush(nullptr));     \
+          std::abort();                          \
+      } while (false)
+#endif
 
 NAMESPACE_CIEL_END
 

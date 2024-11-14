@@ -2,6 +2,7 @@
 
 #  include <ciel/core/alignment.hpp>
 #  include <ciel/core/config.hpp>
+#  include <ciel/core/message.hpp>
 #  include <ciel/test/memory_leak_check.hpp>
 
 #  include <cstddef>

@@ -11,6 +11,7 @@
 #include <ciel/core/is_range.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/iterator_category.hpp>
+#include <ciel/core/message.hpp>
 #include <ciel/demangle.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/sbv_crtp_base.hpp>

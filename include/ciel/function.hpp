@@ -8,6 +8,7 @@
 #include <ciel/core/cstring.hpp>
 #include <ciel/core/exchange.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/message.hpp>
 #include <ciel/core/strip_signature.hpp>
 #include <ciel/memory.hpp>
 #include <ciel/swap.hpp>

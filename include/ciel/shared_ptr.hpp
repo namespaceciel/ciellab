@@ -6,6 +6,7 @@
 #include <ciel/core/compressed_pair.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/message.hpp>
 
 #include <atomic>
 #include <memory>
