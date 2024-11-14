@@ -11,6 +11,7 @@
 #include <ciel/core/message.hpp>
 #include <ciel/range_destroyer.hpp>
 #include <ciel/swap.hpp>
+#include <ciel/to_address.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -20,6 +21,7 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -345,7 +347,7 @@ private:
 
         if (is_contiguous_iterator<Iter>::value && std::is_same<value_type, U>::value
             && std::is_trivially_copy_constructible<value_type>::value) {
-            const size_t count = std::distance(first, last);
+            const size_type count = std::distance(first, last);
             if (count != 0) {
                 ciel::memcpy(end(), ciel::to_address(first), count * sizeof(value_type));
                 this->size_ += count;
@@ -357,13 +359,6 @@ private:
                 ++this->size_;
             }
         }
-    }
-
-    template<class... Args>
-    void construct(pointer p, Args&&... args) {
-        CIEL_PRECONDITION(size() < capacity());
-
-        ::new (p) value_type(std::forward<Args>(args)...);
     }
 
     void destroy(pointer p) noexcept {
@@ -752,7 +747,7 @@ private:
 
             } else {
                 for (pointer p = end_() - 1; p >= pos; --p) {
-                    construct(p + count, std::move(*p));
+                    ::new (p + count) value_type(std::move(*p));
                     destroy(p);
                     rd.advance_backward();
                 }
@@ -995,7 +990,40 @@ public:
         destroy(end_() - 1);
     }
 
-    // TODO: append_range, try_append_range
+    template<class R, enable_if_t<is_range<R>::value> = 0>
+    void append_range(R&& rg) {
+        insert_range(end(), std::forward<R>(rg));
+    }
+
+    template<class R, enable_if_t<is_range<R>::value> = 0, class Iter = decltype(std::declval<R>().begin())>
+    Iter try_append_range(R&& rg) {
+        using U = typename std::iterator_traits<Iter>::value_type;
+
+        if (is_contiguous_iterator<Iter>::value && std::is_same<value_type, U>::value
+            && std::is_trivially_copy_constructible<value_type>::value) {
+            const size_type count = std::min<size_type>(ciel::distance(std::forward<R>(rg)), capacity() - size());
+            if (count != 0) {
+                ciel::memcpy(end(), ciel::to_address(rg.begin()), count * sizeof(value_type));
+                this->size_ += count;
+            }
+
+            return std::next(rg.begin(), count);
+        }
+
+        Iter first      = rg.begin();
+        const Iter last = rg.end();
+
+        for (; first != last && size() != capacity(); ++first) {
+            if (std::is_lvalue_reference<R>::value) {
+                unchecked_emplace_back(*first);
+
+            } else {
+                unchecked_emplace_back(std::move(*first));
+            }
+        }
+
+        return first;
+    }
 
     void clear() noexcept {
         destroy(begin_(), end_());
