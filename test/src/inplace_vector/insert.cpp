@@ -5,6 +5,7 @@
 #include <ciel/test/input_iterator.hpp>
 #include <ciel/test/int_wrapper.hpp>
 #include <ciel/test/random_access_iterator.hpp>
+#include <ciel/test/range.hpp>
 
 #include <array>
 #include <initializer_list>
@@ -230,6 +231,115 @@ void test_insert_iterator_range_impl(::testing::Test*) {
 
         v.insert(v.begin(), Iter{nullptr}, Iter{nullptr});
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4}));
+    }
+
+    // insert_range
+
+    const std::initializer_list<T> il{-1, -1, -1, -1, -1};
+
+    // range without size
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
+        v.insert_range(v.begin(), r);
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6}));
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
+        v.insert_range(v.begin(), std::move(r));
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
+        }
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
+        v.insert_range(v.end() - 1, r);
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 6}));
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
+        v.insert_range(v.end() - 1, std::move(r));
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 6}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
+        }
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
+        v.insert_range(v.end(), r);
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4}));
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
+        v.insert_range(v.end(), std::move(r));
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
+        }
+    }
+    // range with size
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
+        v.insert_range(v.begin(), r);
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6}));
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
+        v.insert_range(v.begin(), std::move(r));
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
+        }
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
+        v.insert_range(v.end() - 1, r);
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 6}));
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
+        v.insert_range(v.end() - 1, std::move(r));
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 6}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
+        }
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
+        v.insert_range(v.end(), r);
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4}));
+    }
+    {
+        C v{0, 1, 2, 3, 4, 5, 6};
+        std::array<T, 5> arr{0, 1, 2, 3, 4};
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
+        v.insert_range(v.end(), std::move(r));
+        ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4}));
+        if (!std::is_trivial<T>::value) {
+            ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
+        }
     }
 }
 

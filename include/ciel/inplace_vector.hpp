@@ -339,10 +339,8 @@ private:
         }
     }
 
-    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
+    template<class Iter>
     void construct_at_end(Iter first, Iter last) {
-        CIEL_PRECONDITION(size() + std::distance(first, last) <= capacity());
-
         using U = typename std::iterator_traits<Iter>::value_type;
 
         if (is_contiguous_iterator<Iter>::value && std::is_same<value_type, U>::value
@@ -533,10 +531,11 @@ public:
     void assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                assign(rg.begin(), rg.end(), rg.size());
+                assign(rg.begin(), rg.end(), ciel::distance(std::forward<R>(rg)));
 
             } else {
-                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
+                       ciel::distance(std::forward<R>(rg)));
             }
 
         } else {
@@ -915,10 +914,11 @@ public:
     iterator insert_range(const_iterator pos, R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                return insert(pos, rg.begin(), rg.end(), rg.size());
+                return insert(pos, rg.begin(), rg.end(), ciel::distance(std::forward<R>(rg)));
             }
 
-            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), rg.size());
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
+                          ciel::distance(std::forward<R>(rg)));
         }
 
         if (std::is_lvalue_reference<R>::value) {
