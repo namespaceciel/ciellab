@@ -719,7 +719,7 @@ public:
 
     template<class R, enable_if_t<is_range<R>::value> = 0>
     iterator insert_range(const_iterator pos, R&& rg) {
-        if (is_range_with_size<R>::value && is_forward_iterator<decltype(rg.begin())>::value) {
+        if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
                 return insert(pos, rg.begin(), rg.end(), rg.size());
             }
