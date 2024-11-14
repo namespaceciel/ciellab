@@ -59,7 +59,6 @@ set(CMAKE_CXX_STANDARD_OPTIONS
     14
     17
     20
-    23
 )
 
 add_subdirectory(googletest)
@@ -78,8 +77,6 @@ function (add_ciellab_test CXX_STANDARD ENABLE_EXCEPTIONS ENABLE_RTTI)
         target_compile_options(${SUB_PROJECT_NAME} PRIVATE -std=c++17)
     elseif (CXX_STANDARD EQUAL 20)
         target_compile_options(${SUB_PROJECT_NAME} PRIVATE -std=c++20)
-    elseif (CXX_STANDARD EQUAL 23)
-        target_compile_options(${SUB_PROJECT_NAME} PRIVATE -std=c++23)
     else ()
         message(FATAL_ERROR "CXX_STANDARD ${CXX_STANDARD} is not available.")
     endif ()
