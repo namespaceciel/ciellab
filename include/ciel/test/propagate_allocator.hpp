@@ -55,25 +55,25 @@ public:
     template<class U>
     CIEL_NODISCARD friend bool operator==(
         const propagate_allocator& lhs, const propagate_allocator<U, POCCAValue, POCMAValue, POCSValue>& rhs) noexcept {
-        return !POCCAValue || !POCMAValue || !POCSValue || lhs.id() == rhs.id();
+        return lhs.id() == rhs.id();
     }
 
 }; // class propagate_allocator
 
 template<class T>
-using pocca_allocator = propagate_allocator<T, true, true, true>;
+using pocca_allocator = propagate_allocator<T, true, false, false>;
 template<class T>
-using non_pocca_allocator = propagate_allocator<T, false, true, true>;
+using non_pocca_allocator = propagate_allocator<T, false, false, false>;
 
 template<class T>
-using pocma_allocator = propagate_allocator<T, true, true, true>;
+using pocma_allocator = propagate_allocator<T, false, true, false>;
 template<class T>
-using non_pocma_allocator = propagate_allocator<T, true, false, true>;
+using non_pocma_allocator = propagate_allocator<T, false, false, false>;
 
 template<class T>
-using pocs_allocator = propagate_allocator<T, true, true, true>;
+using pocs_allocator = propagate_allocator<T, false, false, true>;
 template<class T>
-using non_pocs_allocator = propagate_allocator<T, true, true, false>;
+using non_pocs_allocator = propagate_allocator<T, false, false, false>;
 
 NAMESPACE_CIEL_END
 

@@ -17,8 +17,10 @@ void test_swap_impl(::testing::Test*, C& lhs, C& rhs) {
     ASSERT_EQ(lhs.size(), 200);
     ASSERT_EQ(rhs.size(), 100);
 
-    ASSERT_EQ(lhs.get_allocator(), rhs_copy.get_allocator());
-    ASSERT_EQ(rhs.get_allocator(), lhs_copy.get_allocator());
+    if (std::allocator_traits<typename C::allocator_type>::propagate_on_container_swap::value) {
+        ASSERT_EQ(lhs.get_allocator(), rhs_copy.get_allocator());
+        ASSERT_EQ(rhs.get_allocator(), lhs_copy.get_allocator());
+    }
 }
 
 } // namespace

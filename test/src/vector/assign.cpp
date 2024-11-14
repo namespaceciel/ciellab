@@ -63,7 +63,7 @@ TEST(vector, operator_move) {
         vector<Int, non_pocma_allocator<Int>> l2(5, 1, non_pocma_allocator<Int>(3));
         test_operator_move_impl(this, l, l2);
 
-        // ASSERT_EQ(l, std::initializer_list<Int>({-1, -1, -1}));
+        ASSERT_EQ(l, std::initializer_list<Int>({-1, -1, -1}));
     }
     {
         // propagate_on_container_move_assignment: true_type, equal
