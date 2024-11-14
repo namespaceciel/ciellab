@@ -22,11 +22,11 @@ public:
     range(const range&)            = default;
     range& operator=(const range&) = default;
 
-    Iter begin() const noexcept {
+    CIEL_NODISCARD Iter begin() const noexcept {
         return begin_;
     }
 
-    Iter end() const noexcept {
+    CIEL_NODISCARD Iter end() const noexcept {
         return end_;
     }
 
@@ -48,27 +48,27 @@ public:
     range(const range&)            = default;
     range& operator=(const range&) = default;
 
-    Iter begin() const noexcept {
+    CIEL_NODISCARD Iter begin() const noexcept {
         return begin_;
     }
 
-    Iter end() const noexcept {
+    CIEL_NODISCARD Iter end() const noexcept {
         return end_;
     }
 
-    size_t size() const noexcept {
+    CIEL_NODISCARD size_t size() const noexcept {
         return size_;
     }
 
 }; // class range<Iter, true>
 
 template<class Iter>
-range<Iter, false> make_range(Iter begin, Iter end) noexcept {
+CIEL_NODISCARD range<Iter, false> make_range(Iter begin, Iter end) noexcept {
     return range<Iter, false>(begin, end);
 }
 
 template<class Iter>
-range<Iter, true> make_range(Iter begin, Iter end, size_t size) noexcept {
+CIEL_NODISCARD range<Iter, true> make_range(Iter begin, Iter end, size_t size) noexcept {
     return range<Iter, true>(begin, end, size);
 }
 

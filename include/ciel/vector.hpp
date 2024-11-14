@@ -720,11 +720,11 @@ public:
     iterator insert_range(const_iterator pos, R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                return insert(pos, rg.begin(), rg.end(), ciel::distance(std::forward<R>(rg)));
+                return insert(pos, rg.begin(), rg.end(), ciel::distance(rg));
             }
 
             return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
-                          ciel::distance(std::forward<R>(rg)));
+                          ciel::distance(rg));
         }
 
         if (std::is_lvalue_reference<R>::value) {

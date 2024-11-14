@@ -37,12 +37,12 @@ static constexpr from_range_t from_range;
 // distance for range
 
 template<class R, enable_if_t<is_range_without_size<R>::value> = 0, class Iter = decltype(std::declval<R>().begin())>
-typename std::iterator_traits<Iter>::difference_type distance(R&& rg) {
+typename std::iterator_traits<Iter>::difference_type distance(const R& rg) {
     return std::distance(rg.begin(), rg.end());
 }
 
 template<class R, enable_if_t<is_range_with_size<R>::value> = 0, class Iter = decltype(std::declval<R>().begin())>
-typename std::iterator_traits<Iter>::difference_type distance(R&& rg) {
+typename std::iterator_traits<Iter>::difference_type distance(const R& rg) {
     return rg.size();
 }
 

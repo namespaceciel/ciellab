@@ -33,7 +33,7 @@ void test_try_append_range_impl(::testing::Test*) {
         C v{0, 1};
         std::array<T, 5> arr{0, 1, 2, 3, 4};
         auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
-        ASSERT_EQ(v.try_append_range(std::move(r)), r.end());
+        ASSERT_EQ(v.try_append_range(std::move(r)), r.end()); // NOLINT(bugprone-use-after-move)
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 0, 1, 2, 3, 4}));
         if (!std::is_trivial<T>::value) {
             ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
@@ -50,7 +50,7 @@ void test_try_append_range_impl(::testing::Test*) {
         C v{0, 1, 2, 3, 4};
         std::array<T, 5> arr{0, 1, 2, 3, 4};
         auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
-        ASSERT_EQ(*v.try_append_range(std::move(r)), 3);
+        ASSERT_EQ(*v.try_append_range(std::move(r)), 3); // NOLINT(bugprone-use-after-move)
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 0, 1, 2}));
         if (!std::is_trivial<T>::value) {
             ASSERT_TRUE(std::equal(arr.begin(), arr.begin() + 3, il.begin()));
@@ -68,7 +68,7 @@ void test_try_append_range_impl(::testing::Test*) {
         C v{0, 1};
         std::array<T, 5> arr{0, 1, 2, 3, 4};
         auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
-        ASSERT_EQ(v.try_append_range(std::move(r)), r.end());
+        ASSERT_EQ(v.try_append_range(std::move(r)), r.end()); // NOLINT(bugprone-use-after-move)
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 0, 1, 2, 3, 4}));
         if (!std::is_trivial<T>::value) {
             ASSERT_TRUE(std::equal(arr.begin(), arr.end(), il.begin()));
@@ -85,7 +85,7 @@ void test_try_append_range_impl(::testing::Test*) {
         C v{0, 1, 2, 3, 4};
         std::array<T, 5> arr{0, 1, 2, 3, 4};
         auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
-        ASSERT_EQ(*v.try_append_range(std::move(r)), 3);
+        ASSERT_EQ(*v.try_append_range(std::move(r)), 3); // NOLINT(bugprone-use-after-move)
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4, 0, 1, 2}));
         if (!std::is_trivial<T>::value) {
             ASSERT_TRUE(std::equal(arr.begin(), arr.begin() + 3, il.begin()));

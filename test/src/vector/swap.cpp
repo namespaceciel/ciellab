@@ -3,6 +3,8 @@
 #include <ciel/test/propagate_allocator.hpp>
 #include <ciel/vector.hpp>
 
+#include <memory>
+
 using namespace ciel;
 
 namespace {

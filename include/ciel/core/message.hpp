@@ -107,7 +107,7 @@ public:
 
 template<size_t BufferSize = 512, class... Args>
 void print(std::FILE* stream, const char* msg, Args... args) noexcept {
-    message_builder<BufferSize> mb(msg, args...);
+    const message_builder<BufferSize> mb(msg, args...);
     CIEL_UNUSED(std::fprintf(stream, "%s", mb.get()));
 }
 
@@ -118,7 +118,7 @@ void print(const char* msg, Args... args) noexcept {
 
 template<size_t BufferSize = 512, class... Args>
 void print(char* buffer, const char* msg, Args... args) noexcept {
-    message_builder<BufferSize> mb(msg, args...);
+    const message_builder<BufferSize> mb(msg, args...);
     ciel::memmove(buffer, mb.get(), mb.size() + 1);
 }
 

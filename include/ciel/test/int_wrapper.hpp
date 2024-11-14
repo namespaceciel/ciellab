@@ -18,13 +18,13 @@ public:
     int_wrapper(const int i = 0) noexcept
         : i_(i) {}
 
-    int_wrapper(const int_wrapper& other) noexcept
+    int_wrapper(const int_wrapper& other) noexcept // NOLINT(modernize-use-equals-default)
         : i_(other.i_) {}
 
     int_wrapper(int_wrapper&& other) noexcept(IsNothrowMovable)
         : i_(ciel::exchange(other.i_, -1)) {}
 
-    int_wrapper& operator=(const int_wrapper& other) noexcept {
+    int_wrapper& operator=(const int_wrapper& other) noexcept { // NOLINT(modernize-use-equals-default)
         i_ = other.i_;
         return *this;
     }

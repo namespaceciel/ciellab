@@ -3,6 +3,8 @@
 #include <ciel/split_buffer.hpp>
 #include <ciel/test/propagate_allocator.hpp>
 
+#include <memory>
+
 using namespace ciel;
 
 namespace {

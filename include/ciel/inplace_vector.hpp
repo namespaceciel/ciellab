@@ -531,11 +531,10 @@ public:
     void assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                assign(rg.begin(), rg.end(), ciel::distance(std::forward<R>(rg)));
+                assign(rg.begin(), rg.end(), ciel::distance(rg));
 
             } else {
-                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
-                       ciel::distance(std::forward<R>(rg)));
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), ciel::distance(rg));
             }
 
         } else {
@@ -718,8 +717,9 @@ private:
 
         if (size() + count > capacity()) {
             CIEL_THROW_EXCEPTION(std::bad_alloc{});
+        }
 
-        } else if (pos == end_()) { // equal to emplace_back
+        if (pos == end_()) { // equal to emplace_back
             append_callback();
 
         } else {
@@ -914,11 +914,11 @@ public:
     iterator insert_range(const_iterator pos, R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                return insert(pos, rg.begin(), rg.end(), ciel::distance(std::forward<R>(rg)));
+                return insert(pos, rg.begin(), rg.end(), ciel::distance(rg));
             }
 
             return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
-                          ciel::distance(std::forward<R>(rg)));
+                          ciel::distance(rg));
         }
 
         if (std::is_lvalue_reference<R>::value) {
@@ -1001,7 +1001,7 @@ public:
 
         if (is_contiguous_iterator<Iter>::value && std::is_same<value_type, U>::value
             && std::is_trivially_copy_constructible<value_type>::value) {
-            const size_type count = std::min<size_type>(ciel::distance(std::forward<R>(rg)), capacity() - size());
+            const size_type count = std::min<size_type>(ciel::distance(rg), capacity() - size());
             if (count != 0) {
                 ciel::memcpy(end(), ciel::to_address(rg.begin()), count * sizeof(value_type));
                 this->size_ += count;

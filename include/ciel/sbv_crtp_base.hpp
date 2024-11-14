@@ -250,11 +250,11 @@ struct sbv_crtp_base {
     void assign_range(R&& rg) {
         if (is_range_with_size<R>::value) {
             if (std::is_lvalue_reference<R>::value) {
-                this_()->assign(rg.begin(), rg.end(), ciel::distance(std::forward<R>(rg)));
+                this_()->assign(rg.begin(), rg.end(), ciel::distance(rg));
 
             } else {
                 this_()->assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
-                                ciel::distance(std::forward<R>(rg)));
+                                ciel::distance(rg));
             }
 
         } else {
