@@ -11,19 +11,19 @@ NAMESPACE_CIEL_BEGIN
 
 // is_range
 
-template<class T, class = void>
+template<class T, class = void, class = void>
 struct is_range : std::false_type {};
 
 template<class T>
-struct is_range<T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end())>> : std::true_type {};
+struct is_range<T, void_t<decltype(std::declval<T>().begin())>, void_t<decltype(std::declval<T>().end())>>
+    : std::true_type {};
 
-template<class T, class = void>
+template<class T, class = void, class = void, class = void>
 struct is_range_with_size : std::false_type {};
 
 template<class T>
-struct is_range_with_size<
-    T, void_t<decltype(std::declval<T>().begin(), std::declval<T>().end(), std::declval<T>().size())>>
-    : std::true_type {};
+struct is_range_with_size<T, void_t<decltype(std::declval<T>().begin())>, void_t<decltype(std::declval<T>().end())>,
+                          void_t<decltype(std::declval<T>().size())>> : std::true_type {};
 
 template<class T>
 struct is_range_without_size : std::integral_constant<bool, is_range<T>::value && !is_range_with_size<T>::value> {};

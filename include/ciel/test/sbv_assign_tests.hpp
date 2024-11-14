@@ -44,14 +44,14 @@ inline void test_assign_iterator_range_impl(::testing::Test*, const C& c) {
     {
         auto v = c;
         std::array<T, 5> arr{0, 1, 2, 3, 4};
-        auto r = ciel::make_range(arr.begin(), arr.end());
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
         v.assign_range(r);
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
     }
     {
         auto v = c;
         std::array<T, 5> arr{0, 1, 2, 3, 4};
-        auto r = ciel::make_range(arr.begin(), arr.end());
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()});
         v.assign_range(std::move(r));
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
         if (!std::is_trivial<T>::value) {
@@ -62,14 +62,14 @@ inline void test_assign_iterator_range_impl(::testing::Test*, const C& c) {
     {
         auto v = c;
         std::array<T, 5> arr{0, 1, 2, 3, 4};
-        auto r = ciel::make_range(arr.begin(), arr.end(), arr.size());
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
         v.assign_range(r);
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
     }
     {
         auto v = c;
         std::array<T, 5> arr{0, 1, 2, 3, 4};
-        auto r = ciel::make_range(arr.begin(), arr.end(), arr.size());
+        auto r = ciel::make_range(Iter{arr.data()}, Iter{arr.data() + arr.size()}, arr.size());
         v.assign_range(std::move(r));
         ASSERT_EQ(v, std::initializer_list<T>({0, 1, 2, 3, 4}));
         if (!std::is_trivial<T>::value) {

@@ -25,7 +25,7 @@ private:
     pointer ptr;
 
     static value_type invalid() noexcept {
-        return value_type{~0};
+        return value_type{-1234};
     }
 
 public:
@@ -37,7 +37,9 @@ public:
     void go_next() noexcept {
         CIEL_PRECONDITION(ptr != nullptr);
         CIEL_PRECONDITION(*ptr != invalid());
-        *ptr = invalid();
+        if (*ptr != -1) {
+            *ptr = invalid();
+        }
         ++ptr;
     }
 

@@ -9,6 +9,8 @@ NAMESPACE_CIEL_BEGIN
 
 template<class Iter, bool HasSize>
 class range {
+    static_assert(!std::is_reference<Iter>::value, "");
+
 private:
     Iter begin_;
     Iter end_;
@@ -32,6 +34,8 @@ public:
 
 template<class Iter>
 class range<Iter, true> {
+    static_assert(!std::is_reference<Iter>::value, "");
+
 private:
     Iter begin_;
     Iter end_;
