@@ -9,6 +9,9 @@
 #include <cstdio>
 #include <type_traits>
 #include <utility>
+#ifndef CIEL_HAS_EXCEPTIONS
+#  include <cstdlib>
+#endif
 
 NAMESPACE_CIEL_BEGIN
 
@@ -134,7 +137,6 @@ void println(const char* msg, Args... args) noexcept {
 #ifdef CIEL_HAS_EXCEPTIONS
 #  define CIEL_THROW_EXCEPTION(e) throw e
 #else
-#  include <cstdlib>
 #  define CIEL_THROW_EXCEPTION(e)                \
       do {                                       \
           ciel::println(stderr, "{}", e.what()); \
