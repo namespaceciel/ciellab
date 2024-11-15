@@ -15,7 +15,6 @@
 #include <ciel/core/message.hpp>
 #include <ciel/demangle.hpp>
 #include <ciel/range_destroyer.hpp>
-#include <ciel/sbv_crtp_base.hpp>
 #include <ciel/split_buffer.hpp>
 #include <ciel/to_address.hpp>
 
@@ -29,92 +28,159 @@
 NAMESPACE_CIEL_BEGIN
 
 template<class T, class Allocator = std::allocator<T>>
-class vector : private sbv_crtp_base<T, Allocator, vector<T, Allocator>> {
-    static_assert(!std::is_reference<Allocator>::value, "");
+class vector {
+    static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
 
-    using base_type = sbv_crtp_base<T, Allocator, vector<T, Allocator>>;
-
-public: // alias
-    using typename base_type::allocator_type;
-    using typename base_type::const_iterator;
-    using typename base_type::const_pointer;
-    using typename base_type::const_reference;
-    using typename base_type::const_reverse_iterator;
-    using typename base_type::difference_type;
-    using typename base_type::iterator;
-    using typename base_type::pointer;
-    using typename base_type::reference;
-    using typename base_type::reverse_iterator;
-    using typename base_type::size_type;
-    using typename base_type::value_type;
+public:
+    using value_type             = T;
+    using allocator_type         = Allocator;
+    using size_type              = size_t;
+    using difference_type        = ptrdiff_t;
+    using reference              = value_type&;
+    using const_reference        = const value_type&;
+    using pointer                = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer          = typename std::allocator_traits<allocator_type>::const_pointer;
+    using iterator               = pointer;
+    using const_iterator         = const_pointer;
+    using reverse_iterator       = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 private:
-    using base_type::should_pass_by_value;
-    using typename base_type::alloc_traits;
-    using typename base_type::lvalue;
-    using typename base_type::rvalue;
+    using alloc_traits = std::allocator_traits<allocator_type>;
 
-private: // members
     pointer begin_{nullptr};
     pointer end_{nullptr};
-    compressed_pair<pointer, Allocator> end_cap_alloc_{nullptr, default_init};
+    compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
 
-private: // friends
-    friend base_type;
+    CIEL_NODISCARD pointer& end_cap_() noexcept {
+        return end_cap_alloc_.first();
+    }
 
-private: // private functions
-    using base_type::allocator_;
-    using base_type::construct;
-    using base_type::construct_at_end;
-    using base_type::destroy;
-    using base_type::end_cap_;
-    using base_type::internal_value;
-    using base_type::recommend_cap;
-    using base_type::reset;
-    using base_type::swap_alloc;
+    CIEL_NODISCARD const pointer& end_cap_() const noexcept {
+        return end_cap_alloc_.first();
+    }
 
-public: // public functions
-    // constructor
-    // destructor
-    // operator=
-    using base_type::operator=;
-    // assign
-    using base_type::assign;
-    using base_type::assign_range;
-    using base_type::at;
-    using base_type::get_allocator;
-    using base_type::operator[];
-    using base_type::back;
-    using base_type::begin;
-    using base_type::cbegin;
-    using base_type::cend;
-    using base_type::crbegin;
-    using base_type::crend;
-    using base_type::data;
-    using base_type::empty;
-    using base_type::end;
-    using base_type::front;
-    using base_type::max_size;
-    using base_type::rbegin;
-    using base_type::rend;
-    using base_type::size;
-    // reserve
-    // capacity
-    // shrink_to_fit
-    using base_type::clear;
-    // insert
-    // insert_range
-    // emplace
-    using base_type::emplace_back;
-    using base_type::erase;
-    using base_type::push_back;
-    using base_type::unchecked_emplace_back;
-    // append_range
-    using base_type::pop_back;
-    // resize
-    // swap
+    allocator_type& allocator_() noexcept { // NOLINT(modernize-use-nodiscard)
+        return end_cap_alloc_.second();
+    }
 
-private:
+    const allocator_type& allocator_() const noexcept { // NOLINT(modernize-use-nodiscard)
+        return end_cap_alloc_.second();
+    }
+
+    static constexpr bool should_pass_by_value =
+        std::is_trivially_copyable<value_type>::value && sizeof(value_type) <= 16;
+    using lvalue = conditional_t<should_pass_by_value, value_type, const value_type&>;
+    using rvalue = conditional_t<should_pass_by_value, value_type, value_type&&>;
+
+    CIEL_NODISCARD bool internal_value(const value_type& value, pointer begin) const noexcept {
+        if (should_pass_by_value) {
+            return false;
+        }
+
+        if CIEL_UNLIKELY (ciel::to_address(begin) <= std::addressof(value)
+                          && std::addressof(value) < ciel::to_address(end_)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    CIEL_NODISCARD size_type recommend_cap(const size_type new_size) const {
+        CIEL_PRECONDITION(new_size > 0);
+
+        const size_type ms = max_size();
+
+        if CIEL_UNLIKELY (new_size > ms) {
+            CIEL_THROW_EXCEPTION(std::length_error("ciel::vector expanding size is beyond max_size"));
+        }
+
+        const size_type cap = capacity();
+
+        if CIEL_UNLIKELY (cap >= ms / 2) {
+            return ms;
+        }
+
+        return std::max(cap * 2, new_size);
+    }
+
+    template<class... Args>
+    void construct(pointer p, Args&&... args) {
+        alloc_traits::construct(allocator_(), ciel::to_address(p), std::forward<Args>(args)...);
+    }
+
+    void destroy(pointer p) noexcept {
+        CIEL_PRECONDITION(begin_ <= p);
+        CIEL_PRECONDITION(p < end_);
+
+        alloc_traits::destroy(allocator_(), ciel::to_address(p));
+    }
+
+    pointer destroy(pointer first, pointer last) noexcept {
+        CIEL_PRECONDITION(begin_ <= first);
+        CIEL_PRECONDITION(first <= last);
+        CIEL_PRECONDITION(last <= end_);
+
+        const pointer res = first;
+
+        for (; first != last; ++first) {
+            alloc_traits::destroy(allocator_(), ciel::to_address(first));
+        }
+
+        return res;
+    }
+
+    void construct_at_end(const size_type n) {
+        CIEL_PRECONDITION(end_ + n <= end_cap_());
+
+        for (size_type i = 0; i < n; ++i) {
+            unchecked_emplace_back();
+        }
+    }
+
+    void construct_at_end(const size_type n, lvalue value) {
+        CIEL_PRECONDITION(end_ + n <= end_cap_());
+
+        for (size_type i = 0; i < n; ++i) {
+            unchecked_emplace_back(value);
+        }
+    }
+
+    template<class Iter>
+    void construct_at_end(Iter first, Iter last) {
+        ciel::uninitialized_copy(allocator_(), first, last, end_);
+    }
+
+    void set_nullptr() noexcept {
+        begin_     = nullptr;
+        end_       = nullptr;
+        end_cap_() = nullptr;
+    }
+
+    void init(const size_type count) {
+        CIEL_PRECONDITION(count != 0);
+        CIEL_PRECONDITION(begin_ == nullptr);
+        CIEL_PRECONDITION(end_ == nullptr);
+        CIEL_PRECONDITION(end_cap_() == nullptr);
+
+        begin_     = alloc_traits::allocate(allocator_(), count);
+        end_cap_() = begin_ + count;
+        end_       = begin_;
+    }
+
+    void reset() noexcept {
+        do_destroy();
+        set_nullptr();
+    }
+
+    void reset(const size_type count) {
+        CIEL_PRECONDITION(count != 0);
+
+        do_destroy();
+        set_nullptr(); // It's neccessary since allocation would throw.
+        init(count);
+    }
+
     void swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept(
         is_trivially_relocatable<value_type>::value || std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() == size());
@@ -184,30 +250,6 @@ private:
         sb.set_nullptr();
     }
 
-    void do_destroy() noexcept {
-        if (begin_) {
-            clear();
-            alloc_traits::deallocate(allocator_(), begin_, capacity());
-        }
-    }
-
-    void set_nullptr() noexcept {
-        begin_     = nullptr;
-        end_       = nullptr;
-        end_cap_() = nullptr;
-    }
-
-    void init(const size_type count) {
-        CIEL_PRECONDITION(count != 0);
-        CIEL_PRECONDITION(begin_ == nullptr);
-        CIEL_PRECONDITION(end_ == nullptr);
-        CIEL_PRECONDITION(end_cap_() == nullptr);
-
-        begin_     = alloc_traits::allocate(allocator_(), count);
-        end_cap_() = begin_ + count;
-        end_       = begin_;
-    }
-
     template<class... Args>
     void emplace_back_aux(Args&&... args) {
         if (end_ == end_cap_()) {
@@ -218,6 +260,38 @@ private:
 
         } else {
             unchecked_emplace_back(std::forward<Args>(args)...);
+        }
+    }
+
+    template<class... Args>
+    void unchecked_emplace_back_aux(Args&&... args) {
+        CIEL_PRECONDITION(end_ < end_cap_());
+
+        construct(end_, std::forward<Args>(args)...);
+        ++end_;
+    }
+
+    void copy_assign_alloc(const vector& other, std::true_type) {
+        if (allocator_() != other.allocator_()) {
+            reset();
+        }
+
+        allocator_() = other.allocator_();
+    }
+
+    void copy_assign_alloc(const vector&, std::false_type) noexcept {}
+
+    void swap_alloc(vector& other, std::true_type) noexcept {
+        using std::swap;
+        swap(allocator_(), other.allocator_());
+    }
+
+    void swap_alloc(vector&, std::false_type) noexcept {}
+
+    void do_destroy() noexcept {
+        if (begin_) {
+            clear();
+            alloc_traits::deallocate(allocator_(), begin_, capacity());
         }
     }
 
@@ -325,12 +399,30 @@ public:
     }
 
     vector& operator=(const vector& other) {
-        return static_cast<base_type&>(*this) = other; // NOLINT(misc-unconventional-assign-operator)
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
+            return *this;
+        }
+
+        copy_assign_alloc(other, typename alloc_traits::propagate_on_container_copy_assignment{});
+        assign(other.begin(), other.end());
+
+        return *this;
     }
 
     vector& operator=(vector&& other) noexcept(alloc_traits::propagate_on_container_move_assignment::value
                                                || alloc_traits::is_always_equal::value) {
-        return static_cast<base_type&>(*this) = std::move(other); // NOLINT(misc-unconventional-assign-operator)
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
+            return *this;
+        }
+
+        if (alloc_traits::propagate_on_container_move_assignment::value || allocator_() == other.allocator_()) {
+            swap(other);
+
+        } else {
+            assign(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
+        }
+
+        return *this;
     }
 
     void assign(const size_type count, lvalue value) {
@@ -378,13 +470,191 @@ private:
     }
 
 public:
+    vector& operator=(std::initializer_list<value_type> ilist) {
+        assign(ilist.begin(), ilist.end(), ilist.size());
+        return *this;
+    }
+
+    template<class Iter, enable_if_t<is_forward_iterator<Iter>::value> = 0>
+    void assign(Iter first, Iter last) {
+        const size_type count = std::distance(first, last);
+
+        assign(first, last, count);
+    }
+
+    template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
+    void assign(Iter first, Iter last) {
+        pointer p = begin_;
+        for (; first != last && p != end_; ++first) {
+            *p = *first;
+            ++p;
+        }
+
+        if (p != end_) {
+            end_ = destroy(p, end_);
+
+        } else {
+            for (; first != last; ++first) {
+                emplace_back(*first);
+            }
+        }
+    }
+
+    void assign(std::initializer_list<value_type> ilist) {
+        assign(ilist.begin(), ilist.end(), ilist.size());
+    }
+
+    template<class R, enable_if_t<is_range<R>::value> = 0>
+    void assign_range(R&& rg) {
+        if (is_range_with_size<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
+                assign(rg.begin(), rg.end(), ciel::distance(rg));
+
+            } else {
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()), ciel::distance(rg));
+            }
+
+        } else {
+            if (std::is_lvalue_reference<R>::value) {
+                assign(rg.begin(), rg.end());
+
+            } else {
+                assign(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+            }
+        }
+    }
+
+    allocator_type get_allocator() const noexcept { // NOLINT(modernize-use-nodiscard)
+        return allocator_();
+    }
+
+    CIEL_NODISCARD reference at(const size_type pos) {
+        if CIEL_UNLIKELY (pos >= size()) {
+            CIEL_THROW_EXCEPTION(std::out_of_range("ciel::vector::at pos is not within the range"));
+        }
+
+        return begin_[pos];
+    }
+
+    CIEL_NODISCARD const_reference at(const size_type pos) const {
+        if CIEL_UNLIKELY (pos >= size()) {
+            CIEL_THROW_EXCEPTION(std::out_of_range("ciel::vector::at pos is not within the range"));
+        }
+
+        return begin_[pos];
+    }
+
+    CIEL_NODISCARD reference operator[](const size_type pos) {
+        CIEL_PRECONDITION(pos < size());
+
+        return begin_[pos];
+    }
+
+    CIEL_NODISCARD const_reference operator[](const size_type pos) const {
+        CIEL_PRECONDITION(pos < size());
+
+        return begin_[pos];
+    }
+
+    CIEL_NODISCARD reference front() {
+        CIEL_PRECONDITION(!empty());
+
+        return begin_[0];
+    }
+
+    CIEL_NODISCARD const_reference front() const {
+        CIEL_PRECONDITION(!empty());
+
+        return begin_[0];
+    }
+
+    CIEL_NODISCARD reference back() {
+        CIEL_PRECONDITION(!empty());
+
+        return *(end_ - 1);
+    }
+
+    CIEL_NODISCARD const_reference back() const {
+        CIEL_PRECONDITION(!empty());
+
+        return *(end_ - 1);
+    }
+
+    CIEL_NODISCARD T* data() noexcept {
+        return ciel::to_address(begin_);
+    }
+
+    CIEL_NODISCARD const T* data() const noexcept {
+        return ciel::to_address(begin_);
+    }
+
+    CIEL_NODISCARD iterator begin() noexcept {
+        return iterator(begin_);
+    }
+
+    CIEL_NODISCARD const_iterator begin() const noexcept {
+        return const_iterator(begin_);
+    }
+
+    CIEL_NODISCARD const_iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    CIEL_NODISCARD iterator end() noexcept {
+        return iterator(end_);
+    }
+
+    CIEL_NODISCARD const_iterator end() const noexcept {
+        return const_iterator(end_);
+    }
+
+    CIEL_NODISCARD const_iterator cend() const noexcept {
+        return end();
+    }
+
+    CIEL_NODISCARD reverse_iterator rbegin() noexcept {
+        return reverse_iterator(end());
+    }
+
+    CIEL_NODISCARD const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    CIEL_NODISCARD const_reverse_iterator crbegin() const noexcept {
+        return rbegin();
+    }
+
+    CIEL_NODISCARD reverse_iterator rend() noexcept {
+        return reverse_iterator(begin());
+    }
+
+    CIEL_NODISCARD const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
+
+    CIEL_NODISCARD const_reverse_iterator crend() const noexcept {
+        return rend();
+    }
+
+    CIEL_NODISCARD bool empty() const noexcept {
+        return begin_ == end_;
+    }
+
+    CIEL_NODISCARD size_type size() const noexcept {
+        return end_ - begin_;
+    }
+
+    CIEL_NODISCARD size_type max_size() const noexcept {
+        return std::min<size_type>(std::numeric_limits<difference_type>::max(), alloc_traits::max_size(allocator_()));
+    }
+
     void reserve(const size_type new_cap) {
         if (new_cap <= capacity()) {
             return;
         }
 
         if CIEL_UNLIKELY (new_cap > max_size()) {
-            CIEL_THROW_EXCEPTION(std::length_error{"ciel::vector reserve capacity beyond max_size"});
+            CIEL_THROW_EXCEPTION(std::length_error{"ciel::vector::reserve capacity beyond max_size"});
         }
 
         split_buffer<value_type, allocator_type&> sb(allocator_());
@@ -414,6 +684,10 @@ public:
             alloc_traits::deallocate(allocator_(), begin_, capacity());
             set_nullptr();
         }
+    }
+
+    void clear() noexcept {
+        end_ = destroy(begin_, end_);
     }
 
 private:
@@ -485,51 +759,6 @@ private:
     }
 
 public:
-    template<class... Args>
-    iterator emplace(const_iterator p, Args&&... args) {
-        const pointer pos = begin_ + (p - begin());
-
-        return insert_impl(
-            pos, 1,
-            [&](split_buffer<value_type, allocator_type&>& sb) {
-                sb.unchecked_emplace_back(std::forward<Args>(args)...);
-            },
-            [&] {
-                unchecked_emplace_back(std::forward<Args>(args)...);
-            },
-            [&] {
-                unreachable();
-            },
-            [&] {
-                return false;
-            });
-    }
-
-    template<class U, class... Args>
-    iterator emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
-        const pointer pos = begin_ + (p - begin());
-
-        return insert_impl(
-            pos, 1,
-            [&](split_buffer<value_type, allocator_type&>& sb) {
-                sb.unchecked_emplace_back(il, std::forward<Args>(args)...);
-            },
-            [&] {
-                unchecked_emplace_back(il, std::forward<Args>(args)...);
-            },
-            [&] {
-                unreachable();
-            },
-            [&] {
-                return false;
-            });
-    }
-
-    template<class U, enable_if_t<std::is_same<remove_cvref_t<U>, value_type>::value> = 0>
-    iterator emplace(const_iterator p, U&& value) {
-        return insert(p, std::forward<U>(value));
-    }
-
     iterator insert(const_iterator p, lvalue value) {
         const pointer pos = begin_ + (p - begin());
 
@@ -623,10 +852,6 @@ public:
         return insert(pos, first, last, std::distance(first, last));
     }
 
-    iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) {
-        return insert(pos, ilist.begin(), ilist.end(), ilist.size());
-    }
-
     // Construct them all at the end at first, then rotate them to the right place.
     template<class Iter, enable_if_t<is_exactly_input_iterator<Iter>::value> = 0>
     iterator insert(const_iterator p, Iter first, Iter last) {
@@ -641,6 +866,73 @@ public:
 
         std::rotate(begin() + pos_index, begin() + old_size, end());
         return begin() + pos_index;
+    }
+
+    iterator insert(const_iterator pos, std::initializer_list<value_type> ilist) {
+        return insert(pos, ilist.begin(), ilist.end(), ilist.size());
+    }
+
+    template<class R, enable_if_t<is_range<R>::value> = 0>
+    iterator insert_range(const_iterator pos, R&& rg) {
+        if (is_range_with_size<R>::value) {
+            if (std::is_lvalue_reference<R>::value) {
+                return insert(pos, rg.begin(), rg.end(), ciel::distance(rg));
+            }
+
+            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
+                          ciel::distance(rg));
+        }
+
+        if (std::is_lvalue_reference<R>::value) {
+            return insert(pos, rg.begin(), rg.end());
+        }
+
+        return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
+    }
+
+    template<class... Args>
+    iterator emplace(const_iterator p, Args&&... args) {
+        const pointer pos = begin_ + (p - begin());
+
+        return insert_impl(
+            pos, 1,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.unchecked_emplace_back(std::forward<Args>(args)...);
+            },
+            [&] {
+                unchecked_emplace_back(std::forward<Args>(args)...);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
+    }
+
+    template<class U, class... Args>
+    iterator emplace(const_iterator p, std::initializer_list<U> il, Args&&... args) {
+        const pointer pos = begin_ + (p - begin());
+
+        return insert_impl(
+            pos, 1,
+            [&](split_buffer<value_type, allocator_type&>& sb) {
+                sb.unchecked_emplace_back(il, std::forward<Args>(args)...);
+            },
+            [&] {
+                unchecked_emplace_back(il, std::forward<Args>(args)...);
+            },
+            [&] {
+                unreachable();
+            },
+            [&] {
+                return false;
+            });
+    }
+
+    template<class U, enable_if_t<std::is_same<remove_cvref_t<U>, value_type>::value> = 0>
+    iterator emplace(const_iterator p, U&& value) {
+        return insert(p, std::forward<U>(value));
     }
 
 private:
@@ -676,6 +968,78 @@ private:
     }
 
 public:
+    iterator erase(const_iterator p) {
+        const pointer pos = begin_ + (p - begin());
+        CIEL_PRECONDITION(begin_ <= pos);
+        CIEL_PRECONDITION(pos < end_);
+
+        return erase_impl(pos, pos + 1, 1);
+    }
+
+    iterator erase(const_iterator f, const_iterator l) {
+        const pointer first = begin_ + (f - begin());
+        const pointer last  = begin_ + (l - begin());
+        CIEL_PRECONDITION(begin_ <= first);
+        CIEL_PRECONDITION(last <= end_);
+
+        const auto count = last - first;
+
+        if CIEL_UNLIKELY (count <= 0) {
+            return last;
+        }
+
+        return erase_impl(first, last, count);
+    }
+
+    void push_back(lvalue value) {
+        emplace_back(value);
+    }
+
+    template<bool Valid = !should_pass_by_value, enable_if_t<Valid> = 0>
+    void push_back(rvalue value) {
+        emplace_back(std::move(value));
+    }
+
+    template<class... Args>
+    reference emplace_back(Args&&... args) {
+        emplace_back_aux(std::forward<Args>(args)...);
+
+        return back();
+    }
+
+    template<class U, class... Args>
+    reference emplace_back(std::initializer_list<U> il, Args&&... args) {
+        emplace_back_aux(il, std::forward<Args>(args)...);
+
+        return back();
+    }
+
+    template<class... Args>
+    reference unchecked_emplace_back(Args&&... args) {
+        unchecked_emplace_back_aux(std::forward<Args>(args)...);
+
+        return back();
+    }
+
+    template<class U, class... Args>
+    reference unchecked_emplace_back(std::initializer_list<U> il, Args&&... args) {
+        unchecked_emplace_back_aux(il, std::forward<Args>(args)...);
+
+        return back();
+    }
+
+    template<class R, enable_if_t<is_range<R>::value> = 0>
+    void append_range(R&& rg) {
+        insert_range(end(), std::forward<R>(rg));
+    }
+
+    void pop_back() noexcept {
+        CIEL_PRECONDITION(!empty());
+
+        destroy(end_ - 1);
+        --end_;
+    }
+
     void resize(const size_type count) {
         if (size() >= count) {
             end_ = destroy(begin_ + count, end_);
@@ -709,29 +1073,6 @@ public:
         swap(end_cap_(), other.end_cap_());
 
         swap_alloc(other, typename alloc_traits::propagate_on_container_swap{});
-    }
-
-    template<class R, enable_if_t<is_range<R>::value> = 0>
-    void append_range(R&& rg) {
-        insert_range(end(), std::forward<R>(rg));
-    }
-
-    template<class R, enable_if_t<is_range<R>::value> = 0>
-    iterator insert_range(const_iterator pos, R&& rg) {
-        if (is_range_with_size<R>::value) {
-            if (std::is_lvalue_reference<R>::value) {
-                return insert(pos, rg.begin(), rg.end(), ciel::distance(rg));
-            }
-
-            return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()),
-                          ciel::distance(rg));
-        }
-
-        if (std::is_lvalue_reference<R>::value) {
-            return insert(pos, rg.begin(), rg.end());
-        }
-
-        return insert(pos, std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
     }
 
 }; // class vector
