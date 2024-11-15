@@ -25,16 +25,6 @@ set(SOURCES
     src/inplace_vector/insert.cpp
     src/inplace_vector/trivial.cpp
     src/inplace_vector/try_append_range.cpp
-    src/split_buffer/assign.cpp
-    src/split_buffer/compare.cpp
-    src/split_buffer/constructor.cpp
-    src/split_buffer/data.cpp
-    src/split_buffer/emplace_back.cpp
-    src/split_buffer/empty.cpp
-    src/split_buffer/erase.cpp
-    src/split_buffer/print.cpp
-    src/split_buffer/resize.cpp
-    src/split_buffer/swap.cpp
     src/vector/assign.cpp
     src/vector/capacity.cpp
     src/vector/compare.cpp

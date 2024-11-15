@@ -204,9 +204,9 @@ private:
 
         begin_     = sb.begin_cap_;
         end_       = sb.end_;
-        end_cap_() = sb.end_cap_();
+        end_cap_() = sb.end_cap_;
 
-        sb.set_nullptr();
+        sb.begin_cap_ = nullptr; // enough for split_buffer's destructor
     }
 
     void swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
@@ -245,16 +245,15 @@ private:
 
         begin_     = sb.begin_cap_;
         end_       = sb.end_;
-        end_cap_() = sb.end_cap_();
+        end_cap_() = sb.end_cap_;
 
-        sb.set_nullptr();
+        sb.begin_cap_ = nullptr; // enough for split_buffer's destructor
     }
 
     template<class... Args>
     void emplace_back_aux(Args&&... args) {
         if (end_ == end_cap_()) {
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + 1), size());
+            split_buffer<value_type, allocator_type&> sb(allocator_(), recommend_cap(size() + 1), size());
             sb.unchecked_emplace_back(std::forward<Args>(args)...);
             swap_out_buffer(std::move(sb));
 
@@ -657,8 +656,7 @@ public:
             CIEL_THROW_EXCEPTION(std::length_error{"ciel::vector::reserve capacity beyond max_size"});
         }
 
-        split_buffer<value_type, allocator_type&> sb(allocator_());
-        sb.reserve_cap_and_offset_to(new_cap, size());
+        split_buffer<value_type, allocator_type&> sb(allocator_(), new_cap, size());
         swap_out_buffer(std::move(sb));
     }
 
@@ -672,10 +670,8 @@ public:
         }
 
         if (size() > 0) {
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-
             CIEL_TRY {
-                sb.reserve_cap_and_offset_to(size(), size());
+                split_buffer<value_type, allocator_type&> sb(allocator_(), size(), size());
                 swap_out_buffer(std::move(sb));
             }
             CIEL_CATCH (...) {}
@@ -702,8 +698,7 @@ private:
         const size_type pos_index = pos - begin_;
 
         if (size() + count > capacity()) { // expansion
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(recommend_cap(size() + count), pos_index);
+            split_buffer<value_type, allocator_type&> sb(allocator_(), recommend_cap(size() + count), pos_index);
             expansion_callback(sb);
             swap_out_buffer(std::move(sb), pos);
 
@@ -1055,8 +1050,7 @@ public:
             end_ = destroy(begin_ + count, end_);
 
         } else if (count > capacity()) {
-            split_buffer<value_type, allocator_type&> sb(allocator_());
-            sb.reserve_cap_and_offset_to(count, size());
+            split_buffer<value_type, allocator_type&> sb(allocator_(), count, size());
             sb.construct_at_end(count - size(), value);
             swap_out_buffer(std::move(sb));
 
