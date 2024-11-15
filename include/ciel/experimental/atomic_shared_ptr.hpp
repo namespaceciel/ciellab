@@ -85,7 +85,7 @@ public:
     // Not an atomic operation, like any other atomics.
     atomic_shared_ptr(shared_ptr<T> desired) noexcept
         : counted_control_block_(desired.control_block_) {
-        desired.clear();
+        desired.release();
     }
 
     atomic_shared_ptr(const atomic_shared_ptr&)            = delete;
@@ -113,7 +113,7 @@ public:
 
     void store(shared_ptr<T> desired) noexcept {
         const counted_control_block new_control_block{desired.control_block_};
-        desired.clear();
+        desired.release();
 
         const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
@@ -148,7 +148,7 @@ public:
 
     CIEL_NODISCARD shared_ptr<T> exchange(shared_ptr<T> desired) noexcept {
         const counted_control_block new_control_block(desired.control_block_);
-        desired.clear();
+        desired.release();
 
         const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
 
@@ -165,7 +165,7 @@ public:
                 ecb->shared_count_release();
             }
 
-            desired.clear();
+            desired.release();
             return true;
         }
 

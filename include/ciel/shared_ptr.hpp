@@ -295,7 +295,7 @@ private:
     void enable_weak_this(...) noexcept {}
 
     // Only be used by atomic_shared_ptr.
-    void clear() noexcept {
+    void release() noexcept {
         ptr_           = nullptr;
         control_block_ = nullptr;
     }
