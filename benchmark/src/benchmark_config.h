@@ -147,17 +147,6 @@ void erase() noexcept {
 }
 
 template<class Container>
-void few_objects_emplace_back() {
-    for (int i = 0; i < 1000; ++i) {
-        Container c{50, 123};
-
-        for (int j = 0; j < 50; ++j) {
-            c.emplace_back(j);
-        }
-    }
-}
-
-template<class Container>
 void pop_and_shrink() {
     Container c(10000);
 
