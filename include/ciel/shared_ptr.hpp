@@ -5,6 +5,7 @@
 #include <ciel/core/aligned_storage.hpp>
 #include <ciel/core/compressed_pair.hpp>
 #include <ciel/core/config.hpp>
+#include <ciel/core/exchange.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/message.hpp>
 
@@ -254,8 +255,8 @@ private:
     template<class U, class Alloc, class... Args>
     friend shared_ptr<U> allocate_shared(const Alloc&, Args&&...);
 
-    element_type* ptr_;
-    shared_weak_count* control_block_;
+    element_type* ptr_{nullptr};
+    shared_weak_count* control_block_{nullptr};
 
     template<class Y, class Deleter, class Allocator>
     CIEL_NODISCARD shared_weak_count* alloc_control_block(Y* ptr, Deleter&& dlt, Allocator&& alloc) {
@@ -304,11 +305,9 @@ private:
           control_block_(control_block) {}
 
 public:
-    shared_ptr() noexcept
-        : ptr_(nullptr), control_block_(nullptr) {}
+    shared_ptr() = default;
 
-    shared_ptr(nullptr_t) noexcept
-        : ptr_(nullptr), control_block_(nullptr) {}
+    shared_ptr(nullptr_t) noexcept {}
 
     template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
     explicit shared_ptr(Y* ptr)
@@ -339,8 +338,7 @@ public:
     }
 
     template<class Deleter>
-    shared_ptr(nullptr_t ptr, Deleter d)
-        : ptr_(nullptr) {
+    shared_ptr(nullptr_t ptr, Deleter d) {
         CIEL_TRY {
             control_block_ = alloc_control_block(ptr_, std::move(d), std::allocator<T>());
         }
@@ -365,8 +363,7 @@ public:
     }
 
     template<class Deleter, class Alloc>
-    shared_ptr(nullptr_t ptr, Deleter d, Alloc alloc)
-        : ptr_(nullptr) {
+    shared_ptr(nullptr_t ptr, Deleter d, Alloc alloc) {
         CIEL_TRY {
             control_block_ = alloc_control_block(ptr_, std::move(d), std::move(alloc));
         }
@@ -386,9 +383,8 @@ public:
 
     template<class Y>
     shared_ptr(shared_ptr<Y>&& r, element_type* ptr) noexcept
-        : ptr_(ptr), control_block_(r.control_block_) {
-        r.ptr_           = nullptr;
-        r.control_block_ = nullptr;
+        : ptr_(ptr), control_block_(ciel::exchange(r.control_block_, nullptr)) {
+        r.ptr_ = nullptr;
     }
 
     shared_ptr(const shared_ptr& r) noexcept
@@ -407,17 +403,11 @@ public:
     }
 
     shared_ptr(shared_ptr&& r) noexcept
-        : ptr_(r.ptr_), control_block_(r.control_block_) {
-        r.ptr_           = nullptr;
-        r.control_block_ = nullptr;
-    }
+        : ptr_(ciel::exchange(r.ptr_, nullptr)), control_block_(ciel::exchange(r.control_block_, nullptr)) {}
 
     template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
     shared_ptr(shared_ptr<Y>&& r) noexcept
-        : ptr_(r.ptr_), control_block_(r.control_block_) {
-        r.ptr_           = nullptr;
-        r.control_block_ = nullptr;
-    }
+        : ptr_(ciel::exchange(r.ptr_, nullptr)), control_block_(ciel::exchange(r.control_block_, nullptr)) {}
 
     template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
     explicit shared_ptr(const weak_ptr<Y>& r)
@@ -434,9 +424,6 @@ public:
         : ptr_(r.get()) {
         if (ptr_ != nullptr) {
             control_block_ = alloc_control_block(ptr_, std::move(r.get_deleter()), std::allocator<T>());
-
-        } else {
-            control_block_ = nullptr;
         }
 
         enable_weak_this(r.get(), r.get());
@@ -593,8 +580,8 @@ public:
     using pointer      = element_type*;
 
 private:
-    element_type* ptr_;
-    shared_weak_count* control_block_;
+    element_type* ptr_{nullptr};
+    shared_weak_count* control_block_{nullptr};
 
 public:
     template<class>
@@ -602,8 +589,7 @@ public:
     template<class>
     friend class weak_ptr;
 
-    weak_ptr() noexcept
-        : ptr_(nullptr), control_block_(nullptr) {}
+    weak_ptr() = default;
 
     weak_ptr(const weak_ptr& r) noexcept
         : ptr_(r.ptr_), control_block_(r.control_block_) {
@@ -629,17 +615,11 @@ public:
     }
 
     weak_ptr(weak_ptr&& r) noexcept
-        : ptr_(r.ptr_), control_block_(r.control_block_) {
-        r.ptr_           = nullptr;
-        r.control_block_ = nullptr;
-    }
+        : ptr_(ciel::exchange(r.ptr_, nullptr)), control_block_(ciel::exchange(r.control_block_, nullptr)) {}
 
     template<class Y, enable_if_t<std::is_convertible<Y*, pointer>::value> = 0>
     weak_ptr(weak_ptr<Y>&& r) noexcept
-        : ptr_(r.ptr_), control_block_(r.control_block_) {
-        r.ptr_           = nullptr;
-        r.control_block_ = nullptr;
-    }
+        : ptr_(ciel::exchange(r.ptr_, nullptr)), control_block_(ciel::exchange(r.control_block_, nullptr)) {}
 
     ~weak_ptr() {
         if (control_block_ != nullptr) {
