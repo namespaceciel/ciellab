@@ -172,6 +172,10 @@ void void_cast(Args&&...) noexcept {}
 #endif
 }
 
+inline void nop() noexcept {
+    __asm__ __volatile__("nop");
+}
+
 NAMESPACE_CIEL_END
 
 // unused
