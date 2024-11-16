@@ -7,12 +7,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <type_traits>
 #include <utility>
-#ifndef CIEL_HAS_EXCEPTIONS
-#  include <cstdlib>
-#endif
 
 NAMESPACE_CIEL_BEGIN
 

@@ -153,7 +153,7 @@ private:
         return compressed_.second();
     }
 
-    ~control_block_with_pointer() = default;
+    ~control_block_with_pointer() = default; // NOLINT(cppcoreguidelines-virtual-class-destructor)
 
 public:
     control_block_with_pointer(pointer ptr, deleter_type&& deleter, control_block_allocator&& alloc)
@@ -215,7 +215,7 @@ private:
         return compressed_.second();
     }
 
-    ~control_block_with_instance() = default;
+    ~control_block_with_instance() = default; // NOLINT(cppcoreguidelines-virtual-class-destructor)
 
 public:
     template<class... Args>
