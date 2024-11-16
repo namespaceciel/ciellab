@@ -2,6 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_TEST_MEMORY_LEAK_CHECK_HPP_
 
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 #include <ciel/memory.hpp>
 
 #include <cstddef>

@@ -2,6 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_CORE_CSTRING_HPP_
 
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 
 #include <cstddef>
 #include <cstdint>

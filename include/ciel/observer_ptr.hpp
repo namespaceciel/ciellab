@@ -4,6 +4,7 @@
 #include <ciel/compare.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
+#include <ciel/core/message.hpp>
 
 #include <functional>
 #include <type_traits>

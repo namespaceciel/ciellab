@@ -4,6 +4,7 @@
 #include <ciel/compare.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/iterator_base.hpp>
+#include <ciel/core/message.hpp>
 
 #include <cstddef>
 #include <iterator>

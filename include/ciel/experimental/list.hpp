@@ -7,6 +7,7 @@
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/iterator_base.hpp>
 #include <ciel/core/iterator_category.hpp>
+#include <ciel/core/message.hpp>
 
 #include <algorithm>
 #include <cstddef>

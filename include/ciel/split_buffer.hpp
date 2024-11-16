@@ -3,6 +3,7 @@
 
 #include <ciel/copy_n.hpp>
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 #include <ciel/to_address.hpp>
 
 #include <memory>

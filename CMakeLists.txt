@@ -4,7 +4,7 @@ project(ciellab LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose build type: Debug/Release/RelWithDebInfo/MinSizeRel." FORCE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose build type: Debug/Release/RelWithDebInfo/MinSizeRel." FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 option(CIELLAB_BUILD_TESTS      "Build unit tests" ${PROJECT_IS_TOP_LEVEL})

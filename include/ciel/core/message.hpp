@@ -2,11 +2,11 @@
 #define CIELLAB_INCLUDE_CIEL_CORE_MESSAGE_HPP_
 
 #include <ciel/core/config.hpp>
-#include <ciel/core/cstring.hpp>
 
 #include <array>
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 #ifndef CIEL_HAS_EXCEPTIONS
@@ -27,9 +27,6 @@ public:
     template<class... Args>
     message_builder(const char* msg, Args... args) noexcept {
         append(msg, args...);
-
-        CIEL_POSTCONDITION(buffer_.back() == '\0');
-        CIEL_POSTCONDITION(buffer_[size()] == '\0');
     }
 
     message_builder(const message_builder&)            = delete;
@@ -51,8 +48,6 @@ public:
 
             append(*s);
         }
-
-        CIEL_POSTCONDITION(*s != 0);
 
         append(front);
         append(s + 2, rest...);
@@ -127,6 +122,8 @@ public:
 
 }; // class message_builder
 
+// print
+
 template<size_t BufferSize = 512, class... Args>
 void print(std::FILE* stream, const char* msg, Args... args) noexcept {
     const message_builder<BufferSize> mb(msg, args...);
@@ -141,7 +138,7 @@ void print(const char* msg, Args... args) noexcept {
 template<size_t BufferSize = 512, class... Args>
 void print(char* buffer, const char* msg, Args... args) noexcept {
     const message_builder<BufferSize> mb(msg, args...);
-    ciel::memmove(buffer, mb.get(), mb.size() + 1);
+    std::memmove(buffer, mb.get(), mb.size() + 1);
 }
 
 template<size_t BufferSize = 512, class... Args>
@@ -156,16 +153,48 @@ void println(const char* msg, Args... args) noexcept {
     println<BufferSize>(stdout, msg, args...);
 }
 
+// fatal
+
+template<class... Args>
+[[noreturn]] void fatal(Args&&... args) {
+    ciel::println(stderr, std::forward<Args>(args)...);
+    CIEL_UNUSED(std::fflush(nullptr));
+    std::abort();
+}
+
+// exception
+
 #ifdef CIEL_HAS_EXCEPTIONS
 #  define CIEL_THROW_EXCEPTION(e) throw e
 #else
-#  define CIEL_THROW_EXCEPTION(e)                \
-      do {                                       \
-          ciel::println(stderr, "{}", e.what()); \
-          CIEL_UNUSED(std::fflush(nullptr));     \
-          std::abort();                          \
+#  define CIEL_THROW_EXCEPTION(e)                        \
+      do {                                               \
+          ciel::println(stderr, "exception throw: " #e); \
+          ciel::fatal(e.what());                         \
       } while (false)
 #endif
+
+// assert
+
+CIEL_DIAGNOSTIC_PUSH
+CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wassume")
+
+#ifdef CIEL_IS_DEBUGGING
+#  define CIEL_ASSERT(cond, msg, ...)                          \
+      do {                                                     \
+          if (!(cond)) {                                       \
+              ciel::println(stderr, "assertion fail: " #cond); \
+              ciel::fatal(msg, ##__VA_ARGS__);                 \
+          }                                                    \
+      } while (false)
+#else
+#  define CIEL_ASSERT(cond, msg, ...) CIEL_ASSUME(cond)
+#endif
+
+#define CIEL_PRECONDITION(cond)  CIEL_ASSERT(cond, "")
+#define CIEL_POSTCONDITION(cond) CIEL_ASSERT(cond, "")
+
+CIEL_DIAGNOSTIC_POP
 
 NAMESPACE_CIEL_END
 

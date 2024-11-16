@@ -197,23 +197,6 @@ NAMESPACE_CIEL_END
 #  define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
 #endif
 
-// assert
-
-#ifdef CIEL_IS_DEBUGGING
-#  define CIEL_ASSERT(cond) assert(cond)
-#elif defined(__clang__)
-#  define CIEL_ASSERT(cond)                     \
-      CIEL_DIAGNOSTIC_PUSH                      \
-      CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wassume") \
-      CIEL_ASSUME(cond)                         \
-      CIEL_DIAGNOSTIC_POP
-#else
-#  define CIEL_ASSERT(cond) CIEL_ASSUME(cond)
-#endif
-
-#define CIEL_PRECONDITION(cond)  CIEL_ASSERT(static_cast<bool>(cond))
-#define CIEL_POSTCONDITION(cond) CIEL_ASSERT(static_cast<bool>(cond))
-
 NAMESPACE_CIEL_BEGIN
 
 // alias for type_traits
