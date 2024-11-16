@@ -89,9 +89,31 @@ public:
             }
         }
 
-        for (auto it = std::array<char, 20>::reverse_iterator(temp.begin() + p); it != temp.rend(); ++it) {
+        for (auto it = decltype(temp)::reverse_iterator(temp.begin() + p); it != temp.rend(); ++it) {
             append(*it);
         }
+    }
+
+    void append(uintptr_t s) noexcept {
+        const char hexdigits[] = "0123456789abcdef";
+
+        append('0');
+        append('x');
+
+        std::array<char, 16> temp{};
+
+        for (auto it = temp.rbegin(); it != temp.rend(); ++it) { // NOLINT(modernize-loop-convert)
+            *it = hexdigits[s & 0xf];
+            s >>= 4;
+        }
+
+        for (const char c : temp) {
+            append(c);
+        }
+    }
+
+    void append(const void* p) noexcept {
+        append(reinterpret_cast<uintptr_t>(p));
     }
 
     CIEL_NODISCARD const char* get() const noexcept {

@@ -43,3 +43,13 @@ TEST(message, print) {
     }
     { ciel::println("This is {} testing!", "message.hpp"); }
 }
+
+TEST(message, print_address) {
+    struct {
+        int a{};
+        int b{};
+        int c{};
+    } s;
+
+    ciel::println("Test addresses printing:\n{}\n{}\n{}", &s.a, &s.b, &s.c);
+}
