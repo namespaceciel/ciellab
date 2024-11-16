@@ -25,9 +25,6 @@
 
 NAMESPACE_CIEL_BEGIN
 
-template<class, size_t>
-class inplace_vector;
-
 namespace detail {
 
 // By employing the Curiously Recurring Template Pattern (CRTP),

@@ -20,9 +20,6 @@
 
 NAMESPACE_CIEL_BEGIN
 
-template<class>
-class function;
-
 namespace details {
 
 template<class>
@@ -134,6 +131,9 @@ struct is_small_object : std::integral_constant<bool, sizeof(T) <= sizeof(void*)
 struct assume_trivially_relocatable_t {};
 
 static constexpr assume_trivially_relocatable_t assume_trivially_relocatable;
+
+template<class>
+class function;
 
 template<class R, class... Args>
 class function<R(Args...)> {

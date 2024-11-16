@@ -21,8 +21,6 @@ template<class>
 class weak_ptr;
 template<class>
 class enable_shared_from_this;
-template<class>
-class atomic_shared_ptr;
 
 class shared_weak_count {
 protected:
