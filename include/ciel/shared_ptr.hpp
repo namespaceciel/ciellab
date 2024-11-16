@@ -153,6 +153,8 @@ private:
         return compressed_.second();
     }
 
+    ~control_block_with_pointer() = default;
+
 public:
     control_block_with_pointer(pointer ptr, deleter_type&& deleter, control_block_allocator&& alloc)
         : compressed_(compressed_pair<pointer, deleter_type>(ptr, std::move(deleter)), std::move(alloc)) {}
@@ -212,6 +214,8 @@ private:
     CIEL_NODISCARD const control_block_allocator& allocator_() const noexcept {
         return compressed_.second();
     }
+
+    ~control_block_with_instance() = default;
 
 public:
     template<class... Args>
