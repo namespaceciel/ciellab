@@ -3,6 +3,14 @@ project(ciellab_test LANGUAGES CXX)
 
 set(CMAKE_BUILD_TYPE "Debug")
 
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        58d77fa8070e8cec2dc1ed015d66b454c8d78850 # release-1.12.1, last version supporting C++11
+)
+FetchContent_MakeAvailable(googletest)
+
 set(SOURCES
     src/memory_leak_check.cpp
     src/main.cpp
@@ -51,8 +59,6 @@ set(CMAKE_CXX_STANDARD_OPTIONS
     17
     20
 )
-
-add_subdirectory(googletest)
 
 function (add_ciellab_test CXX_STANDARD ENABLE_EXCEPTIONS ENABLE_RTTI)
 
