@@ -151,51 +151,53 @@ TEST(atomic_shared_ptr, compare_exchange_strong_false) {
 }
 
 // FIXME
-// TEST(atomic_shared_ptr, concurrent_store_and_loads) {
-//    constexpr size_t threads_num = 64;
-//    constexpr size_t operations_num = 10000;
-//
-//    atomic_shared_ptr<size_t> s;
-//    std::latch go{threads_num};
-//
-//    std::vector<std::thread> consumers;
-//    consumers.reserve(threads_num / 2);
-//
-//    for (size_t i = 0; i < threads_num / 2; ++i) {
-//        consumers.emplace_back([&s, &go] {
-//            go.arrive_and_wait();
-//
-//            for (size_t j = 0; j < operations_num; ++j) {
-//                auto p = s.load();
-//
-//                if (p) {
-//                    ASSERT_EQ(*p, 123);
-//                }
-//            }
-//        });
-//    }
-//
-//    std::vector<std::thread> producers;
-//    producers.reserve(threads_num / 2);
-//
-//    for (size_t i = 0; i < threads_num / 2; ++i) {
-//        producers.emplace_back([&s, &go] {
-//            go.arrive_and_wait();
-//
-//            for (size_t j = 0; j < operations_num; ++j) {
-//                s.store(make_shared<size_t>(123));
-//            }
-//        });
-//    }
-//
-//    for (auto& t : consumers) {
-//        t.join();
-//    }
-//
-//    for (auto& t : producers) {
-//        t.join();
-//    }
-//}
+/*
+TEST(atomic_shared_ptr, concurrent_store_and_loads) {
+    constexpr size_t threads_num    = 64;
+    constexpr size_t operations_num = 10000;
+
+    atomic_shared_ptr<size_t> s;
+    ciel::SimpleLatch go{threads_num};
+
+    std::vector<std::thread> consumers;
+    consumers.reserve(threads_num / 2);
+
+    for (size_t i = 0; i < threads_num / 2; ++i) {
+        consumers.emplace_back([&s, &go] {
+            go.arrive_and_wait();
+
+            for (size_t j = 0; j < operations_num; ++j) {
+                auto p = s.load();
+
+                if (p) {
+                    ASSERT_EQ(*p, 123);
+                }
+            }
+        });
+    }
+
+    std::vector<std::thread> producers;
+    producers.reserve(threads_num / 2);
+
+    for (size_t i = 0; i < threads_num / 2; ++i) {
+        producers.emplace_back([&s, &go] {
+            go.arrive_and_wait();
+
+            for (size_t j = 0; j < operations_num; ++j) {
+                s.store(make_shared<size_t>(123));
+            }
+        });
+    }
+
+    for (auto& t : consumers) {
+        t.join();
+    }
+
+    for (auto& t : producers) {
+        t.join();
+    }
+}
+*/
 
 TEST(atomic_shared_ptr, concurrent_exchange) {
     constexpr size_t threads_num    = 64;
