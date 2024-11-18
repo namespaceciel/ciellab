@@ -229,6 +229,9 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
             return *this;
         }
 
+        D& self = static_cast<D&>(*this);
+        self.clear();
+
         ciel::memcpy(this, std::addressof(o), sizeof(D));
         o.size_ = 0;
 
