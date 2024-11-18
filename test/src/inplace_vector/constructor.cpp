@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/inplace_vector.hpp>
 #include <ciel/test/forward_iterator.hpp>
 #include <ciel/test/input_iterator.hpp>
@@ -9,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <initializer_list>
+#include <type_traits>
 
 using namespace ciel;
 
@@ -76,6 +78,14 @@ void test_move_constructor_impl(::testing::Test*) {
     C v1({0, 1, 2, 3, 4});
     C v2(std::move(v1));
     ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
+
+    if (std::is_trivially_copyable<T>::value) {
+        ASSERT_EQ(v1, v2);                                             // NOLINT(bugprone-use-after-move)
+    } else if (is_trivially_relocatable<T>::value) {
+        ASSERT_TRUE(v1.empty());                                       // NOLINT(bugprone-use-after-move)
+    } else {
+        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1})); // NOLINT(bugprone-use-after-move)
+    }
 }
 
 template<class C>
@@ -117,7 +127,10 @@ TEST(inplace_vector, copy_constructor) {
 }
 
 TEST(inplace_vector, move_constructor) {
+    test_move_constructor_impl<inplace_vector<int, 8>>(this);
     test_move_constructor_impl<inplace_vector<Int, 8>>(this);
+    test_move_constructor_impl<inplace_vector<TRInt, 8>>(this);
+    test_move_constructor_impl<inplace_vector<TMInt, 8>>(this);
 }
 
 TEST(inplace_vector, constructor_initializer_list) {

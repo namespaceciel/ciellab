@@ -141,7 +141,7 @@ struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
 
     maybe_has_trivial_move_constructor(maybe_has_trivial_move_constructor&& o) noexcept {
         ciel::memcpy(this, std::addressof(o), sizeof(D));
-        static_cast<D&&>(o).size_ = 0;
+        o.size_ = 0;
     }
 
     maybe_has_trivial_move_constructor()                                                     = default;
@@ -230,7 +230,7 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
         }
 
         ciel::memcpy(this, std::addressof(o), sizeof(D));
-        static_cast<D&&>(o).size_ = 0;
+        o.size_ = 0;
 
         return *this;
     }
