@@ -14,11 +14,24 @@
 #include <ciel/swap.hpp>
 
 #include <cstddef>
-#include <functional>
+#include <exception>
 #include <memory>
 #include <typeinfo>
 
 NAMESPACE_CIEL_BEGIN
+
+class bad_function_call : public std::exception {
+public:
+    bad_function_call()                                    = default;
+    bad_function_call(const bad_function_call&)            = default;
+    bad_function_call& operator=(const bad_function_call&) = default;
+    ~bad_function_call() override                          = default;
+
+    CIEL_NODISCARD const char* what() const noexcept override {
+        return "ciel::bad_function_call";
+    }
+
+}; // class bad_function_call
 
 namespace details {
 
@@ -399,7 +412,7 @@ public:
         const base_type* p = ptr();
 
         if CIEL_UNLIKELY (p == nullptr) {
-            CIEL_THROW_EXCEPTION(std::bad_function_call());
+            CIEL_THROW_EXCEPTION(ciel::bad_function_call{});
         }
 
         return (*p)(std::forward<Args>(args)...);

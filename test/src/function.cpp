@@ -7,9 +7,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#ifdef CIEL_HAS_EXCEPTIONS
-#  include <functional>
-#endif
 
 using namespace ciel;
 
@@ -27,7 +24,7 @@ TEST(function, constructors_and_assignments) {
     const function<void()> f0{nullptr};
 
 #ifdef CIEL_HAS_EXCEPTIONS
-    ASSERT_THROW(f0(), std::bad_function_call);
+    ASSERT_THROW(f0(), ciel::bad_function_call);
 #endif
 
     const function<void()> f1{test1};
@@ -80,7 +77,7 @@ TEST(function, constructors_and_assignments) {
 
     f3 = f0;
 #ifdef CIEL_HAS_EXCEPTIONS
-    ASSERT_THROW(f3(), std::bad_function_call);
+    ASSERT_THROW(f3(), ciel::bad_function_call);
 #endif
 
     f3 = f1;
