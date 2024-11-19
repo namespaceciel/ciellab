@@ -21,6 +21,7 @@ set(SOURCES
     src/do_if_noexcept.cpp
     src/finally.cpp
     src/function.cpp
+    src/function/constructor.cpp
     src/function/overload_resolution.cpp
     src/is_nullable.cpp
     src/list.cpp
