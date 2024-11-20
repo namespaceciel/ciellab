@@ -89,6 +89,17 @@ v.push_back(std::move(v[0]));
 v.resize(5, v[0]);
 ```
 
+#### 7. Move every element in the range if the range type is rvalue.
+
+For the following functions, ciel::vector will perform move insertions.
+
+```cpp
+ciel::vector<T> v(ciel::from_range, std::move(rg));
+v.assign_range(std::move(rg));
+v.insert_range(std::move(rg));
+v.append_range(std::move(rg));
+```
+
 ### function.hpp
 
 `ciel::function` is an enhancement of `std::function` that adds optimization for trivially relocatable objects.
