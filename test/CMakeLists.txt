@@ -28,6 +28,7 @@ set(SOURCES
     src/message.cpp
     src/observer_ptr.cpp
     src/shared_ptr.cpp
+    src/spinlock_ptr.cpp
     src/worth_move.cpp
     src/inplace_vector/constructor.cpp
     src/inplace_vector/emplace.cpp
