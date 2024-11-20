@@ -28,6 +28,8 @@ struct Allocator {
 
 TEST(allocator_traits, trivial) {
     static_assert(allocator_has_trivial_construct<EmptyAllocator<int>, int*>::value, "");
+    static_assert(allocator_has_trivial_construct<EmptyAllocator<int>, int*, const int&>::value, "");
+    static_assert(allocator_has_trivial_construct<EmptyAllocator<int>, int*, int&&>::value, "");
     static_assert(allocator_has_trivial_destroy<EmptyAllocator<int>, int*>::value, "");
 }
 
