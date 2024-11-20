@@ -48,6 +48,21 @@ public:
 private:
     using alloc_traits = std::allocator_traits<allocator_type>;
 
+    template<class... Args>
+    using via_trivial_construct =
+        allocator_has_trivial_construct<allocator_type, decltype(ciel::to_address(std::declval<pointer>())), Args...>;
+    using via_trivial_destroy =
+        allocator_has_trivial_destroy<allocator_type, decltype(ciel::to_address(std::declval<pointer>()))>;
+
+    static constexpr bool expand_via_memcpy =
+        is_trivially_relocatable<value_type>::value
+        && via_trivial_construct<decltype(ciel::move_if_noexcept(*std::declval<pointer>()))>::value
+        && via_trivial_destroy::value;
+
+    static constexpr bool move_via_memmove = is_trivially_relocatable<value_type>::value
+                                          && via_trivial_construct<decltype(std::move(*std::declval<pointer>()))>::value
+                                          && via_trivial_destroy::value;
+
     pointer begin_{nullptr};
     pointer end_{nullptr};
     compressed_pair<pointer, allocator_type> end_cap_alloc_{nullptr, default_init};
@@ -182,12 +197,12 @@ private:
     }
 
     void swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept(
-        is_trivially_relocatable<value_type>::value || std::is_nothrow_move_constructible<value_type>::value) {
+        expand_via_memcpy || std::is_nothrow_move_constructible<value_type>::value) {
         CIEL_PRECONDITION(sb.front_spare() == size());
 
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
-            if (is_trivially_relocatable<value_type>::value) {
+            if (expand_via_memcpy) {
                 ciel::memcpy(ciel::to_address(sb.begin_cap_), ciel::to_address(begin_), sizeof(value_type) * size());
                 // sb.begin_ = sb.begin_cap_;
 
@@ -210,7 +225,7 @@ private:
     }
 
     void swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb,
-                         pointer pos) noexcept(is_trivially_relocatable<value_type>::value
+                         pointer pos) noexcept(expand_via_memcpy
                                                || std::is_nothrow_move_constructible<value_type>::value) {
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
@@ -220,7 +235,7 @@ private:
             CIEL_PRECONDITION(sb.front_spare() == front_count);
             CIEL_PRECONDITION(sb.back_spare() >= back_count);
 
-            if (is_trivially_relocatable<value_type>::value) {
+            if (expand_via_memcpy) {
                 ciel::memcpy(ciel::to_address(sb.begin_cap_), ciel::to_address(begin_),
                              sizeof(value_type) * front_count);
                 // sb.begin_ = sb.begin_cap_;
@@ -721,7 +736,7 @@ private:
             //                       ----------       |
             //                       first last      range_destroyer in case of exceptions
             //                       |  count |
-            if (is_trivially_relocatable<value_type>::value) {
+            if (move_via_memmove) {
                 const size_type pos_end_dis = end_ - pos;
                 ciel::memmove(ciel::to_address(pos + count), ciel::to_address(pos), sizeof(value_type) * pos_end_dis);
                 end_ = pos;
@@ -932,7 +947,7 @@ public:
 
 private:
     iterator erase_impl(pointer first, pointer last,
-                        const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
+                        const difference_type count) noexcept(move_via_memmove
                                                               || std::is_nothrow_move_assignable<value_type>::value) {
         CIEL_PRECONDITION(last - first == count);
         CIEL_PRECONDITION(count != 0);
@@ -943,7 +958,7 @@ private:
         if (back_count == 0) {
             end_ = destroy(first, end_);
 
-        } else if (is_trivially_relocatable<value_type>::value) {
+        } else if (move_via_memmove) {
             destroy(first, last);
             end_ -= count;
 

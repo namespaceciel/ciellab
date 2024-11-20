@@ -3,12 +3,14 @@
 
 #include <ciel/compare.hpp>
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 
 #include <cstddef>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <type_traits>
+#include <unordered_set>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -306,6 +308,9 @@ public:
 
 template<class T>
 class fancy_allocator {
+private:
+    std::unordered_set<void*> set;
+
 public:
     using value_type = T;
     using pointer    = min_pointer<T>;
@@ -327,8 +332,25 @@ public:
         std::allocator<T>().deallocate(p.ptr_, n);
     }
 
-    CIEL_NODISCARD friend bool operator==(fancy_allocator, fancy_allocator) noexcept {
-        return true;
+    template<class U, class... Args>
+    void construct(U* p, Args&&... args) {
+        CIEL_PRECONDITION(set.count(p) == 0);
+        set.emplace(p);
+
+        ::new (static_cast<void*>(p)) U(std::forward<Args>(args)...);
+    }
+
+    template<class U>
+    void destroy(U* p) noexcept {
+        auto it = set.find(p);
+        CIEL_PRECONDITION(it != set.end());
+        set.erase(it);
+
+        p->~U();
+    }
+
+    CIEL_NODISCARD friend bool operator==(const fancy_allocator& lhs, const fancy_allocator& rhs) noexcept {
+        return lhs.set == rhs.set;
     }
 
 }; // class fancy_allocator
