@@ -11,10 +11,10 @@ NAMESPACE_CIEL_BEGIN
 template<class F>
 class finally {
 public:
-    explicit finally(const F& f)
+    explicit finally(const F& f) noexcept
         : f_(f), valid_(true) {}
 
-    explicit finally(F&& f)
+    explicit finally(F&& f) noexcept
         : f_(std::move(f)), valid_(true) {}
 
     finally(finally&& other) noexcept
@@ -41,7 +41,7 @@ private:
 }; // class finally
 
 template<class F, class DecayF = decay_t<F>>
-CIEL_NODISCARD finally<DecayF> make_finally(F&& f) {
+CIEL_NODISCARD finally<DecayF> make_finally(F&& f) noexcept {
     return finally<DecayF>(std::forward<F>(f));
 }
 
