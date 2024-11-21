@@ -3,13 +3,13 @@
 #include <ciel/atomic_shared_ptr.hpp>
 #include <ciel/shared_ptr.hpp>
 #include <ciel/test/simple_latch.hpp>
+#include <ciel/vector.hpp>
 
 #include <cstddef>
 #include <cstdlib>
 #include <numeric>
 #include <thread>
 #include <utility>
-#include <vector>
 
 using namespace ciel;
 
@@ -157,11 +157,11 @@ TEST(atomic_shared_ptr, concurrent_store_and_loads) {
     atomic_shared_ptr<size_t> s;
     ciel::SimpleLatch go{threads_num};
 
-    std::vector<std::thread> consumers;
+    vector<std::thread> consumers;
     consumers.reserve(threads_num / 2);
 
     for (size_t i = 0; i < threads_num / 2; ++i) {
-        consumers.emplace_back([&s, &go] {
+        consumers.unchecked_emplace_back([&s, &go] {
             go.arrive_and_wait();
 
             for (size_t j = 0; j < operations_num; ++j) {
@@ -174,11 +174,11 @@ TEST(atomic_shared_ptr, concurrent_store_and_loads) {
         });
     }
 
-    std::vector<std::thread> producers;
+    vector<std::thread> producers;
     producers.reserve(threads_num / 2);
 
     for (size_t i = 0; i < threads_num / 2; ++i) {
-        producers.emplace_back([&s, &go] {
+        producers.unchecked_emplace_back([&s, &go] {
             go.arrive_and_wait();
 
             for (size_t j = 0; j < operations_num; ++j) {
@@ -203,14 +203,14 @@ TEST(atomic_shared_ptr, concurrent_exchange) {
     atomic_shared_ptr<size_t> s(make_shared<size_t>(0));
     SimpleLatch go{threads_num};
 
-    std::vector<size_t> local_sums_produced(threads_num);
-    std::vector<size_t> local_sums_consumed(threads_num);
+    vector<size_t> local_sums_produced(threads_num);
+    vector<size_t> local_sums_consumed(threads_num);
     {
-        std::vector<std::thread> threads;
+        vector<std::thread> threads;
         threads.reserve(threads_num);
 
         for (size_t i = 0; i < threads_num; ++i) {
-            threads.emplace_back([i, &s, &go, &local_sums_produced, &local_sums_consumed] {
+            threads.unchecked_emplace_back([i, &s, &go, &local_sums_produced, &local_sums_consumed] {
                 go.arrive_and_wait();
 
                 size_t local_sum_produced = 0;

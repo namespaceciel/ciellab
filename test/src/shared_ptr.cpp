@@ -3,12 +3,12 @@
 #include <ciel/core/config.hpp>
 #include <ciel/shared_ptr.hpp>
 #include <ciel/test/simple_latch.hpp>
+#include <ciel/vector.hpp>
 
 #include <cstddef>
 #include <string>
 #include <thread>
 #include <utility>
-#include <vector>
 
 using namespace ciel;
 
@@ -133,11 +133,11 @@ TEST(shared_ptr, concurrent_store_and_loads) {
     shared_ptr<size_t> s{new size_t{123}};
     SimpleLatch go{threads_num};
 
-    std::vector<std::thread> consumers;
+    vector<std::thread> consumers;
     consumers.reserve(threads_num);
 
     for (size_t i = 0; i < threads_num; ++i) {
-        consumers.emplace_back([&s, &go] {
+        consumers.unchecked_emplace_back([&s, &go] {
             go.arrive_and_wait();
 
             for (size_t j = 0; j < operations_num; ++j) {
