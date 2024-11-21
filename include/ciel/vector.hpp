@@ -603,11 +603,11 @@ public:
     }
 
     CIEL_NODISCARD iterator begin() noexcept {
-        return iterator(begin_);
+        return {begin_};
     }
 
     CIEL_NODISCARD const_iterator begin() const noexcept {
-        return const_iterator(begin_);
+        return {begin_};
     }
 
     CIEL_NODISCARD const_iterator cbegin() const noexcept {
@@ -615,11 +615,11 @@ public:
     }
 
     CIEL_NODISCARD iterator end() noexcept {
-        return iterator(end_);
+        return {end_};
     }
 
     CIEL_NODISCARD const_iterator end() const noexcept {
-        return const_iterator(end_);
+        return {end_};
     }
 
     CIEL_NODISCARD const_iterator cend() const noexcept {
@@ -627,11 +627,11 @@ public:
     }
 
     CIEL_NODISCARD reverse_iterator rbegin() noexcept {
-        return reverse_iterator(end());
+        return {end()};
     }
 
     CIEL_NODISCARD const_reverse_iterator rbegin() const noexcept {
-        return const_reverse_iterator(end());
+        return {end()};
     }
 
     CIEL_NODISCARD const_reverse_iterator crbegin() const noexcept {
@@ -639,11 +639,11 @@ public:
     }
 
     CIEL_NODISCARD reverse_iterator rend() noexcept {
-        return reverse_iterator(begin());
+        return {begin()};
     }
 
     CIEL_NODISCARD const_reverse_iterator rend() const noexcept {
-        return const_reverse_iterator(begin());
+        return {begin()};
     }
 
     CIEL_NODISCARD const_reverse_iterator crend() const noexcept {
