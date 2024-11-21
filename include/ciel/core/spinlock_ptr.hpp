@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <thread>
 
 NAMESPACE_CIEL_BEGIN
 
@@ -40,12 +41,12 @@ public:
     CIEL_NODISCARD T* lock(const std::memory_order mo = std::memory_order_seq_cst) const noexcept {
         uintptr_t cur = ptr_.load(std::memory_order_relaxed);
         while (is_locked(cur)) {
-            ciel::yield();
+            std::this_thread::yield();
             cur = ptr_.load(std::memory_order_relaxed);
         }
 
         while (!ptr_.compare_exchange_strong(cur, cur | lock_bit, mo, std::memory_order_relaxed)) {
-            ciel::yield();
+            std::this_thread::yield();
             cur &= ~lock_bit; // Clear LSB if exists.
         }
 

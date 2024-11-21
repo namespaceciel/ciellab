@@ -172,16 +172,6 @@ void void_cast(Args&&...) noexcept {}
 #endif
 }
 
-inline void nop() noexcept {
-    __asm__ volatile("nop");
-}
-
-// On pipelined processors, notify the core that we are in a spin loop and
-// that speculative execution past this point may not be a performance gain.
-inline void yield() noexcept {
-    __asm__ volatile("yield");
-}
-
 NAMESPACE_CIEL_END
 
 // unused
