@@ -257,7 +257,7 @@ private:
     template<class U, class Alloc, class... Args>
     friend shared_ptr<U> allocate_shared(const Alloc&, Args&&...);
 
-    element_type* ptr_{nullptr};
+    pointer ptr_{nullptr};
     shared_weak_count* control_block_{nullptr};
 
     template<class Y, class Deleter, class Allocator>
@@ -305,6 +305,9 @@ private:
     shared_ptr(shared_weak_count* control_block) noexcept
         : ptr_(control_block ? static_cast<pointer>(control_block->managed_pointer()) : nullptr),
           control_block_(control_block) {}
+
+    shared_ptr(pointer ptr, shared_weak_count* control_block) noexcept
+        : ptr_(ptr), control_block_(control_block) {}
 
 public:
     shared_ptr() = default;
@@ -376,7 +379,7 @@ public:
     }
 
     template<class Y>
-    shared_ptr(const shared_ptr<Y>& r, element_type* ptr) noexcept
+    shared_ptr(const shared_ptr<Y>& r, pointer ptr) noexcept
         : ptr_(ptr), control_block_(r.control_block_) {
         if (control_block_ != nullptr) {
             control_block_->shared_add_ref();
@@ -384,7 +387,7 @@ public:
     }
 
     template<class Y>
-    shared_ptr(shared_ptr<Y>&& r, element_type* ptr) noexcept
+    shared_ptr(shared_ptr<Y>&& r, pointer ptr) noexcept
         : ptr_(ptr), control_block_(ciel::exchange(r.control_block_, nullptr)) {
         r.ptr_ = nullptr;
     }
@@ -493,7 +496,7 @@ public:
         swap(control_block_, r.control_block_);
     }
 
-    CIEL_NODISCARD element_type* get() const noexcept {
+    CIEL_NODISCARD pointer get() const noexcept {
         return ptr_;
     }
 
@@ -582,7 +585,7 @@ public:
     using pointer      = element_type*;
 
 private:
-    element_type* ptr_{nullptr};
+    pointer ptr_{nullptr};
     shared_weak_count* control_block_{nullptr};
 
 public:

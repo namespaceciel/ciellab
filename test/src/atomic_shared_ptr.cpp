@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/experimental/atomic_shared_ptr.hpp>
+#include <ciel/atomic_shared_ptr.hpp>
 #include <ciel/shared_ptr.hpp>
 #include <ciel/test/simple_latch.hpp>
 
@@ -150,8 +150,6 @@ TEST(atomic_shared_ptr, compare_exchange_strong_false) {
     ASSERT_EQ(l.use_count(), 4);
 }
 
-// FIXME
-/*
 TEST(atomic_shared_ptr, concurrent_store_and_loads) {
     constexpr size_t threads_num    = 64;
     constexpr size_t operations_num = 10000;
@@ -197,7 +195,6 @@ TEST(atomic_shared_ptr, concurrent_store_and_loads) {
         t.join();
     }
 }
-*/
 
 TEST(atomic_shared_ptr, concurrent_exchange) {
     constexpr size_t threads_num    = 64;
