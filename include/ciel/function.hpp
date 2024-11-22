@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <typeinfo>
 
@@ -461,6 +462,13 @@ template<class R, class... ArgTypes>
 CIEL_NODISCARD bool operator==(const function<R(ArgTypes...)>& f, nullptr_t) noexcept {
     return !f;
 }
+
+// When the target is a function pointer or a std::reference_wrapper, small object optimization is guaranteed.
+template<class T>
+struct is_trivially_relocatable<std::reference_wrapper<T>> : std::true_type {};
+
+static_assert(is_small_object<std::reference_wrapper<void()>>::value,
+              "SOO should be guaranteed for std::reference_wrapper");
 
 #if CIEL_STD_VER >= 17
 
