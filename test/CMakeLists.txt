@@ -36,7 +36,7 @@ set(SOURCES
     src/inplace_vector/emplace.cpp
     src/inplace_vector/erase.cpp
     src/inplace_vector/insert.cpp
-    src/inplace_vector/trivial.cpp
+    src/inplace_vector/trait.cpp
     src/inplace_vector/try_append_range.cpp
     src/vector/assign.cpp
     src/vector/capacity.cpp

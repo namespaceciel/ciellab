@@ -245,10 +245,41 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
 
 }; // struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
 
+// conditional_copyable_and_moveable
+
+template<class T, bool = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
+         bool = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value>
+struct conditional_copyable_and_moveable {};
+
+template<class T, bool Copyable>
+struct conditional_copyable_and_moveable<T, Copyable, false> {
+    conditional_copyable_and_moveable()  = default;
+    ~conditional_copyable_and_moveable() = default;
+
+    conditional_copyable_and_moveable(conditional_copyable_and_moveable&&)                 = delete;
+    conditional_copyable_and_moveable(const conditional_copyable_and_moveable&)            = delete;
+    conditional_copyable_and_moveable& operator=(conditional_copyable_and_moveable&&)      = delete;
+    conditional_copyable_and_moveable& operator=(const conditional_copyable_and_moveable&) = delete;
+
+}; // struct conditional_copyable_and_moveable<T, Copyable, false>
+
+template<class T>
+struct conditional_copyable_and_moveable<T, false, true> {
+    conditional_copyable_and_moveable()                                               = default;
+    ~conditional_copyable_and_moveable()                                              = default;
+    conditional_copyable_and_moveable(conditional_copyable_and_moveable&&)            = default;
+    conditional_copyable_and_moveable& operator=(conditional_copyable_and_moveable&&) = default;
+
+    conditional_copyable_and_moveable(const conditional_copyable_and_moveable&)            = delete;
+    conditional_copyable_and_moveable& operator=(const conditional_copyable_and_moveable&) = delete;
+
+}; // struct conditional_copyable_and_moveable<T, false, true>
+
 } // namespace detail
 
 template<class T, size_t Capacity>
-class inplace_vector : private detail::maybe_has_trivial_move_assignment<T, Capacity, inplace_vector<T, Capacity>> {
+class inplace_vector : private detail::maybe_has_trivial_move_assignment<T, Capacity, inplace_vector<T, Capacity>>,
+                       private detail::conditional_copyable_and_moveable<T> {
     using base_type = detail::maybe_has_trivial_move_assignment<T, Capacity, inplace_vector<T, Capacity>>;
 
     template<class, size_t>

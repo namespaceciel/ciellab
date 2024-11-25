@@ -2,6 +2,8 @@
 
 #include <ciel/inplace_vector.hpp>
 
+#include <memory>
+#include <mutex>
 #include <type_traits>
 
 using namespace ciel;
@@ -111,4 +113,20 @@ TEST(inplace_vector, nothrow) {
     static_assert(not std::is_nothrow_move_constructible<inplace_vector<NotNothrow, 8>>::value, "");
     static_assert(not std::is_nothrow_copy_assignable<inplace_vector<NotNothrow, 8>>::value, "");
     static_assert(not std::is_nothrow_move_assignable<inplace_vector<NotNothrow, 8>>::value, "");
+}
+
+TEST(inplace_vector, copyable) {
+    static_assert(not std::is_copy_constructible<inplace_vector<std::mutex, 8>>::value, "");
+    static_assert(not std::is_copy_assignable<inplace_vector<std::mutex, 8>>::value, "");
+
+    static_assert(not std::is_copy_constructible<inplace_vector<std::unique_ptr<int>, 8>>::value, "");
+    static_assert(not std::is_copy_assignable<inplace_vector<std::unique_ptr<int>, 8>>::value, "");
+}
+
+TEST(inplace_vector, moveable) {
+    static_assert(not std::is_move_constructible<inplace_vector<std::mutex, 8>>::value, "");
+    static_assert(not std::is_move_assignable<inplace_vector<std::mutex, 8>>::value, "");
+
+    static_assert(std::is_move_constructible<inplace_vector<std::unique_ptr<int>, 8>>::value, "");
+    static_assert(std::is_move_assignable<inplace_vector<std::unique_ptr<int>, 8>>::value, "");
 }
