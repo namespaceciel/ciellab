@@ -29,7 +29,9 @@ set(SOURCES
     src/observer_ptr.cpp
     src/shared_ptr.cpp
     src/spinlock_ptr.cpp
+    src/swap.cpp
     src/worth_move.cpp
+    src/inplace_vector/assign.cpp
     src/inplace_vector/constructor.cpp
     src/inplace_vector/emplace.cpp
     src/inplace_vector/erase.cpp

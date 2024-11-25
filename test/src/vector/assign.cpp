@@ -14,6 +14,7 @@
 #include <array>
 #include <initializer_list>
 #include <memory>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -288,5 +289,30 @@ TEST(vector, assign_size_self_value) {
         ASSERT_TRUE(std::all_of(v.begin(), v.end(), [](int i) {
             return i == 2;
         }));
+    }
+}
+
+TEST(vector, issue_5) {
+    {
+        int x = 1;
+        int y = 2;
+        ciel::vector<std::tuple<int&>> v;
+        v.reserve(2);
+        v.unchecked_emplace_back(std::tie(x));
+
+        v.assign(v.capacity(), std::tie(y));
+
+        ASSERT_EQ(x, 2);
+    }
+    {
+        int x = 1;
+        int y = 2;
+        ciel::vector<std::tuple<int&>> v;
+        v.reserve(2);
+        v.unchecked_emplace_back(std::tie(x));
+
+        v.assign(v.capacity() + 1, std::tie(y)); // expansion
+
+        ASSERT_EQ(x, 1);
     }
 }
