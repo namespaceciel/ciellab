@@ -34,20 +34,20 @@ struct NonTriviallyRelocatable {
 } // namespace
 
 TEST(function, copy_stack) {
-    function<void()> f1(assume_trivially_relocatable, TriviallyRelocatable{});
+    const function<void()> f1(assume_trivially_relocatable, TriviallyRelocatable{});
     f1();
 
-    const function<void()> f2(f1);
+    const function<void()> f2(f1); // NOLINT(performance-unnecessary-copy-initialization)
 
     f1();
     f2();
 }
 
 TEST(function, copy_heap) {
-    function<void()> f1(NonTriviallyRelocatable{});
+    const function<void()> f1(NonTriviallyRelocatable{});
     f1();
 
-    const function<void()> f2(f1);
+    const function<void()> f2(f1); // NOLINT(performance-unnecessary-copy-initialization)
 
     f1();
     f2();
