@@ -877,7 +877,7 @@ public:
         const pointer pos = begin_() + (p - begin());
 
         if CIEL_UNLIKELY (count == 0) {
-            return iterator(pos);
+            return {pos};
         }
 
         return insert_impl(
@@ -899,7 +899,7 @@ private:
         const pointer pos = begin_() + (p - begin());
 
         if CIEL_UNLIKELY (count == 0) {
-            return iterator(pos);
+            return {pos};
         }
 
         return insert_impl(
