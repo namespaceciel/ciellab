@@ -1,6 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 #define CIELLAB_INCLUDE_CIEL_RANGE_DESTROYER_HPP_
 
+#include <ciel/allocator_traits.hpp>
 #include <ciel/core/compressed_pair.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/message.hpp>
@@ -9,14 +10,18 @@
 #include <cstddef>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 NAMESPACE_CIEL_BEGIN
 
+template<class...>
+class range_destroyer;
+
 // Destroy ranges in destructor for exception handling.
-// Note that Allocator can be reference type.
-template<class T, class Allocator = std::allocator<T>, bool = std::is_trivially_destructible<T>::value>
-class range_destroyer {
-    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
+// Note that Allocator should be reference type.
+template<class T, class Allocator>
+class range_destroyer<T, Allocator> {
+    static_assert(std::is_lvalue_reference<Allocator>::value, "");
 
 private:
     using allocator_type = remove_reference_t<Allocator>;
@@ -26,40 +31,30 @@ private:
     static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
 
     pointer begin_;
-    compressed_pair<pointer, Allocator> end_alloc_;
-
-    CIEL_NODISCARD pointer& end_() noexcept {
-        return end_alloc_.first();
-    }
-
-    allocator_type& allocator_() noexcept {
-        return end_alloc_.second();
-    }
+    pointer end_;
+    Allocator allocator_;
 
 public:
     range_destroyer(pointer begin, pointer end, allocator_type& alloc) noexcept
-        : begin_{begin}, end_alloc_{end, alloc} {}
-
-    range_destroyer(pointer begin, pointer end, const allocator_type& alloc = allocator_type{}) noexcept
-        : begin_{begin}, end_alloc_{end, alloc} {}
+        : begin_{begin}, end_{end}, allocator_{alloc} {}
 
     range_destroyer(const range_destroyer&)            = delete;
     range_destroyer& operator=(const range_destroyer&) = delete;
 
     ~range_destroyer() {
-        CIEL_PRECONDITION(begin_ <= end_());
+        CIEL_PRECONDITION(begin_ <= end_);
 
-        for (; begin_ != end_(); ++begin_) {
-            alloc_traits::destroy(allocator_(), ciel::to_address(begin_));
+        for (; begin_ != end_; ++begin_) {
+            alloc_traits::destroy(allocator_, ciel::to_address(begin_));
         }
     }
 
     void advance_forward() noexcept {
-        ++end_();
+        ++end_;
     }
 
     void advance_forward(const ptrdiff_t n) noexcept {
-        end_() += n;
+        end_ += n;
     }
 
     void advance_backward() noexcept {
@@ -71,36 +66,54 @@ public:
     }
 
     void release() noexcept {
-        end_() = begin_;
+        end_ = begin_;
     }
 
 }; // class range_destroyer
 
-template<class T, class Allocator>
-class range_destroyer<T, Allocator, true> {
-    static_assert(!std::is_rvalue_reference<Allocator>::value, "");
-
+template<class T>
+class range_destroyer<T> {
 private:
-    using allocator_type = remove_reference_t<Allocator>;
-    using pointer        = typename std::allocator_traits<allocator_type>::pointer;
+    using value_type = T;
+    using pointer    = T*;
 
-    static_assert(std::is_same<typename allocator_type::value_type, T>::value, "");
+    pointer begin_;
+    pointer end_;
 
 public:
-    range_destroyer(pointer, pointer, const allocator_type& = allocator_type{}) noexcept {}
+    range_destroyer(pointer begin, pointer end) noexcept
+        : begin_{begin}, end_{end} {}
 
     range_destroyer(const range_destroyer&)            = delete;
     range_destroyer& operator=(const range_destroyer&) = delete;
 
-    void advance_forward() noexcept {}
+    ~range_destroyer() {
+        CIEL_PRECONDITION(begin_ <= end_);
 
-    void advance_forward(ptrdiff_t) noexcept {}
+        for (; begin_ != end_; ++begin_) {
+            begin_->~value_type();
+        }
+    }
 
-    void advance_backward() noexcept {}
+    void advance_forward() noexcept {
+        ++end_;
+    }
 
-    void advance_backward(ptrdiff_t) noexcept {}
+    void advance_forward(const ptrdiff_t n) noexcept {
+        end_ += n;
+    }
 
-    void release() noexcept {}
+    void advance_backward() noexcept {
+        --begin_;
+    }
+
+    void advance_backward(const ptrdiff_t n) noexcept {
+        begin_ -= n;
+    }
+
+    void release() noexcept {
+        end_ = begin_;
+    }
 
 }; // class range_destroyer
 
