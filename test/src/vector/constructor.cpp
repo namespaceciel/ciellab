@@ -80,7 +80,7 @@ void test_copy_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
-    C v2(v1); // NOLINT(performance-unnecessary-copy-initialization)
+    C v2(v1);
     ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
 }
 
@@ -188,7 +188,7 @@ TEST(vector, move_constructor_with_allocator) {
         C v1({0, 1, 2, 3, 4});
         const C v2(std::move(v1), Alloc{});
         ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
-        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1})); // NOLINT(bugprone-use-after-move)
+        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1}));
     }
 }
 

@@ -22,7 +22,7 @@ CIEL_NODISCARD inline const char* demangle_alloc(const char* name) noexcept {
 }
 
 inline void demangle_free(const char* name) noexcept {
-    std::free(const_cast<char*>(name)); // NOLINT(cppcoreguidelines-no-malloc)
+    std::free(const_cast<char*>(name));
 }
 #else
 CIEL_NODISCARD inline const char* demangle_alloc(const char* name) noexcept {

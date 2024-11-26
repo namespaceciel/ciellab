@@ -193,11 +193,11 @@ private:
         return size_node_allocator_.first();
     }
 
-    node_allocator& allocator_() noexcept { // NOLINT(modernize-use-nodiscard)
+    node_allocator& allocator_() noexcept {
         return size_node_allocator_.second();
     }
 
-    const node_allocator& allocator_() const noexcept { // NOLINT(modernize-use-nodiscard)
+    const node_allocator& allocator_() const noexcept {
         return size_node_allocator_.second();
     }
 
@@ -232,7 +232,7 @@ private:
 
                 CIEL_TRY {
                     node_alloc_traits::construct(allocator_(), construct_place, before_begin.base(), begin.base(),
-                                                 std::forward<Arg>(arg)...); // NOLINT(bugprone-use-after-move)
+                                                 std::forward<Arg>(arg)...);
                     ++size_();
 
                     before_begin.base()->next_ = construct_place;
@@ -445,7 +445,7 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    allocator_type get_allocator() const noexcept { // NOLINT(modernize-use-nodiscard)
+    allocator_type get_allocator() const noexcept {
         return allocator_();
     }
 

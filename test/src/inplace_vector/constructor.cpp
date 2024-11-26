@@ -67,7 +67,7 @@ void test_copy_constructor_impl(::testing::Test*) {
     using T = typename C::value_type;
 
     C v1({0, 1, 2, 3, 4});
-    C v2(v1); // NOLINT(performance-unnecessary-copy-initialization)
+    C v2(v1);
     ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
 }
 
@@ -80,11 +80,11 @@ void test_move_constructor_impl(::testing::Test*) {
     ASSERT_EQ(v2, std::initializer_list<T>({0, 1, 2, 3, 4}));
 
     if (std::is_trivially_copyable<T>::value) {
-        ASSERT_EQ(v1, v2);                                             // NOLINT(bugprone-use-after-move)
+        ASSERT_EQ(v1, v2);
     } else if (is_trivially_relocatable<T>::value) {
-        ASSERT_TRUE(v1.empty());                                       // NOLINT(bugprone-use-after-move)
+        ASSERT_TRUE(v1.empty());
     } else {
-        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1})); // NOLINT(bugprone-use-after-move)
+        ASSERT_EQ(v1, std::initializer_list<T>({-1, -1, -1, -1, -1}));
     }
 }
 

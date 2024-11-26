@@ -26,7 +26,7 @@ public:
     using const_reference = const T&;
 
 private:
-    T value_; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+    T value_;
 
 public:
     explicit compressed_pair_elem(default_init_t) {}

@@ -75,11 +75,11 @@ private:
         return end_cap_alloc_.first();
     }
 
-    allocator_type& allocator_() noexcept { // NOLINT(modernize-use-nodiscard)
+    allocator_type& allocator_() noexcept {
         return end_cap_alloc_.second();
     }
 
-    const allocator_type& allocator_() const noexcept { // NOLINT(modernize-use-nodiscard)
+    const allocator_type& allocator_() const noexcept {
         return end_cap_alloc_.second();
     }
 
@@ -538,7 +538,7 @@ public:
         }
     }
 
-    allocator_type get_allocator() const noexcept { // NOLINT(modernize-use-nodiscard)
+    allocator_type get_allocator() const noexcept {
         return allocator_();
     }
 

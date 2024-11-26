@@ -396,7 +396,7 @@ public:
     }
 
     template<class F>
-    function& operator=(F&& f) { // NOLINT(misc-unconventional-assign-operator)
+    function& operator=(F&& f) {
         assign(std::forward<F>(f));
         return *this;
     }

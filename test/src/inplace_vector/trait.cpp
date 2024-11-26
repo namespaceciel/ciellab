@@ -15,23 +15,18 @@ struct Trivial {};
 struct NotTrivial {
     NotTrivial() = default;
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotTrivial(const NotTrivial&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotTrivial(NotTrivial&&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotTrivial& operator=(const NotTrivial&) noexcept {
         return *this;
     }
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotTrivial& operator=(NotTrivial&&) noexcept {
         return *this;
     }
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     ~NotTrivial() {}
 };
 
@@ -40,12 +35,10 @@ struct NotTriviallyAssignable {
     NotTriviallyAssignable(const NotTriviallyAssignable&) = default;
     NotTriviallyAssignable(NotTriviallyAssignable&&)      = default;
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotTriviallyAssignable& operator=(const NotTriviallyAssignable&) noexcept {
         return *this;
     }
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotTriviallyAssignable& operator=(NotTriviallyAssignable&&) noexcept {
         return *this;
     }
@@ -54,18 +47,14 @@ struct NotTriviallyAssignable {
 struct NotNothrow {
     NotNothrow() = default;
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotNothrow(const NotNothrow&) {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default, performance-noexcept-move-constructor)
     NotNothrow(NotNothrow&&) {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     NotNothrow& operator=(const NotNothrow&) {
         return *this;
     }
 
-    // NOLINTNEXTLINE(modernize-use-equals-default, performance-noexcept-move-constructor)
     NotNothrow& operator=(NotNothrow&&) {
         return *this;
     }

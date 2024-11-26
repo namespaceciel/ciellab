@@ -24,7 +24,7 @@ TEST(shared_ptr, move_constructor) {
 
     const shared_ptr<int> dest(std::move(src));
 
-    ASSERT_FALSE(src); // NOLINT(bugprone-use-after-move)
+    ASSERT_FALSE(src);
     ASSERT_TRUE(dest);
     ASSERT_EQ(*dest, 1729);
 }
@@ -41,7 +41,7 @@ TEST(shared_ptr, move_assign) {
 
     dest = std::move(src);
 
-    ASSERT_FALSE(src); // NOLINT(bugprone-use-after-move)
+    ASSERT_FALSE(src);
     ASSERT_TRUE(dest);
     ASSERT_EQ(*dest, 123);
 }
@@ -74,7 +74,7 @@ TEST(shared_ptr, alias_move_constructor) {
 
         const shared_ptr<Base> dest{std::move(src)};
 
-        ASSERT_FALSE(src); // NOLINT(bugprone-use-after-move)
+        ASSERT_FALSE(src);
         ASSERT_TRUE(dest);
         ASSERT_EQ(dest->str(), "Derived");
     }

@@ -18,25 +18,20 @@ struct T2 {
 
 struct T3 {
     // user-defined destructor suppress implicitly-declared move constructor and assignments
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     virtual ~T3() {}
 };
 
 struct T4 {
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T4(const T4&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T4& operator=(const T4&) noexcept {
         return *this;
     }
 };
 
 struct T5 {
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T5(T5&&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T5& operator=(T5&&) noexcept {
         return *this;
     }
@@ -50,34 +45,27 @@ struct T7 {
     std::unique_ptr<int> v;
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-virtual-class-destructor)
 struct T8 {
     virtual void f() noexcept {}
 };
 
 struct T9 {
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T9(const T9&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T9(T9&&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T9& operator=(const T9&) noexcept {
         return *this;
     }
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T9& operator=(T9&&) noexcept {
         return *this;
     }
 };
 
 struct T10 {
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T10(T10&&) noexcept {}
 
-    // NOLINTNEXTLINE(modernize-use-equals-default)
     T10& operator=(T10&&) noexcept {
         return *this;
     }

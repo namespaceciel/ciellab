@@ -48,7 +48,7 @@ TEST(function, constructors_and_assignments) {
     CIEL_UNUSED(f5());
 
     function<int()> f6{std::move(f4)};
-    ASSERT_FALSE(f4); // NOLINT(bugprone-use-after-move)
+    ASSERT_FALSE(f4);
     CIEL_UNUSED(f6());
 
     f4 = nullptr;
@@ -62,7 +62,7 @@ TEST(function, constructors_and_assignments) {
     CIEL_UNUSED(f4());
 
     f4 = std::move(f6);
-    ASSERT_FALSE(f6); // NOLINT(bugprone-use-after-move)
+    ASSERT_FALSE(f6);
     CIEL_UNUSED(f4());
 
     static_assert(not is_small_object<std::deque<int>>::value, "");
@@ -84,7 +84,7 @@ TEST(function, constructors_and_assignments) {
     f3();
 
     f7 = std::move(f3);
-    ASSERT_FALSE(f3); // NOLINT(bugprone-use-after-move)
+    ASSERT_FALSE(f3);
     f7();
 }
 

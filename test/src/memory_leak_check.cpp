@@ -15,7 +15,7 @@ CIEL_NODISCARD void* operator new(const size_t count) {
     CIEL_POSTCONDITION(extra >= ciel::max_align);
     CIEL_POSTCONDITION(extra % ciel::max_align == 0);
 
-    void* ptr = std::malloc(count + extra); // NOLINT(cppcoreguidelines-no-malloc)
+    void* ptr = std::malloc(count + extra);
     if (ptr == nullptr) {
         CIEL_THROW_EXCEPTION(std::bad_alloc{});
     }
@@ -49,7 +49,7 @@ void operator delete(void* ptr) noexcept {
     node->pop();
 
     CIEL_POSTCONDITION(ciel::is_aligned(ptr, ciel::max_align));
-    std::free(ptr); // NOLINT(cppcoreguidelines-no-malloc)
+    std::free(ptr);
 }
 
 void operator delete[](void* ptr) noexcept {

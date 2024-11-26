@@ -11,7 +11,7 @@ struct B1 {};
 struct D1 : B1 {};
 
 struct B2 {
-    ~B2() {} // NOLINT(modernize-use-equals-default)
+    ~B2() {}
 };
 
 struct D2 : B2 {};
@@ -19,7 +19,7 @@ struct D2 : B2 {};
 struct B3 {};
 
 struct D3 : B3 {
-    ~D3() {} // NOLINT(modernize-use-equals-default)
+    ~D3() {}
 };
 
 struct B4 {
@@ -33,7 +33,7 @@ struct B5 {
 };
 
 struct D5 : B5 {
-    ~D5() override {} // NOLINT(modernize-use-equals-default)
+    ~D5() override {}
 };
 
 } // namespace

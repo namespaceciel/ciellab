@@ -37,7 +37,7 @@ TEST(function, copy_stack) {
     const function<void()> f1(assume_trivially_relocatable, TriviallyRelocatable{});
     f1();
 
-    const function<void()> f2(f1); // NOLINT(performance-unnecessary-copy-initialization)
+    const function<void()> f2(f1);
 
     f1();
     f2();
@@ -47,7 +47,7 @@ TEST(function, copy_heap) {
     const function<void()> f1(NonTriviallyRelocatable{});
     f1();
 
-    const function<void()> f2(f1); // NOLINT(performance-unnecessary-copy-initialization)
+    const function<void()> f2(f1);
 
     f1();
     f2();
@@ -58,7 +58,7 @@ TEST(function, move_stack) {
     f1();
 
     const function<void()> f2(std::move(f1));
-    ASSERT_TRUE(!f1); // NOLINT(bugprone-use-after-move)
+    ASSERT_TRUE(!f1);
 
     f2();
 }
@@ -68,7 +68,7 @@ TEST(function, move_heap) {
     f1();
 
     const function<void()> f2(std::move(f1));
-    ASSERT_TRUE(!f1); // NOLINT(bugprone-use-after-move)
+    ASSERT_TRUE(!f1);
 
     f2();
 }

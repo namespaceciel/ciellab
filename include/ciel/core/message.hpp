@@ -96,7 +96,7 @@ public:
 
         std::array<char, 16> temp{};
 
-        for (auto it = temp.rbegin(); it != temp.rend(); ++it) { // NOLINT(modernize-loop-convert)
+        for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
             *it = hexdigits[s & 0xf];
             s >>= 4;
         }

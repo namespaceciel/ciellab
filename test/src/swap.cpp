@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/swap.hpp> // NOLINT(misc-include-cleaner)
+#include <ciel/swap.hpp>
 
 #include <tuple>
 #include <utility>
