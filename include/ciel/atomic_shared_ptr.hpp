@@ -19,7 +19,7 @@ private:
     using pointer      = element_type*;
 
     pointer ptr_{nullptr};
-    mutable spinlock_ptr<shared_weak_count> control_block_{nullptr};
+    mutable spinlock_ptr<control_block_base> control_block_{nullptr};
 
 public:
     using value_type = shared_ptr<T>;
@@ -70,7 +70,7 @@ public:
             order = std::memory_order_acquire;
         }
 
-        shared_weak_count* cb = control_block_.lock(order);
+        control_block_base* cb = control_block_.lock(order);
         if (cb) {
             cb->shared_add_ref();
         }
@@ -97,7 +97,7 @@ public:
         CIEL_PRECONDITION(failure != std::memory_order_release);
         CIEL_PRECONDITION(failure != std::memory_order_acq_rel);
 
-        shared_weak_count* cb = control_block_.lock(std::memory_order_acquire);
+        control_block_base* cb = control_block_.lock(std::memory_order_acquire);
         if (ptr_ == expected.ptr_ && cb == expected.control_block_) {
             std::swap(ptr_, desired.ptr_);
             control_block_.swap_unlock(desired.control_block_, success);

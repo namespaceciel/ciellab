@@ -22,7 +22,7 @@ class weak_ptr;
 template<class>
 class enable_shared_from_this;
 
-class shared_weak_count {
+class control_block_base {
 protected:
     // The object will be destroyed after decrementing to zero.
     std::atomic<size_t> shared_count_{1};
@@ -36,15 +36,15 @@ protected:
     template<class>
     friend class atomic_shared_ptr;
 
-    shared_weak_count() = default;
+    control_block_base() = default;
 
     // We never call the deleter on the base class pointer,
     // so it's not necessary to mark virtual on destructor.
-    ~shared_weak_count() = default;
+    ~control_block_base() = default;
 
 public:
-    shared_weak_count(const shared_weak_count&)            = delete;
-    shared_weak_count& operator=(const shared_weak_count&) = delete;
+    control_block_base(const control_block_base&)            = delete;
+    control_block_base& operator=(const control_block_base&) = delete;
 
     CIEL_NODISCARD size_t use_count() const noexcept {
         return shared_count_.load(std::memory_order_relaxed);
@@ -110,10 +110,10 @@ public:
     virtual void destroy() noexcept                               = 0;
     CIEL_NODISCARD virtual void* managed_pointer() const noexcept = 0;
 
-}; // class shared_weak_count
+}; // class control_block_base
 
 template<class element_type, class Deleter, class Allocator>
-class control_block_with_pointer final : public shared_weak_count {
+class control_block_with_pointer final : public control_block_base {
     static_assert(std::is_same<element_type, typename Allocator::value_type>::value, "");
 
 public:
@@ -184,7 +184,7 @@ public:
 }; // class control_block_with_pointer
 
 template<class element_type, class Allocator>
-class control_block_with_instance final : public shared_weak_count {
+class control_block_with_instance final : public control_block_base {
     static_assert(std::is_same<element_type, typename Allocator::value_type>::value, "");
 
 public:
@@ -258,10 +258,10 @@ private:
     friend shared_ptr<U> allocate_shared(const Alloc&, Args&&...);
 
     pointer ptr_{nullptr};
-    shared_weak_count* control_block_{nullptr};
+    control_block_base* control_block_{nullptr};
 
     template<class Y, class Deleter, class Allocator>
-    CIEL_NODISCARD shared_weak_count* alloc_control_block(Y* ptr, Deleter&& dlt, Allocator&& alloc) {
+    CIEL_NODISCARD control_block_base* alloc_control_block(Y* ptr, Deleter&& dlt, Allocator&& alloc) {
         using alloc_traits               = std::allocator_traits<Allocator>;
         using control_block_type         = control_block_with_pointer<Y, Deleter, Allocator>;
         using control_block_allocator    = typename alloc_traits::template rebind_alloc<control_block_type>;
@@ -302,11 +302,11 @@ private:
         control_block_ = nullptr;
     }
 
-    shared_ptr(shared_weak_count* control_block) noexcept
+    shared_ptr(control_block_base* control_block) noexcept
         : ptr_(control_block ? static_cast<pointer>(control_block->managed_pointer()) : nullptr),
           control_block_(control_block) {}
 
-    shared_ptr(pointer ptr, shared_weak_count* control_block) noexcept
+    shared_ptr(pointer ptr, control_block_base* control_block) noexcept
         : ptr_(ptr), control_block_(control_block) {}
 
 public:
@@ -586,7 +586,7 @@ public:
 
 private:
     pointer ptr_{nullptr};
-    shared_weak_count* control_block_{nullptr};
+    control_block_base* control_block_{nullptr};
 
 public:
     template<class>
