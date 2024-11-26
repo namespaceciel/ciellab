@@ -27,19 +27,19 @@ public:
                                 && std::is_move_assignable<T>::value && !std::is_assignable<T, helper>::value;
     static constexpr bool value = construct || assign;
 
-}; // struct worth_move_constructing
+}; // struct worth_move
 
 template<class T>
 struct worth_move_constructing {
     static constexpr bool value = worth_move<T>::construct;
 
-}; // worth_move_constructing
+}; // struct worth_move_constructing
 
 template<class T>
 struct worth_move_assigning {
     static constexpr bool value = worth_move<T>::assign;
 
-}; // worth_move_assigning
+}; // struct worth_move_assigning
 
 NAMESPACE_CIEL_END
 
