@@ -24,7 +24,7 @@ add_subdirectory(third_party/ciellab)
 
 #### 2. We don't support incomplete types, since we need to verify whether T is trivially copyable throughout the entire class.
 
-#### 3. Proposal P1144 supported. We provide an `is_trivially_relocatable` trait, which defaults to `std::is_trivially_move_constructible`. You can partially specialize this trait for specific classes. When it comes to operations like expansions, insertions, and deletions, we will use `memcpy` or `memmove` for trivially relocatable objects.
+#### 3. Proposal P1144 supported. We provide an `is_trivially_relocatable` trait, which defaults to `std::is_trivially_copyable`. You can partially specialize this trait for specific classes. When it comes to operations like expansions, insertions, and deletions, we will use `memcpy` or `memmove` for trivially relocatable objects.
 
 Most types in C++ are trivially relocatable, except for those that have self references.
 
