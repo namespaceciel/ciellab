@@ -109,16 +109,21 @@ struct maybe_has_trivial_copy_constructor<T, Capacity, D, true> : inplace_vector
 
 // maybe_has_trivial_move_constructor
 
-template<class T, size_t Capacity, class D, bool = is_trivially_relocatable<T>::value,
-         bool = std::is_trivially_move_constructible<T>::value>
+template<class T, size_t Capacity, class D, bool = std::is_trivially_move_constructible<T>::value>
 struct maybe_has_trivial_move_constructor : maybe_has_trivial_copy_constructor<T, Capacity, D> {
     using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
 
     maybe_has_trivial_move_constructor(maybe_has_trivial_move_constructor&& o) noexcept(
-        std::is_nothrow_move_constructible<T>::value) {
-        D& self   = static_cast<D&>(*this);
-        D&& other = static_cast<D&&>(o);
-        self.construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
+        std::is_nothrow_move_constructible<T>::value || is_trivially_relocatable<T>::value) {
+        if (is_trivially_relocatable<T>::value) {
+            ciel::memcpy(std::addressof(this->data_), std::addressof(o.data_), sizeof(T) * o.size_);
+            this->size_ = ciel::exchange(o.size_, 0);
+
+        } else {
+            D& self   = static_cast<D&>(*this);
+            D&& other = static_cast<D&&>(o);
+            self.construct_at_end(std::make_move_iterator(other.begin()), std::make_move_iterator(other.end()));
+        }
     }
 
     maybe_has_trivial_move_constructor()                                                     = default;
@@ -128,29 +133,11 @@ struct maybe_has_trivial_move_constructor : maybe_has_trivial_copy_constructor<T
 
 }; // struct maybe_has_trivial_move_constructor
 
-template<class T, size_t Capacity, class D, bool B>
-struct maybe_has_trivial_move_constructor<T, Capacity, D, B, true>
-    : maybe_has_trivial_copy_constructor<T, Capacity, D> {
-    using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
-
-}; // struct maybe_has_trivial_move_constructor<T, Capacity, D, B, true>
-
 template<class T, size_t Capacity, class D>
-struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
-    : maybe_has_trivial_copy_constructor<T, Capacity, D> {
+struct maybe_has_trivial_move_constructor<T, Capacity, D, true> : maybe_has_trivial_copy_constructor<T, Capacity, D> {
     using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
 
-    maybe_has_trivial_move_constructor(maybe_has_trivial_move_constructor&& o) noexcept {
-        ciel::memcpy(std::addressof(this->data_), std::addressof(o.data_), sizeof(T) * o.size_);
-        this->size_ = ciel::exchange(o.size_, 0);
-    }
-
-    maybe_has_trivial_move_constructor()                                                     = default;
-    maybe_has_trivial_move_constructor(const maybe_has_trivial_move_constructor&)            = default;
-    maybe_has_trivial_move_constructor& operator=(const maybe_has_trivial_move_constructor&) = default;
-    maybe_has_trivial_move_constructor& operator=(maybe_has_trivial_move_constructor&&)      = default;
-
-}; // struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
+}; // struct maybe_has_trivial_move_constructor<T, Capacity, D, true>
 
 // maybe_has_trivial_copy_assignment
 
@@ -188,21 +175,30 @@ struct maybe_has_trivial_copy_assignment<T, Capacity, D, true> : maybe_has_trivi
 
 // maybe_has_trivial_move_assignment
 
-template<class T, size_t Capacity, class D, bool = is_trivially_relocatable<T>::value,
+template<class T, size_t Capacity, class D,
          bool = std::is_trivially_move_constructible<T>::value && std::is_trivially_move_assignable<T>::value
              && std::is_trivially_destructible<T>::value>
 struct maybe_has_trivial_move_assignment : maybe_has_trivial_copy_assignment<T, Capacity, D> {
     using maybe_has_trivial_copy_assignment<T, Capacity, D>::maybe_has_trivial_copy_assignment;
 
-    maybe_has_trivial_move_assignment&
-    operator=(maybe_has_trivial_move_assignment&& o) noexcept(std::is_nothrow_move_assignable<T>::value) {
+    maybe_has_trivial_move_assignment& operator=(maybe_has_trivial_move_assignment&& o) noexcept(
+        std::is_nothrow_move_assignable<T>::value || is_trivially_relocatable<T>::value) {
         if CIEL_UNLIKELY (this == std::addressof(o)) {
             return *this;
         }
 
-        D& self   = static_cast<D&>(*this);
-        D&& other = static_cast<D&&>(o);
-        self.assign_range(std::move(other));
+        D& self = static_cast<D&>(*this);
+
+        if (is_trivially_relocatable<T>::value) {
+            self.clear();
+
+            ciel::memcpy(std::addressof(this->data_), std::addressof(o.data_), sizeof(T) * o.size_);
+            this->size_ = ciel::exchange(o.size_, 0);
+
+        } else {
+            D&& other = static_cast<D&&>(o);
+            self.assign_range(std::move(other));
+        }
 
         return *this;
     }
@@ -214,37 +210,11 @@ struct maybe_has_trivial_move_assignment : maybe_has_trivial_copy_assignment<T, 
 
 }; // struct maybe_has_trivial_move_assignment
 
-template<class T, size_t Capacity, class D, bool B>
-struct maybe_has_trivial_move_assignment<T, Capacity, D, B, true> : maybe_has_trivial_copy_assignment<T, Capacity, D> {
-    using maybe_has_trivial_copy_assignment<T, Capacity, D>::maybe_has_trivial_copy_assignment;
-
-}; // struct maybe_has_trivial_move_assignment<T, Capacity, D, B, true>
-
 template<class T, size_t Capacity, class D>
-struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
-    : maybe_has_trivial_copy_assignment<T, Capacity, D> {
+struct maybe_has_trivial_move_assignment<T, Capacity, D, true> : maybe_has_trivial_copy_assignment<T, Capacity, D> {
     using maybe_has_trivial_copy_assignment<T, Capacity, D>::maybe_has_trivial_copy_assignment;
 
-    maybe_has_trivial_move_assignment& operator=(maybe_has_trivial_move_assignment&& o) noexcept {
-        if CIEL_UNLIKELY (this == std::addressof(o)) {
-            return *this;
-        }
-
-        D& self = static_cast<D&>(*this);
-        self.clear();
-
-        ciel::memcpy(std::addressof(this->data_), std::addressof(o.data_), sizeof(T) * o.size_);
-        this->size_ = ciel::exchange(o.size_, 0);
-
-        return *this;
-    }
-
-    maybe_has_trivial_move_assignment()                                                    = default;
-    maybe_has_trivial_move_assignment(const maybe_has_trivial_move_assignment&)            = default;
-    maybe_has_trivial_move_assignment(maybe_has_trivial_move_assignment&&)                 = default;
-    maybe_has_trivial_move_assignment& operator=(const maybe_has_trivial_move_assignment&) = default;
-
-}; // struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
+}; // struct maybe_has_trivial_move_assignment<T, Capacity, D, true>
 
 // conditional_copyable_and_moveable
 
@@ -289,11 +259,11 @@ class inplace_vector : private detail::maybe_has_trivial_move_assignment<T, Capa
     friend struct detail::inplace_vector_storage;
     template<class, size_t, class, bool>
     friend struct detail::maybe_has_trivial_copy_constructor;
-    template<class, size_t, class, bool, bool>
+    template<class, size_t, class, bool>
     friend struct detail::maybe_has_trivial_move_constructor;
     template<class, size_t, class, bool>
     friend struct detail::maybe_has_trivial_copy_assignment;
-    template<class, size_t, class, bool, bool>
+    template<class, size_t, class, bool>
     friend struct detail::maybe_has_trivial_move_assignment;
 
 public:
