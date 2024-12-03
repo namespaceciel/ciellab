@@ -5,6 +5,7 @@
 #include <ciel/copy_n.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/cstring.hpp>
+#include <ciel/core/exchange.hpp>
 #include <ciel/core/is_range.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/iterator_category.hpp>
@@ -140,8 +141,8 @@ struct maybe_has_trivial_move_constructor<T, Capacity, D, true, false>
     using maybe_has_trivial_copy_constructor<T, Capacity, D>::maybe_has_trivial_copy_constructor;
 
     maybe_has_trivial_move_constructor(maybe_has_trivial_move_constructor&& o) noexcept {
-        ciel::memcpy(this, std::addressof(o), sizeof(D));
-        o.size_ = 0;
+        ciel::memcpy(std::addressof(this->data_), std::addressof(o.data_), sizeof(T) * o.size_);
+        this->size_ = ciel::exchange(o.size_, 0);
     }
 
     maybe_has_trivial_move_constructor()                                                     = default;
@@ -232,8 +233,8 @@ struct maybe_has_trivial_move_assignment<T, Capacity, D, true, false>
         D& self = static_cast<D&>(*this);
         self.clear();
 
-        ciel::memcpy(this, std::addressof(o), sizeof(D));
-        o.size_ = 0;
+        ciel::memcpy(std::addressof(this->data_), std::addressof(o.data_), sizeof(T) * o.size_);
+        this->size_ = ciel::exchange(o.size_, 0);
 
         return *this;
     }
