@@ -30,6 +30,7 @@ set(SOURCES
     src/shared_ptr.cpp
     src/spinlock_ptr.cpp
     src/swap.cpp
+    src/treiber_stack.cpp
     src/worth_move.cpp
     src/inplace_vector/assign.cpp
     src/inplace_vector/constructor.cpp

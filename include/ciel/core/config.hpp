@@ -172,6 +172,9 @@ void void_cast(Args&&...) noexcept {}
 #endif
 }
 
+// Used to isolate values on cache lines to prevent false sharing.
+static constexpr size_t cacheline_size = 64;
+
 NAMESPACE_CIEL_END
 
 // unused

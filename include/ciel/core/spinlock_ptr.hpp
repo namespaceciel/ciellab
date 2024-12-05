@@ -33,11 +33,15 @@ public:
     spinlock_ptr& operator=(const spinlock_ptr&) = delete;
 
     ~spinlock_ptr() {
-        CIEL_PRECONDITION(!is_locked(ptr_.load(std::memory_order_relaxed)));
+        CIEL_PRECONDITION(!is_locked());
     }
 
     CIEL_NODISCARD bool is_locked(const uintptr_t value) const noexcept {
         return value & lock_bit;
+    }
+
+    CIEL_NODISCARD bool is_locked() const noexcept {
+        return ptr_.load(std::memory_order_relaxed) & lock_bit;
     }
 
     CIEL_NODISCARD pointer lock(const std::memory_order order = std::memory_order_seq_cst) const noexcept {
@@ -56,12 +60,14 @@ public:
     }
 
     void unlock(const std::memory_order order = std::memory_order_seq_cst) const noexcept {
-        CIEL_PRECONDITION(is_locked(ptr_.load(std::memory_order_relaxed)));
+        CIEL_PRECONDITION(is_locked());
 
         ptr_.fetch_sub(1, order);
     }
 
-    void swap_unlock(pointer& p, std::memory_order order = std::memory_order_seq_cst) noexcept {
+    void swap_unlock(pointer& p, std::memory_order order = std::memory_order_seq_cst) const noexcept {
+        CIEL_PRECONDITION(is_locked());
+
         if (order != std::memory_order_seq_cst) {
             order = std::memory_order_release;
         }
@@ -69,6 +75,22 @@ public:
         uintptr_t temp = reinterpret_cast<uintptr_t>(p);
         temp           = ptr_.exchange(temp, order);
         p              = reinterpret_cast<pointer>(temp & ~lock_bit);
+    }
+
+    CIEL_NODISCARD pointer ptr() const noexcept {
+        CIEL_PRECONDITION(is_locked());
+
+        uintptr_t cur = ptr_.load(std::memory_order_relaxed);
+        --cur;
+        return reinterpret_cast<pointer>(cur);
+    }
+
+    void store(pointer p, std::memory_order order = std::memory_order_seq_cst) const noexcept {
+        CIEL_PRECONDITION(is_locked());
+
+        uintptr_t temp = reinterpret_cast<uintptr_t>(p);
+        ++temp;
+        ptr_.store(temp, order);
     }
 
 }; // class spinlock_ptr
