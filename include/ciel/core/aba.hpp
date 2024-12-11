@@ -13,13 +13,15 @@
 NAMESPACE_CIEL_BEGIN
 
 // TODO: The current main implementation of ABA uses packed_ptr to avoid DWCAS,
-// which limits it to support only 2^16 operations.
+// which limits it to support only 2^16 operations. So theoretically, in some absurdly pathological case,
+// the ABA problem could still happen if one thread is pre-empted and then
+// another thread(s) somehow performs more than 2^16 operations before the original thread wakes up again.
 template<class T>
 class aba {
 private:
-    using linked_type = packed_ptr<T>;
+    atomic_packed_ptr<T> ptr_{nullptr};
 
-    std::atomic<linked_type> ptr_{nullptr};
+    using linked_type = typename decltype(ptr_)::value_type;
 
     struct impl {
         linked_type old_;
@@ -45,6 +47,11 @@ public:
         return {ptr_.load(std::memory_order_relaxed), this};
     }
 
+#  if CIEL_STD_VER >= 17
+    static constexpr bool is_always_lock_free = decltype(ptr_)::is_always_lock_free;
+    static_assert(is_always_lock_free == true);
+#  endif
+
 }; // class aba
 
 #else
@@ -57,7 +64,7 @@ NAMESPACE_CIEL_BEGIN
 template<class T>
 class aba {
 private:
-    spinlock_ptr<T> ptr_{nullptr};
+    spinlock_ptr<T> ptr_;
 
     struct impl {
         aba* parent_;
@@ -88,6 +95,10 @@ public:
 
         return {this};
     }
+
+#  if CIEL_STD_VER >= 17
+    static constexpr bool is_always_lock_free = false;
+#  endif
 
 }; // class aba
 

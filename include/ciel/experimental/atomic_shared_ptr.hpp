@@ -1,91 +1,80 @@
 #ifndef CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_ATOMIC_SHARED_PTR_HPP_
 #define CIELLAB_INCLUDE_CIEL_EXPERIMENTAL_ATOMIC_SHARED_PTR_HPP_
 
-#include <ciel/compare.hpp>
 #include <ciel/core/config.hpp>
-#include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/message.hpp>
+#include <ciel/core/packed_ptr.hpp>
 #include <ciel/shared_ptr.hpp>
+
+#include <atomic>
+#include <utility>
 
 NAMESPACE_CIEL_BEGIN
 
-// This is an over simplified split_reference_count implementation of atomic<shared_ptr<T>> only for educational
-// purposes. We don't consider any memory_orders, hence all are seq_cst.
-//
-CIEL_DIAGNOSTIC_PUSH
-// current split_reference_count atomic_shared_ptr's implementation needs
-// 48-bit uintptr_t and 16-bit local_ref_count to be packed in a std::atomic.
-CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wint-to-pointer-cast")
-CIEL_GCC_DIAGNOSTIC_IGNORED("-Wint-to-pointer-cast")
+// This is an over simplified split_reference_count implementation of atomic<shared_ptr<T>>
+// only for educational purposes. We don't consider any memory_orders, hence all are seq_cst.
 
 template<class T>
 class atomic_shared_ptr {
+public:
+    using value_type = shared_ptr<T>;
+
 private:
-    struct counted_control_block {
-        uintptr_t control_block_ : 48;
-        size_t local_count_      : 16; // TODO: Use spin_lock as a backup when local_count_ is beyond 2 ^ 16
-
-        counted_control_block(control_block_base* other, const size_t local_count = 0) noexcept
-            : control_block_(reinterpret_cast<uintptr_t>(other)), local_count_(local_count) {
-            CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(other) < (1ULL << 48));
-        }
-
-        CIEL_NODISCARD friend bool operator==(const counted_control_block& lhs,
-                                              const counted_control_block& rhs) noexcept {
-            return lhs.control_block_ == rhs.control_block_ && lhs.local_count_ == rhs.local_count_;
-        }
-
-    }; // struct counted_control_block
-
     // TODO: local pointer?
-    mutable std::atomic<counted_control_block> counted_control_block_;
+    mutable atomic_packed_ptr<control_block_base> packed_control_block_{nullptr};
 
-    CIEL_NODISCARD counted_control_block increment_local_ref_count() const noexcept {
-        counted_control_block old_control_block = counted_control_block_;
-        counted_control_block new_control_block{nullptr};
+    using packed_type = decltype(packed_control_block_)::value_type;
+
+    // Atomically increment local ref count, so that store() after this can be safe.
+    // Return new packed_control_block.
+    CIEL_NODISCARD packed_type increment_local_ref_count() const noexcept {
+        packed_type cur_packed = packed_control_block_.load();
+        packed_type new_packed;
 
         do {
-            new_control_block = old_control_block;
-            ++new_control_block.local_count_;
+            new_packed = cur_packed;
+            ++new_packed.count_;
 
-        } while (!counted_control_block_.compare_exchange_weak(old_control_block, new_control_block));
+        } while (!packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
 
-        CIEL_POSTCONDITION(new_control_block.local_count_ > 0);
+        CIEL_POSTCONDITION(new_packed.count() > 0);
 
-        return new_control_block;
+        return new_packed;
     }
 
-    void decrement_local_ref_count(counted_control_block prev_control_block) const noexcept {
-        CIEL_PRECONDITION(prev_control_block.local_count_ > 0);
+    // Atomically decrement the local ref count if old_packed.ptr() == cur_packed.ptr(),
+    // or decrement the remote ref count.
+    void decrement_local_ref_count(packed_type old_packed) const noexcept {
+        CIEL_PRECONDITION(old_packed.count() > 0);
 
-        counted_control_block old_control_block = counted_control_block_;
-        counted_control_block new_control_block{nullptr};
+        packed_type cur_packed = packed_control_block_.load();
+        packed_type new_packed;
 
         do {
-            new_control_block = old_control_block;
-            --new_control_block.local_count_;
+            CIEL_PRECONDITION(cur_packed.count() > 0 || cur_packed.ptr() != old_packed.ptr());
 
-        } while (old_control_block.control_block_ == prev_control_block.control_block_
-                 && !counted_control_block_.compare_exchange_weak(old_control_block, new_control_block));
+            new_packed = cur_packed;
+            --new_packed.count_;
+
+        } while (cur_packed.ptr() == old_packed.ptr()
+                 && !packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
+        // TODO: Would cur_packed be modified after CAS succeeded?
 
         // Already pointing to another control_block by store().
-        // store() already help us update the remote ref count, so we just decrement that.
-        control_block_base* pcb = reinterpret_cast<control_block_base*>(prev_control_block.control_block_);
-        if (old_control_block.control_block_ != prev_control_block.control_block_ && pcb != nullptr) {
-            pcb->shared_count_release();
+        // store() has already helped us update the remote ref count, so we just decrement that.
+        auto old_cb = old_packed.ptr();
+        if (cur_packed.ptr() != old_cb && old_cb != nullptr) {
+            old_cb->shared_count_release();
         }
     }
 
 public:
-    atomic_shared_ptr() noexcept
-        : counted_control_block_(nullptr) {}
+    atomic_shared_ptr() = default;
 
-    atomic_shared_ptr(nullptr_t) noexcept
-        : counted_control_block_(nullptr) {}
+    atomic_shared_ptr(nullptr_t) noexcept {}
 
-    // Not an atomic operation, like any other atomics.
-    atomic_shared_ptr(shared_ptr<T> desired) noexcept
-        : counted_control_block_(desired.control_block_) {
+    atomic_shared_ptr(value_type desired) noexcept
+        : packed_control_block_(desired.control_block_) {
         desired.release();
     }
 
@@ -96,8 +85,8 @@ public:
         store(nullptr);
     }
 
-    atomic_shared_ptr& operator=(shared_ptr<T> desired) noexcept {
-        store(desired);
+    atomic_shared_ptr& operator=(value_type desired) noexcept {
+        store(std::move(desired));
         return *this;
     }
 
@@ -107,63 +96,67 @@ public:
     }
 
     CIEL_NODISCARD bool is_lock_free() const noexcept {
-        CIEL_PRECONDITION(counted_control_block_.is_lock_free() == true);
-
-        return counted_control_block_.is_lock_free();
+        return packed_control_block_.is_lock_free();
     }
 
-    void store(shared_ptr<T> desired) noexcept {
-        const counted_control_block new_control_block{desired.control_block_};
+    void store(value_type desired) noexcept {
+        const packed_type new_packed(desired.control_block_, 0);
         desired.release();
 
-        const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
+        const packed_type cur_packed = packed_control_block_.exchange(new_packed);
 
-        // Help inflight loads to update those local refcounts to the global.
-        control_block_base* ocb = reinterpret_cast<control_block_base*>(old_control_block.control_block_);
-        if (ocb != nullptr) {
-            ocb->shared_add_ref(old_control_block.local_count_);
-            ocb->shared_count_release();
+        // Help inflight loads to update those local ref counts to the global.
+        auto cur_cb = cur_packed.ptr();
+        if (cur_cb != nullptr) {
+            cur_cb->shared_add_ref(cur_packed.count());
+            cur_cb->shared_count_release();
         }
     }
 
-    CIEL_NODISCARD shared_ptr<T> load() const noexcept {
-        // Atomically increment local ref count, so that store() after this can be safe.
-        const counted_control_block cur_control_block = increment_local_ref_count();
+    CIEL_NODISCARD value_type load() const noexcept {
+        const packed_type cur_packed = increment_local_ref_count();
 
-        control_block_base* ccb = reinterpret_cast<control_block_base*>(cur_control_block.control_block_);
-        if (ccb != nullptr) {
-            ccb->shared_add_ref();
+        auto cur_cb = cur_packed.ptr();
+        if (cur_cb != nullptr) {
+            cur_cb->shared_add_ref();
         }
 
-        shared_ptr<T> result{ccb}; // private constructor
+        decrement_local_ref_count(cur_packed);
 
-        decrement_local_ref_count(cur_control_block);
-
-        return result;
+        return {cur_cb};
     }
 
     CIEL_NODISCARD
-    operator shared_ptr<T>() const noexcept {
+    operator value_type() const noexcept {
         return load();
     }
 
-    CIEL_NODISCARD shared_ptr<T> exchange(shared_ptr<T> desired) noexcept {
-        const counted_control_block new_control_block(desired.control_block_);
+    CIEL_NODISCARD value_type exchange(value_type desired) noexcept {
+        const packed_type new_packed(desired.control_block_, 0);
         desired.release();
 
-        const counted_control_block old_control_block = counted_control_block_.exchange(new_control_block);
+        const packed_type cur_packed = packed_control_block_.exchange(new_packed);
 
-        return shared_ptr<T>(reinterpret_cast<control_block_base*>(old_control_block.control_block_));
+        // Help inflight loads to update those local ref counts to the global.
+        auto cur_cb = cur_packed.ptr();
+        if (cur_cb != nullptr) {
+            cur_cb->shared_add_ref(cur_packed.count());
+        }
+
+        return {cur_cb};
     }
 
-    CIEL_NODISCARD bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
-        counted_control_block expected_control_block(expected.control_block_);
-        const counted_control_block desired_control_block(desired.control_block_);
+    CIEL_NODISCARD bool compare_exchange_weak(value_type& expected, value_type desired) noexcept {
+        const packed_type cur_packed = packed_control_block_.load();
+        packed_type expected_packed(expected.control_block_, cur_packed.count());
+        const packed_type desired_packed(desired.control_block_, 0);
 
-        if (counted_control_block_.compare_exchange_weak(expected_control_block, desired_control_block)) {
-            control_block_base* ecb = reinterpret_cast<control_block_base*>(expected_control_block.control_block_);
-            if (ecb != nullptr) {
-                ecb->shared_count_release();
+        if (packed_control_block_.compare_exchange_weak(expected_packed, desired_packed)) {
+            // Help inflight loads to update those local ref counts to the global.
+            auto expected_cb = expected_packed.ptr();
+            if (expected_cb != nullptr) {
+                expected_cb->shared_add_ref(expected_packed.count());
+                expected_cb->shared_count_release();
             }
 
             desired.release();
@@ -174,30 +167,25 @@ public:
         return false;
     }
 
-    CIEL_NODISCARD bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired) noexcept {
-        const counted_control_block expected_control_block(expected.control_block_);
+    CIEL_NODISCARD bool compare_exchange_strong(value_type& expected, value_type desired) noexcept {
+        const auto expected_cb = expected.control_block_;
 
         do {
             if (compare_exchange_weak(expected, desired)) {
                 return true;
             }
 
-        } while (expected_control_block == expected.control_block_);
+        } while (expected_cb == expected.control_block_);
 
         return false;
     }
 
 #if CIEL_STD_VER >= 17
-    static constexpr bool is_always_lock_free = std::atomic<counted_control_block>::is_always_lock_free;
-    static_assert(is_always_lock_free == true, "");
+    static constexpr bool is_always_lock_free = decltype(packed_control_block_)::is_always_lock_free;
+    static_assert(is_always_lock_free == true);
 #endif
 
 }; // class atomic_shared_ptr
-
-CIEL_DIAGNOSTIC_POP
-
-template<class T>
-struct is_trivially_relocatable<atomic_shared_ptr<T>> : std::true_type {};
 
 NAMESPACE_CIEL_END
 

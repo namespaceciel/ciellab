@@ -4,6 +4,7 @@
 #include <ciel/core/config.hpp>
 #include <ciel/core/message.hpp>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 
@@ -14,7 +15,7 @@ struct alignas(size_t) packed_ptr {
     uintptr_t ptr_ : 48;
     size_t count_  : 16;
 
-    packed_ptr(T* ptr, const size_t count = 0) noexcept
+    packed_ptr(T* ptr = nullptr, const size_t count = 0) noexcept
         : ptr_(reinterpret_cast<uintptr_t>(ptr)), count_(count) {
         CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(ptr) < (1ULL << 48));
         CIEL_PRECONDITION(count < (1ULL << 16));
@@ -37,6 +38,9 @@ struct alignas(size_t) packed_ptr {
     }
 
 }; // struct packed_ptr
+
+template<class T>
+using atomic_packed_ptr = std::atomic<packed_ptr<T>>;
 
 NAMESPACE_CIEL_END
 
