@@ -55,7 +55,7 @@ public:
     // Returns true only if this operation is responsible for afterwards cleanup, i.e. shared_ptr object deletion.
     bool decrement(const size_t diff, const std::memory_order order = std::memory_order_seq_cst) noexcept {
         const size_t res = impl_.fetch_sub(diff, order);
-        CIEL_PRECONDITION(res - diff >= 0);
+        CIEL_PRECONDITION(res >= diff);
 
         if (res == diff) {
             size_t expected = 0;
