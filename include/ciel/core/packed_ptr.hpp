@@ -11,7 +11,7 @@
 NAMESPACE_CIEL_BEGIN
 
 template<class T>
-struct alignas(size_t) packed_ptr {
+class alignas(size_t) packed_ptr {
 private:
     uintptr_t ptr_ : 48;
     size_t count_  : 16;
@@ -55,7 +55,7 @@ public:
         return !(lhs == rhs);
     }
 
-}; // struct packed_ptr
+}; // class packed_ptr
 
 template<class T>
 using atomic_packed_ptr = std::atomic<packed_ptr<T>>;

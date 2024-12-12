@@ -21,7 +21,7 @@ NAMESPACE_CIEL_BEGIN
 //    This aligns with reference counting semantics, where the one that calls decrement
 //    should be the same one that previously called increment, and there is no possibilities to decrement from zero.
 
-struct wait_free_counter {
+class wait_free_counter {
 private:
     static constexpr size_t zero_flag = size_t(1) << (std::numeric_limits<size_t>::digits - 1);
     std::atomic<size_t> impl_{1};
@@ -74,7 +74,7 @@ public:
     static_assert(is_always_lock_free);
 #endif
 
-}; // wait_free_counter
+}; // class wait_free_counter
 
 NAMESPACE_CIEL_END
 
