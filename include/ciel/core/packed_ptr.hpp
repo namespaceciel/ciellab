@@ -12,9 +12,11 @@ NAMESPACE_CIEL_BEGIN
 
 template<class T>
 struct alignas(size_t) packed_ptr {
+private:
     uintptr_t ptr_ : 48;
     size_t count_  : 16;
 
+public:
     packed_ptr(T* ptr = nullptr, const size_t count = 0) noexcept
         : ptr_(reinterpret_cast<uintptr_t>(ptr)), count_(count) {
         CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(ptr) < (1ULL << 48));
@@ -27,6 +29,22 @@ struct alignas(size_t) packed_ptr {
 
     CIEL_NODISCARD size_t count() const noexcept {
         return count_;
+    }
+
+    void set_ptr(T* ptr) noexcept {
+        ptr_ = reinterpret_cast<uintptr_t>(ptr);
+    }
+
+    void set_count(const size_t count) noexcept {
+        count_ = count;
+    }
+
+    void increment_count() noexcept {
+        ++count_;
+    }
+
+    void decrement_count() noexcept {
+        --count_;
     }
 
     CIEL_NODISCARD friend bool operator==(const packed_ptr& lhs, const packed_ptr& rhs) noexcept {

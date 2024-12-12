@@ -33,7 +33,7 @@ private:
 
         do {
             new_packed = cur_packed;
-            ++new_packed.count_;
+            new_packed.increment_count();
 
         } while (!packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
 
@@ -54,7 +54,7 @@ private:
             CIEL_PRECONDITION(cur_packed.count() > 0 || cur_packed.ptr() != old_packed.ptr());
 
             new_packed = cur_packed;
-            --new_packed.count_;
+            new_packed.decrement_count();
 
         } while (cur_packed.ptr() == old_packed.ptr()
                  && !packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
