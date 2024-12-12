@@ -31,6 +31,7 @@ set(SOURCES
     src/spinlock_ptr.cpp
     src/swap.cpp
     src/treiber_stack.cpp
+    src/wait_free_counter.cpp
     src/worth_move.cpp
     src/inplace_vector/assign.cpp
     src/inplace_vector/constructor.cpp

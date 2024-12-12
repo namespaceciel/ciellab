@@ -49,7 +49,7 @@ public:
 
 #  if CIEL_STD_VER >= 17
     static constexpr bool is_always_lock_free = decltype(ptr_)::is_always_lock_free;
-    static_assert(is_always_lock_free == true);
+    static_assert(is_always_lock_free);
 #  endif
 
 }; // class aba
