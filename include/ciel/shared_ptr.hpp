@@ -8,6 +8,7 @@
 #include <ciel/core/exchange.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/message.hpp>
+#include <ciel/core/wait_free_counter.hpp>
 
 #include <atomic>
 #include <memory>
@@ -25,7 +26,7 @@ class enable_shared_from_this;
 class control_block_base {
 protected:
     // The object will be destroyed after decrementing to zero.
-    std::atomic<size_t> shared_count_{1};
+    wait_free_counter shared_count_ /* {1} */;
     // weak_ref + (shared_count_ != 0), The control block will be destroyed after decrementing to zero.
     std::atomic<size_t> weak_count_{1};
 
@@ -51,9 +52,7 @@ public:
     }
 
     void shared_add_ref(const size_t count = 1) noexcept {
-        const size_t previous = shared_count_.fetch_add(count, std::memory_order_relaxed);
-
-        CIEL_POSTCONDITION(count == 0 || previous != 0);
+        CIEL_PRECONDITION(shared_count_.increment_if_not_zero(count, std::memory_order_relaxed));
     }
 
     void weak_add_ref() noexcept {
@@ -68,7 +67,7 @@ public:
         // https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html
         // Alternatively, an acquire-release decrement would work, but might be less efficient
         // since the acquire is only relevant if the decrement zeros the counter.
-        if (shared_count_.fetch_sub(off, std::memory_order_release) == off) {
+        if (shared_count_.decrement(off, std::memory_order_release)) {
             std::atomic_thread_fence(std::memory_order_acquire);
 
             dispose();
@@ -90,16 +89,7 @@ public:
     }
 
     CIEL_NODISCARD bool increment_if_not_zero() noexcept {
-        size_t old_count = shared_count_.load(std::memory_order_relaxed);
-
-        do {
-            if (old_count == 0) {
-                return false;
-            }
-
-        } while (!shared_count_.compare_exchange_weak(old_count, old_count + 1, std::memory_order_relaxed));
-
-        return true;
+        return shared_count_.increment_if_not_zero(1, std::memory_order_relaxed);
     }
 
     CIEL_NODISCARD virtual void* get_deleter(const std::type_info&) noexcept {
