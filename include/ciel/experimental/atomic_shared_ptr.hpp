@@ -100,17 +100,7 @@ public:
     }
 
     void store(value_type desired) noexcept {
-        const packed_type new_packed(desired.control_block_, 0);
-        desired.release();
-
-        const packed_type cur_packed = packed_control_block_.exchange(new_packed);
-
-        // Help inflight loads to update those local ref counts to the global.
-        auto cur_cb = cur_packed.ptr();
-        if (cur_cb != nullptr) {
-            cur_cb->shared_add_ref(cur_packed.count());
-            cur_cb->shared_count_release();
-        }
+        CIEL_UNUSED(exchange(std::move(desired)));
     }
 
     CIEL_NODISCARD value_type load() const noexcept {
