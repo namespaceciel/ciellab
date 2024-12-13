@@ -83,6 +83,8 @@ private:
         return end_cap_alloc_.second();
     }
 
+    // Inspired by folly::fbvector, this constant is to optimize away internal_value's branch
+    // to always return false when requirements are satisfied.
     static constexpr bool should_pass_by_value =
         std::is_trivially_copyable<value_type>::value && sizeof(value_type) <= 16;
     using lvalue = conditional_t<should_pass_by_value, value_type, const value_type&>;
