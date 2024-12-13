@@ -26,6 +26,7 @@ set(SOURCES
     src/is_nullable.cpp
     src/list.cpp
     src/message.cpp
+    src/mpsc_queue.cpp
     src/observer_ptr.cpp
     src/reference_counter.cpp
     src/shared_ptr.cpp
