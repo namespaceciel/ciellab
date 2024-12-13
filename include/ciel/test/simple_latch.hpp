@@ -2,6 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_TEST_SIMPLE_LATCH_HPP_
 
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 
 #include <condition_variable>
 #include <cstddef>

@@ -1,0 +1,98 @@
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_MPSC_QUEUE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_MPSC_QUEUE_HPP_
+
+#include <ciel/core/aligned_storage.hpp>
+#include <ciel/core/config.hpp>
+
+#include <atomic>
+#include <type_traits>
+
+NAMESPACE_CIEL_BEGIN
+
+template<class T>
+class mpsc_queue {
+    static_assert(std::is_same<decltype(T::next), std::atomic<T*>>::value, "");
+
+private:
+    alignas(cacheline_size) std::atomic<T*> front_{nullptr};
+    alignas(cacheline_size) std::atomic<T*> back_{nullptr};
+    aligned_storage<sizeof(T), alignof(T)> stub_;
+
+public:
+    mpsc_queue() noexcept {
+        T* stub_ptr = reinterpret_cast<T*>(&stub_);
+        stub_ptr->next.store(nullptr, std::memory_order_relaxed);
+        front_.store(stub_ptr, std::memory_order_relaxed);
+    }
+
+    mpsc_queue(const mpsc_queue&)            = delete;
+    mpsc_queue& operator=(const mpsc_queue&) = delete;
+
+    void push(T* t) noexcept {
+        push(t, t);
+    }
+
+    void push(T* first, T* last) noexcept {
+        last->next.store(nullptr, std::memory_order_relaxed);
+        T* prev = back_.exchange(last, std::memory_order_acq_rel);
+
+        if CIEL_LIKELY (prev != nullptr) { // not at stub state
+            prev->next.store(first, std::memory_order_relaxed);
+            return;
+        }
+
+        // at stub state, remove stub
+        front_.store(first, std::memory_order_relaxed);
+    }
+
+    // ProcessEachNode is a monadic predicate callback type, to properly process each node.
+    // The callback may return false to stop the iteration early, but must have processed the element it was given.
+    template<class ProcessEachNode,
+             enable_if_t<std::is_same<decltype(std::declval<ProcessEachNode>()(std::declval<T*>())), bool>::value> = 0>
+    void process(ProcessEachNode&& process_each_node) noexcept {
+        T* cur = front_.load(std::memory_order_relaxed);
+        T* b   = back_.load(std::memory_order_relaxed);
+
+        if CIEL_UNLIKELY (b == nullptr) { // at stub state
+            return;
+        }
+
+        while (cur != b) {
+            T* next = cur->next.load(std::memory_order_relaxed);
+
+            if CIEL_UNLIKELY (!process_each_node(cur)) {
+                front_.store(next, std::memory_order_relaxed);
+                return;
+            }
+
+            cur = next;
+        }
+
+        // Probably only one node left.
+        front_.store(cur, std::memory_order_relaxed);
+    }
+
+    // ProcessEachNode callback must process all nodes left.
+    // No producers shall exist here.
+    template<class ProcessEachNode,
+             enable_if_t<std::is_same<decltype(std::declval<ProcessEachNode>()(std::declval<T*>())), void>::value> = 0>
+    void destructive_process(ProcessEachNode&& process_each_node) noexcept {
+        T* cur = front_.load(std::memory_order_relaxed);
+        T* b   = back_.load(std::memory_order_relaxed);
+
+        if CIEL_UNLIKELY (b == nullptr) { // at stub state
+            return;
+        }
+
+        while (cur != nullptr) {
+            T* next = cur->next.load(std::memory_order_relaxed);
+            process_each_node(cur);
+            cur = next;
+        }
+    }
+
+}; // class mpsc_queue
+
+NAMESPACE_CIEL_END
+
+#endif // CIELLAB_INCLUDE_CIEL_CORE_ALIGNED_STORAGE_HPP_
