@@ -17,6 +17,8 @@ public:
     void arrive_and_wait() noexcept {
         std::unique_lock<std::mutex> lock(mutex_);
 
+        CIEL_PRECONDITION(count_down_ != 0);
+
         if (--count_down_ == 0) {
             cv_.notify_all();
 
