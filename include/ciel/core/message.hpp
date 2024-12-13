@@ -88,8 +88,10 @@ public:
         }
     }
 
-    void append(uintptr_t s) noexcept {
+    void append(const void* p) noexcept {
         const char hexdigits[] = "0123456789abcdef";
+
+        uintptr_t s = reinterpret_cast<uintptr_t>(p);
 
         append('0');
         append('x');
@@ -104,10 +106,6 @@ public:
         for (const char c : temp) {
             append(c);
         }
-    }
-
-    void append(const void* p) noexcept {
-        append(reinterpret_cast<uintptr_t>(p));
     }
 
     CIEL_NODISCARD const char* get() const noexcept {
