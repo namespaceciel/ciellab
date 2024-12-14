@@ -8,7 +8,7 @@
 #include <ciel/core/exchange.hpp>
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/message.hpp>
-#include <ciel/core/wait_free_counter.hpp>
+#include <ciel/core/reference_counter.hpp>
 
 #include <atomic>
 #include <memory>
@@ -26,7 +26,7 @@ class enable_shared_from_this;
 class control_block_base {
 protected:
     // The object will be destroyed after decrementing to zero.
-    wait_free_counter shared_count_ /* {1} */;
+    reference_counter shared_count_ /* {1} */;
     // weak_ref + (shared_count_ != 0), The control block will be destroyed after decrementing to zero.
     std::atomic<size_t> weak_count_{1};
 

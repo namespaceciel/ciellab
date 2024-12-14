@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/core/wait_free_counter.hpp>
+#include <ciel/core/reference_counter.hpp>
 #include <ciel/test/simple_latch.hpp>
 #include <ciel/vector.hpp>
 
@@ -9,8 +9,8 @@
 
 using namespace ciel;
 
-TEST(wait_free_counter, singlethread) {
-    wait_free_counter counter;
+TEST(reference_counter, singlethread) {
+    reference_counter counter;
     ASSERT_EQ(counter.load(), 1);
 
     ASSERT_TRUE(counter.increment_if_not_zero(1));
@@ -27,11 +27,11 @@ TEST(wait_free_counter, singlethread) {
     ASSERT_EQ(counter.load(), 0);
 }
 
-TEST(wait_free_counter, multithread) {
+TEST(reference_counter, multithread) {
     constexpr size_t threads_num = 2000;
     SimpleLatch go{threads_num + 1};
 
-    wait_free_counter counter;
+    reference_counter counter;
     std::atomic<size_t> cleanup_count{0};
     std::atomic<bool> hits_zero{false};
 

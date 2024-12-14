@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_CORE_WAIT_FREE_COUNTER_HPP_
-#define CIELLAB_INCLUDE_CIEL_CORE_WAIT_FREE_COUNTER_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_REFERENCE_COUNTER_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_REFERENCE_COUNTER_HPP_
 
 #include <ciel/core/config.hpp>
 #include <ciel/core/message.hpp>
@@ -21,20 +21,20 @@ NAMESPACE_CIEL_BEGIN
 //    This aligns with reference counting semantics, where the one that calls decrement
 //    should be the same one that previously called increment, and there is no possibilities to decrement from zero.
 
-class wait_free_counter {
+class reference_counter {
 private:
     static constexpr size_t zero_flag = size_t(1) << (std::numeric_limits<size_t>::digits - 1);
     std::atomic<size_t> impl_{1};
 
 public:
-    wait_free_counter() = default;
+    reference_counter() = default;
 
-    ~wait_free_counter() {
+    ~reference_counter() {
         CIEL_PRECONDITION(load() == 0);
     }
 
-    wait_free_counter(const wait_free_counter&)            = delete;
-    wait_free_counter& operator=(const wait_free_counter&) = delete;
+    reference_counter(const reference_counter&)            = delete;
+    reference_counter& operator=(const reference_counter&) = delete;
 
     // Returns zero only if zero_flag is being set, returns one in zero_pending stage.
     size_t load(const std::memory_order order = std::memory_order_seq_cst) const noexcept {
@@ -74,8 +74,8 @@ public:
     static_assert(is_always_lock_free);
 #endif
 
-}; // class wait_free_counter
+}; // class reference_counter
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_CORE_WAIT_FREE_COUNTER_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_REFERENCE_COUNTER_HPP_
