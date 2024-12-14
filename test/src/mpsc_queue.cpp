@@ -23,24 +23,28 @@ struct Node {
 } // namespace
 
 TEST(mpsc_queue, singlethread) {
-    std::array<Node, 10> arr;
+    std::array<Node, 6> arr;
     mpsc_queue<Node> queue;
     std::atomic<size_t> count{0};
+    queue.process([&](Node*) { CIEL_PRECONDITION(false); return true; });
 
     queue.push(arr.data());
-    queue.process([&](::testing::Test*, Node*) { CIEL_PRECONDITION(false); return true; });
+    queue.process([&](Node*) { CIEL_PRECONDITION(false); return true; });
 
+    (arr.data() + 1)->next.store(arr.data() + 2);
+    (arr.data() + 2)->next.store(arr.data() + 3);
+    (arr.data() + 3)->next.store(arr.data() + 4);
+    (arr.data() + 4)->next.store(arr.data() + 5);
     queue.push(arr.data() + 1, arr.data() + 5);
     queue.process([&](Node* node) { count += node->value; return true; });
-    ASSERT_EQ(count, 4);
+    ASSERT_EQ(count, 5);
 
     queue.destructive_process([&](Node* node) { count += node->value; });
-    ASSERT_EQ(count, 5);
-    
+    ASSERT_EQ(count, 6);
 }
 
 TEST(mpsc_queue, multithread) {
-    constexpr size_t producer_threads_num = 1;
+    constexpr size_t producer_threads_num = 1000;
     std::array<Node, producer_threads_num> arr;
     SimpleLatch go{producer_threads_num + 1};
     mpsc_queue<Node> queue;

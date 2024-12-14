@@ -3,6 +3,7 @@
 
 #include <ciel/core/aligned_storage.hpp>
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 
 #include <atomic>
 #include <type_traits>
@@ -21,8 +22,9 @@ private:
 public:
     mpsc_queue() noexcept {
         T* stub_ptr = reinterpret_cast<T*>(&stub_);
-        stub_ptr->next.store(nullptr, std::memory_order_relaxed);
-        front_.store(stub_ptr, std::memory_order_relaxed);
+        using AtomicTPtr = std::atomic<T*>;
+        ::new(&(stub_ptr->next)) AtomicTPtr(nullptr);
+        front_.store(stub_ptr, std::memory_order_seq_cst);
     }
 
     mpsc_queue(const mpsc_queue&)            = delete;
@@ -33,35 +35,43 @@ public:
     }
 
     void push(T* first, T* last) noexcept {
-        last->next.store(nullptr, std::memory_order_relaxed);
-        T* prev = back_.exchange(last, std::memory_order_acq_rel);
+        CIEL_PRECONDITION(first != nullptr);
+        CIEL_PRECONDITION(last != nullptr);
+
+        last->next.store(nullptr, std::memory_order_seq_cst);
+        T* prev = back_.exchange(last, std::memory_order_seq_cst);
 
         if CIEL_LIKELY (prev != nullptr) { // not at stub state
-            prev->next.store(first, std::memory_order_relaxed);
+            prev->next.store(first, std::memory_order_seq_cst);
             return;
         }
 
         // at stub state, remove stub
-        front_.store(first, std::memory_order_relaxed);
+        front_.store(first, std::memory_order_seq_cst);
     }
 
     // ProcessEachNode is a monadic predicate callback type, to properly process each node.
     // The callback may return false to stop the iteration early, but must have processed the element it was given.
-    template<class ProcessEachNode,
-             enable_if_t<std::is_same<decltype(std::declval<ProcessEachNode>()(std::declval<T*>())), bool>::value> = 0>
+    template<class ProcessEachNode>
     void process(ProcessEachNode&& process_each_node) noexcept {
-        T* cur = front_.load(std::memory_order_relaxed);
-        T* b   = back_.load(std::memory_order_relaxed);
+        // TODO: back_ must be loaded first, but I don't know why.
+        T* b   = back_.load(std::memory_order_seq_cst);
+        T* cur = front_.load(std::memory_order_seq_cst);
 
         if CIEL_UNLIKELY (b == nullptr) { // at stub state
             return;
         }
 
         while (cur != b) {
-            T* next = cur->next.load(std::memory_order_relaxed);
+            T* next = cur->next.load(std::memory_order_seq_cst);
+
+            // If the push is happening halfway (back_ is updated while prev->next is not updated yet).
+            if CIEL_UNLIKELY (next == nullptr) {
+                break;
+            }
 
             if CIEL_UNLIKELY (!process_each_node(cur)) {
-                front_.store(next, std::memory_order_relaxed);
+                front_.store(next, std::memory_order_seq_cst);
                 return;
             }
 
@@ -69,23 +79,22 @@ public:
         }
 
         // Probably only one node left.
-        front_.store(cur, std::memory_order_relaxed);
+        front_.store(cur, std::memory_order_seq_cst);
     }
 
     // ProcessEachNode callback must process all nodes left.
-    // No producers shall exist here.
-    template<class ProcessEachNode,
-             enable_if_t<std::is_same<decltype(std::declval<ProcessEachNode>()(std::declval<T*>())), void>::value> = 0>
+    // No other related threads shall exist here.
+    template<class ProcessEachNode>
     void destructive_process(ProcessEachNode&& process_each_node) noexcept {
-        T* cur = front_.load(std::memory_order_relaxed);
-        T* b   = back_.load(std::memory_order_relaxed);
+        T* cur = front_.load(std::memory_order_seq_cst);
+        T* b   = back_.load(std::memory_order_seq_cst);
 
         if CIEL_UNLIKELY (b == nullptr) { // at stub state
             return;
         }
 
         while (cur != nullptr) {
-            T* next = cur->next.load(std::memory_order_relaxed);
+            T* next = cur->next.load(std::memory_order_seq_cst);
             process_each_node(cur);
             cur = next;
         }
