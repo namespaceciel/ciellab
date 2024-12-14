@@ -10,6 +10,7 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Daniel Anderson's CppCon talk: https://www.youtube.com/watch?v=kPh8pod0-gk
 // This class is useful for reference counting, i.e. shared_ptr's shared_count, when the count hits zero,
 // the managed object will be deleted and the count shall not increment from zero thereafter.
 //
