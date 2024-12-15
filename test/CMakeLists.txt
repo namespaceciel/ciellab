@@ -22,6 +22,7 @@ set(SOURCES
     src/function.cpp
     src/function/constructor.cpp
     src/function/overload_resolution.cpp
+    src/hazard_pointer.cpp
     src/is_nullable.cpp
     src/list.cpp
     src/message.cpp
