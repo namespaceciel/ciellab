@@ -28,7 +28,9 @@ TEST(reference_counter, singlethread) {
 }
 
 TEST(reference_counter, multithread) {
-    constexpr size_t threads_num = 2000;
+    constexpr size_t threads_num    = 64;
+    constexpr size_t operations_num = 10000;
+
     SimpleLatch go{threads_num + 1};
 
     reference_counter counter;
@@ -41,9 +43,11 @@ TEST(reference_counter, multithread) {
         write_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            if (counter.increment_if_not_zero(1)) {
-                if (counter.decrement(1)) {
-                    ++cleanup_count;
+            for (size_t j = 0; j < operations_num; ++j) {
+                if (counter.increment_if_not_zero(1)) {
+                    if (counter.decrement(1)) {
+                        ++cleanup_count;
+                    }
                 }
             }
         });
@@ -55,11 +59,13 @@ TEST(reference_counter, multithread) {
         read_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            if (hits_zero.load()) {
-                ASSERT_EQ(counter.load(), 0);
+            for (size_t j = 0; j < operations_num; ++j) {
+                if (hits_zero.load()) {
+                    ASSERT_EQ(counter.load(), 0);
 
-            } else if (counter.load() == 0) {
-                hits_zero = true;
+                } else if (counter.load() == 0) {
+                    hits_zero = true;
+                }
             }
         });
     }

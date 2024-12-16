@@ -12,10 +12,11 @@
 using namespace ciel;
 
 TEST(spinlock_ptr, lock) {
+    constexpr size_t threads_num    = 64;
+    constexpr size_t operations_num = 10000;
+
     const std::unique_ptr<int> up{new int{0}};
     const spinlock_ptr<int> ptr{up.get()};
-
-    constexpr size_t threads_num = 1000;
 
     SimpleLatch go{threads_num};
 
@@ -26,10 +27,12 @@ TEST(spinlock_ptr, lock) {
         threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            int* p = ptr.lock();
-            CIEL_DEFER({ ptr.unlock(); });
+            for (size_t j = 0; j < operations_num; ++j) {
+                int* p = ptr.lock();
+                CIEL_DEFER({ ptr.unlock(); });
 
-            ++(*p);
+                ++(*p);
+            }
         });
     }
 
@@ -37,5 +40,5 @@ TEST(spinlock_ptr, lock) {
         t.join();
     }
 
-    ASSERT_EQ(*up, threads_num);
+    ASSERT_EQ(*up, threads_num * operations_num);
 }

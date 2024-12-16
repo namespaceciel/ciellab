@@ -198,7 +198,7 @@ TEST(atomic_shared_ptr, concurrent_store_and_loads) {
 
 TEST(atomic_shared_ptr, concurrent_exchange) {
     constexpr size_t threads_num    = 64;
-    constexpr size_t operations_num = 200;
+    constexpr size_t operations_num = 10000;
 
     atomic_shared_ptr<size_t> s(make_shared<size_t>(0));
     SimpleLatch go{threads_num};

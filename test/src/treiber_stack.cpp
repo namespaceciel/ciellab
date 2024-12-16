@@ -16,15 +16,17 @@ namespace {
 
 struct Node {
     size_t value{1};
-    std::atomic<Node*> next{nullptr};
+    std::atomic<Node*> next{this}; // Intentionally
 
 }; // struct Node
 
 } // namespace
 
 TEST(treiber_stack, concurrent_push_and_pop) {
-    constexpr size_t threads_num = 1000;
-    std::array<Node, threads_num / 2> arr;
+    constexpr size_t threads_num    = 64;
+    constexpr size_t operations_num = 1000;
+
+    std::array<std::array<Node, operations_num>, threads_num / 2> arr;
     SimpleLatch go{threads_num};
     treiber_stack<Node> stack;
     std::atomic<size_t> count{0};
@@ -35,7 +37,9 @@ TEST(treiber_stack, concurrent_push_and_pop) {
         push_threads.unchecked_emplace_back([&, i] {
             go.arrive_and_wait();
 
-            stack.push(std::addressof(arr[i]));
+            for (size_t j = 0; j < operations_num; ++j) {
+                stack.push(std::addressof(arr[i][j]));
+            }
         });
     }
 
@@ -45,9 +49,11 @@ TEST(treiber_stack, concurrent_push_and_pop) {
         pop_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            Node* node = stack.pop();
-            if (node != nullptr) {
-                count += node->value;
+            for (size_t j = 0; j < operations_num; ++j) {
+                Node* node = stack.pop();
+                if (node != nullptr) {
+                    count += node->value;
+                }
             }
         });
     }
@@ -60,11 +66,11 @@ TEST(treiber_stack, concurrent_push_and_pop) {
         t.join();
     }
 
-    auto top = stack.pop_all();
+    Node* top = stack.pop_all();
     while (top != nullptr) {
         count += top->value;
         top = top->next;
     }
 
-    ASSERT_EQ(count, threads_num / 2);
+    ASSERT_EQ(count, threads_num / 2 * operations_num);
 }
