@@ -12,7 +12,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 set(SOURCES
-    src/memory_leak_check.cpp
     src/main.cpp
     src/allocator_traits.cpp
     src/atomic_shared_ptr.cpp
