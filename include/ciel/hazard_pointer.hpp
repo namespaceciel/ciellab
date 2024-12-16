@@ -16,6 +16,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+namespace detail {
+namespace retired_list_detail {
+
 template<class T, class = int, class = void, class = void>
 struct is_garbage_collectible : std::false_type {};
 
@@ -84,6 +87,8 @@ public:
 
 }; // class retired_list
 
+} // namespace retired_list_detail
+
 // Each thread owns a hazard_slot, they are linked together to form a linked list
 // so that threads can scan for the set of current protected pointers.
 //
@@ -117,15 +122,17 @@ struct
     std::unordered_set<garbage_type*> protected_set;
 
     // Garbage collected by this slot.
-    retired_list<garbage_type> retired_list;
+    retired_list_detail::retired_list<garbage_type> retired_list;
 
 }; // struct alignas(cacheline_size) hazard_slot
+
+} // namespace detail
 
 template<class GarbageType>
 class hazard_pointer {
 private:
     using garbage_type = GarbageType;
-    using hazard_slot  = hazard_slot<garbage_type>;
+    using hazard_slot  = detail::hazard_slot<garbage_type>;
 
     static constexpr size_t cleanup_threshold = 1000;
 
