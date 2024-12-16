@@ -89,7 +89,11 @@ public:
 //
 // Except for next and in_use, members should not be touched by more than one thread at one time.
 template<class GarbageType>
-struct alignas(cacheline_size) hazard_slot {
+struct
+#if CIEL_STD_VER >= 17
+    alignas(cacheline_size)
+#endif
+        hazard_slot {
     using garbage_type = GarbageType;
 
     hazard_slot(const bool iu) noexcept
