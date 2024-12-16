@@ -7,7 +7,8 @@
 #include <ciel/vector.hpp>
 
 #include <atomic>
-#include <memory>
+#include <cstddef>
+#include <thread>
 
 using namespace ciel;
 

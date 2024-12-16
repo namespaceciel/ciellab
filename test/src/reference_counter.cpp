@@ -4,6 +4,7 @@
 #include <ciel/test/simple_latch.hpp>
 #include <ciel/vector.hpp>
 
+#include <atomic>
 #include <cstddef>
 #include <thread>
 
