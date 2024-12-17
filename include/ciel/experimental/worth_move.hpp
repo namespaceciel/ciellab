@@ -25,9 +25,9 @@ private:
     }; // struct helper
 
 public:
-    static constexpr bool construct = std::is_class<T>::value && !std::is_trivial<T>::value
+    static constexpr bool construct = std::is_class<T>::value && !std::is_trivially_copyable<T>::value
                                    && std::is_move_constructible<T>::value && !std::is_constructible<T, helper>::value;
-    static constexpr bool assign = std::is_class<T>::value && !std::is_trivial<T>::value
+    static constexpr bool assign = std::is_class<T>::value && !std::is_trivially_copyable<T>::value
                                 && std::is_move_assignable<T>::value && !std::is_assignable<T, helper>::value;
     static constexpr bool value = construct || assign;
 
