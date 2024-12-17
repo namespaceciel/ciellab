@@ -7,7 +7,11 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by:
+// https://stackoverflow.com/questions/51901837/how-to-get-if-a-type-is-truly-move-constructible/51912859#51912859
+//
 // FIXME: Current implementation returns true for const&& constructor and assignment.
+
 template<class T>
 struct worth_move {
     static_assert(!std::is_const<T>::value, "");

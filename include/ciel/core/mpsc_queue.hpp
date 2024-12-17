@@ -10,6 +10,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// https://github.com/microsoft/snmalloc/blob/main/snmalloc.pdf
+// See Figure 3 in snmalloc paper for thorough explanations.
+
 template<class T>
 class mpsc_queue {
     static_assert(std::is_same<decltype(T::next), std::atomic<T*>>::value, "");

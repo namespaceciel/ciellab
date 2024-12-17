@@ -10,6 +10,10 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// https://en.cppreference.com/w/cpp/memory/to_address
+// to_address is to unpack any fancy pointers to raw pointers, while std::addressof(*p) cannot be used
+// because there may be no valid object for p to dereference to.
+
 CIEL_DIAGNOSTIC_PUSH
 #if CIEL_STD_VER >= 20
 // std::move_iterator's operator-> has been deprecated in C++20

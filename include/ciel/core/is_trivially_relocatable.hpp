@@ -10,6 +10,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p1144r10.html
+
 template<class T>
 struct is_trivially_relocatable : disjunction<std::is_trivially_copyable<T>,
 #ifdef _LIBCPP___TYPE_TRAITS_IS_TRIVIALLY_RELOCATABLE_H

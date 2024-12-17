@@ -5,6 +5,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// https://en.cppreference.com/w/cpp/utility/as_const
+
 template<class T>
 add_const_t<T>& as_const(T& t) noexcept {
     return t;

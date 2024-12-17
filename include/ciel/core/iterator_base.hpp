@@ -7,7 +7,6 @@
 
 NAMESPACE_CIEL_BEGIN
 
-// iterator_base
 template<class Derived>
 struct input_iterator_base {
     Derived& operator++() noexcept {

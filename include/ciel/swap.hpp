@@ -12,6 +12,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Arthur O’Dwyer's libc++ fork:
+// https://github.com/Quuxplusone/llvm-project/blob/6af94af4d0351649eaef8454e7fb58a1175a9580/libcxx/include/__utility/swap.h
+
 // relocatable_swap
 template<class T>
 void relocatable_swap(T& lhs, T& rhs) noexcept {
