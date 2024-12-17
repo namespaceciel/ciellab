@@ -10,6 +10,16 @@ else
     NUM_JOB := 1
 endif
 
+GCC_PATH ?= gcc
+GCC_PATH := $(or $(CIELLAB_GCC),$(GCC_PATH))
+GXX_PATH ?= g++
+GXX_PATH := $(or $(CIELLAB_GXX),$(GXX_PATH))
+
+CLANG_PATH ?= clang
+CLANG_PATH := $(or $(CIELLAB_CLANG),$(CLANG_PATH))
+CLANGXX_PATH ?= clang++
+CLANGXX_PATH := $(or $(CIELLAB_CLANGXX),$(CLANGXX_PATH))
+
 clean:
 	rm -rf $(BUILD_DIR)
 .PHONY: clean
@@ -17,7 +27,7 @@ clean:
 # -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
 
 clang_test_build:
-	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
+	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=$(CLANG_PATH) -DCMAKE_CXX_COMPILER=$(CLANGXX_PATH) -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
 	cmake --build $(BUILD_DIR)/clang --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
 	cmake --build $(BUILD_DIR)/clang --target ciellab_test_20_exceptions_off_rtti_off -j $(NUM_JOB)
 
@@ -27,7 +37,7 @@ clang_test_run:
 clang_test: clang_test_build clang_test_run
 
 gcc_test_build:
-	cmake -S . -B $(BUILD_DIR)/gcc -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && \
+	cmake -S . -B $(BUILD_DIR)/gcc -DCMAKE_C_COMPILER=$(GCC_PATH) -DCMAKE_CXX_COMPILER=$(GXX_PATH) && \
 	cmake --build $(BUILD_DIR)/gcc --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
 	cmake --build $(BUILD_DIR)/gcc --target ciellab_test_20_exceptions_off_rtti_off -j $(NUM_JOB)
 
@@ -40,7 +50,7 @@ test: clang_test_build gcc_test_build clang_test_run gcc_test_run
 .PHONY: test
 
 clang_benchmark_build:
-	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
+	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=$(CLANG_PATH) -DCMAKE_CXX_COMPILER=$(CLANGXX_PATH) -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
     cmake --build $(BUILD_DIR)/clang --target ciellab_benchmark -j $(NUM_JOB)
 
 clang_benchmark_run:
@@ -49,7 +59,7 @@ clang_benchmark_run:
 clang_benchmark: clang_benchmark_build clang_benchmark_run
 
 gcc_benchmark_build:
-	cmake -S . -B $(BUILD_DIR)/gcc -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ && \
+	cmake -S . -B $(BUILD_DIR)/gcc -DCMAKE_C_COMPILER=$(GCC_PATH) -DCMAKE_CXX_COMPILER=$(GXX_PATH) && \
     cmake --build $(BUILD_DIR)/gcc --target ciellab_benchmark -j $(NUM_JOB)
 
 gcc_benchmark_run:
