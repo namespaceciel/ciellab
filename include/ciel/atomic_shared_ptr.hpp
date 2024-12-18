@@ -74,9 +74,10 @@ public:
         if (cb) {
             cb->shared_add_ref();
         }
+        value_type res{ptr_, cb};
         control_block_.unlock(std::memory_order_relaxed);
 
-        return {ptr_, cb};
+        return res;
     }
 
     CIEL_NODISCARD operator value_type() const noexcept {
