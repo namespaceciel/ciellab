@@ -57,9 +57,10 @@ TEST(mpsc_queue, singlethread) {
 
 TEST(mpsc_queue, multithread) {
     constexpr size_t producer_threads_num = 64;
-    constexpr size_t operations_num       = 1000;
+    constexpr size_t operations_num       = 10000;
 
-    std::array<std::array<Node, operations_num>, producer_threads_num> arr;
+    using ArrayType = std::array<std::array<Node, operations_num>, producer_threads_num>;
+    std::unique_ptr<ArrayType> arr{new ArrayType{}};
     SimpleLatch go{producer_threads_num + 1};
     mpsc_queue<Node> queue;
     std::atomic<size_t> count{0};
@@ -71,7 +72,7 @@ TEST(mpsc_queue, multithread) {
             go.arrive_and_wait();
 
             for (size_t j = 0; j < operations_num; ++j) {
-                queue.push(std::addressof(arr[i][j]));
+                queue.push(std::addressof((*arr)[i][j]));
             }
         });
     }
@@ -86,7 +87,7 @@ TEST(mpsc_queue, multithread) {
                 return true;
             });
 
-            std::this_thread::yield();
+            // std::this_thread::yield();
         }
     });
 

@@ -62,7 +62,7 @@ public:
         T* cur = front_.load(std::memory_order_relaxed);
         T* b   = back_.load(std::memory_order_relaxed);
 
-        if CIEL_UNLIKELY (b == nullptr) { // at stub state
+        if CIEL_UNLIKELY (cur == reinterpret_cast<T*>(&stub_)) { // at stub state
             return;
         }
 
@@ -91,9 +91,8 @@ public:
     template<class ProcessEachNode>
     void destructive_process(ProcessEachNode&& process_each_node) noexcept {
         T* cur = front_.load(std::memory_order_relaxed);
-        T* b   = back_.load(std::memory_order_relaxed);
 
-        if CIEL_UNLIKELY (b == nullptr) { // at stub state
+        if CIEL_UNLIKELY (cur == reinterpret_cast<T*>(&stub_)) { // at stub state
             return;
         }
 
