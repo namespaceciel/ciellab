@@ -1,15 +1,18 @@
 #ifndef CIELLAB_INCLUDE_CIEL_HAZARD_POINTER_HPP_
 #define CIELLAB_INCLUDE_CIEL_HAZARD_POINTER_HPP_
 
+#include <ciel/core/aligned_storage.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/exchange.hpp>
 #include <ciel/core/message.hpp>
+#include <ciel/core/reference_counter.hpp>
 
 #include <atomic>
 #include <cstddef>
 #include <memory>
 #include <new>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -142,8 +145,9 @@ private:
         hazard_slot* const my_slot;
 
         hazard_slot_owner()
-            : my_slot(get().get_slot()) {
+            : my_slot(get_pair().first.get_slot()) {
             CIEL_PRECONDITION(my_slot != nullptr);
+            CIEL_PRECONDITION(get_pair().second.increment_if_not_zero(1, std::memory_order_relaxed));
         }
 
         hazard_slot_owner(const hazard_slot_owner&)            = delete;
@@ -152,6 +156,12 @@ private:
         ~hazard_slot_owner() {
             my_slot->protected_ptr.store(nullptr, std::memory_order_release);
             my_slot->in_use.store(false, std::memory_order_release);
+
+            using Pair = std::pair<hazard_pointer, reference_counter>;
+            Pair& get  = get_pair();
+            if (get.second.decrement(1, std::memory_order_relaxed)) {
+                get.~Pair();
+            }
         }
 
     }; // struct hazard_slot_owner
@@ -199,10 +209,21 @@ private:
         }
     }
 
+    friend std::pair<hazard_pointer, reference_counter>;
+
+    // It can't be `static hazard_pointer res;` since static hazard_slot_owner uses hazard_pointer in destructors,
+    // so hazard_pointer must outlive them. Use a binding reference_counter to conditionally manually destroy it.
+    CIEL_NODISCARD static std::pair<hazard_pointer, reference_counter>& get_pair() {
+        using Pair = std::pair<hazard_pointer, reference_counter>;
+        static typename aligned_storage<sizeof(Pair), alignof(Pair)>::type buffer;
+        static auto* ptr =
+            new (&buffer) Pair(std::piecewise_construct, std::forward_as_tuple(), std::forward_as_tuple(0));
+        return *ptr;
+    }
+
 public:
     CIEL_NODISCARD static hazard_pointer& get() {
-        static hazard_pointer res;
-        return res;
+        return get_pair().first;
     }
 
     ~hazard_pointer() {

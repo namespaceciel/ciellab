@@ -15,7 +15,8 @@ NAMESPACE_CIEL_BEGIN
 // the managed object will be deleted and the count shall not increment from zero thereafter.
 //
 // Contracts:
-// 1. The counter starts at one.
+// 1. The counter should start at one, but for symmetry purposes,
+//    it can start at zero and increment immediately afterwards.
 // 2. Once the counter decrements to zero, it will stuck at it and never increment again.
 // 3. Before the counter hits zero, the number of increment and decrement calls should be equal.
 //    After the counter hits zero, no further decrement calls should be invoked.
@@ -25,14 +26,11 @@ NAMESPACE_CIEL_BEGIN
 class reference_counter {
 private:
     static constexpr size_t zero_flag = size_t(1) << (std::numeric_limits<size_t>::digits - 1);
-    std::atomic<size_t> impl_{1};
+    std::atomic<size_t> impl_;
 
 public:
-    reference_counter() = default;
-
-    ~reference_counter() {
-        CIEL_PRECONDITION(load() == 0);
-    }
+    reference_counter(const size_t i = 1) noexcept
+        : impl_(i) {}
 
     reference_counter(const reference_counter&)            = delete;
     reference_counter& operator=(const reference_counter&) = delete;
