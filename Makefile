@@ -24,8 +24,6 @@ clean:
 	rm -rf $(BUILD_DIR)
 .PHONY: clean
 
-# -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
-
 clang_test_build:
 	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=$(CLANG_PATH) -DCMAKE_CXX_COMPILER=$(CLANGXX_PATH) -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
 	cmake --build $(BUILD_DIR)/clang --target ciellab_test_11_exceptions_on_rtti_on -j $(NUM_JOB) && \
@@ -71,13 +69,18 @@ benchmark: clang_benchmark_build gcc_benchmark_build clang_benchmark_run gcc_ben
 .PHONY: benchmark
 
 format:
-	./format.sh run $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src
+	./format.sh run $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src $(PROJECT_SOURCE_DIR)/clang_tidy.cpp
 .PHONY: format
 
 check_format:
-	./format.sh check $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src
+	./format.sh check $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src $(PROJECT_SOURCE_DIR)/clang_tidy.cpp
 .PHONY: check_format
 
 cc:
 	cmake -S . -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 .PHONY: cc
+
+clang_tidy:
+	cmake -S . -B $(BUILD_DIR)/clang_tidy -DCMAKE_CXX_CLANG_TIDY="clang-tidy" && \
+	cmake --build $(BUILD_DIR)/clang_tidy --target ciellab_clang_tidy -j $(NUM_JOB)
+.PHONY: clang_tidy

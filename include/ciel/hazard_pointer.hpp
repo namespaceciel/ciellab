@@ -19,6 +19,9 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Daniel Anderson's hazard_pointer implementation:
+// https://github.com/DanielLiamAnderson/atomic_shared_ptr/blob/master/include/parlay/details/hazard_pointers.hpp
+
 namespace detail {
 namespace retired_list_detail {
 
@@ -190,10 +193,9 @@ private:
                 }
 
                 return new_slot;
-
-            } else {
-                cur = next;
             }
+
+            cur = next;
         }
     }
 
@@ -251,10 +253,9 @@ public:
 
             if CIEL_LIKELY (res == cur) {
                 return res;
-
-            } else {
-                res = cur;
             }
+
+            res = cur;
         }
     }
 

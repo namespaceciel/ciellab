@@ -25,7 +25,7 @@ NAMESPACE_CIEL_BEGIN
 
 class reference_counter {
 private:
-    static constexpr size_t zero_flag = size_t(1) << (std::numeric_limits<size_t>::digits - 1);
+    static constexpr size_t zero_flag = static_cast<size_t>(1) << (std::numeric_limits<size_t>::digits - 1);
     std::atomic<size_t> impl_;
 
 public:

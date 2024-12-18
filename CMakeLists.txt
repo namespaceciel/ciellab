@@ -24,3 +24,6 @@ endif ()
 if (CIELLAB_BUILD_BENCHMARKS)
     add_subdirectory(benchmark)
 endif ()
+
+add_executable(ciellab_clang_tidy clang_tidy.cpp)
+target_link_libraries(ciellab_clang_tidy ciellab)

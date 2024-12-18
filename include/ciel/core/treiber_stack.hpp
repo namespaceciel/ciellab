@@ -38,8 +38,8 @@ public:
 
     CIEL_NODISCARD T* pop() noexcept {
         auto impl = stack_.read();
-        T* top;
-        T* next;
+        T* top    = nullptr;
+        T* next   = nullptr;
 
         do {
             top = impl.ptr();
@@ -57,7 +57,7 @@ public:
 
     CIEL_NODISCARD T* pop_all() noexcept {
         auto impl = stack_.read();
-        T* top;
+        T* top    = nullptr;
 
         do {
             top = impl.ptr();
