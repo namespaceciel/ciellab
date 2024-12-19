@@ -5,7 +5,6 @@
 #include <ciel/core/config.hpp>
 #include <ciel/core/exchange.hpp>
 #include <ciel/core/message.hpp>
-#include <ciel/core/reference_counter.hpp>
 
 #include <atomic>
 #include <cstddef>
@@ -150,7 +149,7 @@ private:
         hazard_slot_owner()
             : my_slot(get_pair().first.get_slot()) {
             CIEL_PRECONDITION(my_slot != nullptr);
-            CIEL_PRECONDITION(get_pair().second.increment_if_not_zero(1, std::memory_order_relaxed));
+            get_pair().second.fetch_add(1, std::memory_order_relaxed);
         }
 
         hazard_slot_owner(const hazard_slot_owner&)            = delete;
@@ -158,11 +157,18 @@ private:
 
         ~hazard_slot_owner() {
             my_slot->protected_ptr.store(nullptr, std::memory_order_release);
-            my_slot->in_use.store(false, std::memory_order_release);
+            my_slot->in_use.store(false, std::memory_order_relaxed);
 
-            using Pair = std::pair<hazard_pointer, reference_counter>;
+            using Pair = std::pair<hazard_pointer, std::atomic<size_t>>;
             Pair& get  = get_pair();
-            if (get.second.decrement(1, std::memory_order_relaxed)) {
+
+            constexpr size_t off = 1;
+            // Same pattern as control_block_base::weak_count_release
+            if (get.second.load(std::memory_order_acquire) == off) {
+                get.~Pair();
+
+            } else if (get.second.fetch_sub(off, std::memory_order_release) == off) {
+                std::atomic_thread_fence(std::memory_order_acquire);
                 get.~Pair();
             }
         }
@@ -179,7 +185,7 @@ private:
 
         while (true) {
             if (!cur->in_use.load(std::memory_order_relaxed)
-                && !cur->in_use.exchange(true, std::memory_order_acquire)) {
+                && !cur->in_use.exchange(true, std::memory_order_relaxed)) {
                 return cur;
             }
 
@@ -211,12 +217,12 @@ private:
         }
     }
 
-    friend std::pair<hazard_pointer, reference_counter>;
+    friend std::pair<hazard_pointer, std::atomic<size_t>>;
 
     // It can't be `static hazard_pointer res;` since static hazard_slot_owner uses hazard_pointer in destructors,
     // so hazard_pointer must outlive them. Use a binding reference_counter to conditionally manually destroy it.
-    CIEL_NODISCARD static std::pair<hazard_pointer, reference_counter>& get_pair() {
-        using Pair = std::pair<hazard_pointer, reference_counter>;
+    CIEL_NODISCARD static std::pair<hazard_pointer, std::atomic<size_t>>& get_pair() {
+        using Pair = std::pair<hazard_pointer, std::atomic<size_t>>;
         static typename aligned_storage<sizeof(Pair), alignof(Pair)>::type buffer;
         static auto* ptr =
             new (&buffer) Pair(std::piecewise_construct, std::forward_as_tuple(), std::forward_as_tuple(0));
@@ -240,7 +246,7 @@ public:
     hazard_pointer& operator=(const hazard_pointer&) = delete;
 
     CIEL_NODISCARD garbage_type* protect(std::atomic<garbage_type*>& src) noexcept {
-        garbage_type* res = src.load(std::memory_order_acquire);
+        garbage_type* res = src.load(std::memory_order_relaxed);
 
         while (true) {
             if (res == nullptr) {
