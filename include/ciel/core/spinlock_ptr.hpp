@@ -10,6 +10,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by GNU libstdc++'s implementation.
+
 template<class T>
 class spinlock_ptr {
     static_assert(alignof(T) > 1, "We can't use the LSB as the lock bit if alignof(T) == 1");

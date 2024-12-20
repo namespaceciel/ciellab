@@ -10,6 +10,7 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Microsoft snmalloc's implementation.
 // https://github.com/microsoft/snmalloc/blob/main/snmalloc.pdf
 // See Figure 3 in snmalloc paper for thorough explanations.
 

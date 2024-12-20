@@ -11,6 +11,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by LLVM libc++'s implementation.
+
 template<class, class>
 class vector;
 

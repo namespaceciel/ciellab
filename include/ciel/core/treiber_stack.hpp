@@ -9,6 +9,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Microsoft snmalloc's implementation.
+
 template<class T>
 class treiber_stack {
     static_assert(std::is_same<decltype(T::next), std::atomic<T*>>::value, "");

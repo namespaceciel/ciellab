@@ -8,6 +8,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Microsoft GSL's implementation.
+
 template<class F>
 class finally {
 public:

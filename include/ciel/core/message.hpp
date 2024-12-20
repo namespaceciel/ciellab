@@ -14,6 +14,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Microsoft snmalloc's implementation.
+
 template<size_t BufferSize>
 class message_builder {
 private:

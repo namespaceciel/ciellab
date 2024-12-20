@@ -11,6 +11,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by LLVM libc++'s implementation.
+
 struct default_init_t {};
 
 static constexpr default_init_t default_init;

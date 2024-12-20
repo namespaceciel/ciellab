@@ -21,6 +21,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by LLVM libc++'s implementation.
+
 class bad_function_call : public std::exception {
 public:
     bad_function_call()                                    = default;

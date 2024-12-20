@@ -14,6 +14,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by Boost: https://github.com/boostorg/core/blob/develop/include/boost/core/demangle.hpp
+
 #ifdef CIEL_HAS_CXXABI_H
 CIEL_NODISCARD inline const char* demangle_alloc(const char* name) noexcept {
     size_t size = 0;

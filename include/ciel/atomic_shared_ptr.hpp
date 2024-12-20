@@ -12,6 +12,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by GNU libstdc++'s implementation.
+
 template<class T>
 class atomic_shared_ptr {
 private:

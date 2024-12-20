@@ -33,6 +33,8 @@ NAMESPACE_CIEL_BEGIN
 // Note: It may be safe deleting trivially destructible objects from Base, but for some reasons
 // standard refused to make it well-defined, see https://cplusplus.github.io/EWG/ewg-closed.html#99.
 
+// Inspired by: https://github.com/Quuxplusone/llvm-project/commit/d40169c2feebfbddf48df4e4e81cc0b62fa884be
+
 template<class T, class U, class RT = remove_cv_t<T>, class RU = remove_cv_t<U>>
 struct is_similar : std::is_same<RT, RU> {
     static_assert(std::is_same<RT, remove_cv_t<T>>::value, "Don't touch default parameters");

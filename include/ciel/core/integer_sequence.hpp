@@ -24,7 +24,7 @@ using index_sequence = integer_sequence<size_t, Ints...>;
 
 namespace details {
 
-// https://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence
+// Inspired by: https://stackoverflow.com/questions/17424477/implementation-c14-make-integer-sequence
 
 template<class, class>
 struct merge_and_renumber;

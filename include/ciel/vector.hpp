@@ -27,6 +27,8 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Inspired by LLVM libc++ and folly's implementation.
+
 template<class T, class Allocator = std::allocator<T>>
 class vector {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");

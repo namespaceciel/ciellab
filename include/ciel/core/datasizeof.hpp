@@ -21,7 +21,9 @@ NAMESPACE_CIEL_BEGIN
 //
 // Swapping for trivially relocatable types can be performed using std::memcpy,
 // in which case there is no need to modify the tail padding.
-//
+
+// Inspired by LLVM libc++'s implementation.
+
 CIEL_DIAGNOSTIC_PUSH
 CIEL_CLANG_DIAGNOSTIC_IGNORED("-Winvalid-offsetof")
 CIEL_GCC_DIAGNOSTIC_IGNORED("-Winvalid-offsetof")
