@@ -83,7 +83,7 @@ private:
         }
 
         CIEL_NODISCARD bool store_conditional(T* ptr) const noexcept {
-            parent_->ptr_.store(ptr);
+            parent_->ptr_.store(ptr, std::memory_order_relaxed);
             return true;
         }
 
@@ -91,7 +91,7 @@ private:
 
 public:
     CIEL_NODISCARD impl read() noexcept {
-        CIEL_UNUSED(ptr_.lock());
+        CIEL_UNUSED(ptr_.lock(std::memory_order_acquire));
 
         return {this};
     }
