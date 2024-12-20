@@ -121,10 +121,6 @@ ciel::function<void()> f1{[v] { (void)v; }};
 ciel::function<void()> f2{ciel::assume_trivially_relocatable, [v] { (void)v; }};
 ```
 
-### can_be_destroyed_from_base.hpp
-
-If T is a derived class of some base B, then `std::unique_ptr<T>` is implicitly convertible to `std::unique_ptr<B>`. The default deleter of the resulting `std::unique_ptr<B>` will use operator delete for B, leading to undefined behavior unless the destructor of B is virtual, or the entire T is trivially destructible. So it's crucial to check for it.
-
 ### TODO: other .hpp
 
 ## Benchmark
