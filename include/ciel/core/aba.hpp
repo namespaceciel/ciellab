@@ -12,7 +12,7 @@
 
 NAMESPACE_CIEL_BEGIN
 
-// TODO: The current main implementation of ABA uses packed_ptr to avoid DWCAS,
+// The current main implementation of ABA uses packed_ptr to avoid DWCAS,
 // which limits it to support only 2^16 operations. So theoretically, in some absurdly pathological case,
 // the ABA problem could still happen if one thread is pre-empted and then
 // another thread(s) somehow performs more than 2^16 operations before the original thread wakes up again.
