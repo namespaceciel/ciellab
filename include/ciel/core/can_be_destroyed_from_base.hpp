@@ -35,11 +35,10 @@ NAMESPACE_CIEL_BEGIN
 
 // Inspired by: https://github.com/Quuxplusone/llvm-project/commit/d40169c2feebfbddf48df4e4e81cc0b62fa884be
 
-template<class T, class U, class RT = remove_cv_t<T>, class RU = remove_cv_t<U>>
-struct is_similar : std::is_same<RT, RU> {
-    static_assert(std::is_same<RT, remove_cv_t<T>>::value, "Don't touch default parameters");
-    static_assert(std::is_same<RU, remove_cv_t<U>>::value, "Don't touch default parameters");
-};
+template<class T, class U>
+struct is_similar : conditional_t<std::is_const<T>::value || std::is_volatile<T>::value || std::is_const<U>::value
+                                      || std::is_volatile<U>::value,
+                                  is_similar<remove_cv_t<T>, remove_cv_t<U>>, std::is_same<T, U>> {};
 
 template<class T, class U>
 struct is_similar<T*, U*> : is_similar<T, U> {};

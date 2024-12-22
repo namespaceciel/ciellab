@@ -55,6 +55,7 @@ TEST(can_be_destroyed_from_base, similar) {
     static_assert(is_similar<const int, int>::value, "");
     static_assert(is_similar<const int*, int*>::value, "");
     static_assert(is_similar<int* const, int*>::value, "");
+    static_assert(is_similar<const int* const, int*>::value, "");
     static_assert(is_similar<const int[], int[]>::value, "");
     static_assert(is_similar<const int[9], int[]>::value, "");
     static_assert(is_similar<const int[], int[9]>::value, "");
@@ -63,6 +64,7 @@ TEST(can_be_destroyed_from_base, similar) {
     static_assert(is_similar<int, const int>::value, "");
     static_assert(is_similar<int*, const int*>::value, "");
     static_assert(is_similar<int*, int* const>::value, "");
+    static_assert(is_similar<int*, const int* const>::value, "");
     static_assert(is_similar<int[], const int[]>::value, "");
     static_assert(is_similar<int[9], const int[]>::value, "");
     static_assert(is_similar<int[], const int[9]>::value, "");
