@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <string>
 
-#if defined(__has_include) && __has_include(<cxxabi.h>)
+#if __has_include(<cxxabi.h>)
 #  define CIEL_HAS_CXXABI_H
 #  include <cxxabi.h>
 #endif

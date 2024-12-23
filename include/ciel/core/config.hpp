@@ -102,6 +102,12 @@
 #  define __has_builtin(x) false
 #endif
 
+// __has_include
+
+#ifndef __has_include
+#  define __has_include(x) false
+#endif
+
 // try catch throw
 
 #ifdef CIEL_HAS_EXCEPTIONS
