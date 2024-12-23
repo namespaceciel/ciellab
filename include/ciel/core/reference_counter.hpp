@@ -58,7 +58,13 @@ public:
 
         if (res == diff) {
             size_t expected = 0;
-            return impl_.compare_exchange_strong(expected, zero_flag);
+            // It must be `compare_exchange_strong` because the only way it can fail must be
+            // if some other threads have performed `fetch_add` successfully.
+            // Any spurious failure could lead to resource leaks. For instance,
+            // if this is the last function call of the object, it must return true to prevent such leaks.
+            if CIEL_LIKELY (impl_.compare_exchange_strong(expected, zero_flag)) {
+                return true;
+            }
         }
 
         return false;
