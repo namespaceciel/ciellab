@@ -4,6 +4,7 @@
 #include <ciel/core/aligned_storage.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/exchange.hpp>
+#include <ciel/core/is_final.hpp>
 #include <ciel/core/message.hpp>
 
 #include <atomic>
@@ -18,33 +19,37 @@
 
 NAMESPACE_CIEL_BEGIN
 
+// Synopsis: https://eel.is/c++draft/saferecl.hp
+// TODO: Slowly change to standard-compatible interface.
+//
 // Inspired by Daniel Anderson's hazard_pointer implementation:
 // https://github.com/DanielLiamAnderson/atomic_shared_ptr/blob/master/include/parlay/details/hazard_pointers.hpp
+
+class hazard_pointer_obj_base_link {
+private:
+    hazard_pointer_obj_base_link* next_{nullptr};
+
+public:
+    hazard_pointer_obj_base_link* hp_next() const noexcept {
+        return next_;
+    }
+
+    void hp_set_next(hazard_pointer_obj_base_link* n) noexcept {
+        next_ = n;
+    }
+
+    virtual void hp_destroy() noexcept = 0;
+
+}; // class hazard_pointer_obj_base_link
 
 namespace detail {
 namespace retired_list_detail {
 
-template<class T, class = int, class = void, class = void>
-struct is_garbage_collectible : std::false_type {};
-
-// The garbage type shall have three public member function:
-//     T* next();
-//     void set_next(T*);
-//     void destroy();
-// to be linked by retired_list and be destroyed afterwards.
-template<class T>
-struct is_garbage_collectible<T, enable_if_t<std::is_convertible<decltype(std::declval<T>().next()), T*>::value>,
-                              void_t<decltype(std::declval<T>().set_next(std::declval<T*>()))>,
-                              void_t<decltype(std::declval<T>().destroy())>> : std::true_type {};
-
 // Stuck in hazard_slot, and each slot is owned by one thread at one time,
 // so it don't need synchronizations.
-template<class GarbageType>
 class retired_list {
-    static_assert(is_garbage_collectible<GarbageType>::value, "");
-
 private:
-    using garbage_type = GarbageType;
+    using garbage_type = hazard_pointer_obj_base_link;
 
     garbage_type* head_{nullptr};
 
@@ -63,28 +68,28 @@ public:
     void push(garbage_type* p) noexcept {
         CIEL_PRECONDITION(p != nullptr);
 
-        p->set_next(ciel::exchange(head_, p));
+        p->hp_set_next(ciel::exchange(head_, p));
     }
 
     template<class F>
     void cleanup(F&& is_protected) {
         while (head_ && !is_protected(head_)) {
-            garbage_type* old = ciel::exchange(head_, head_->next());
-            old->destroy();
+            garbage_type* old = ciel::exchange(head_, head_->hp_next());
+            old->hp_destroy();
         }
 
         if (head_) {
             garbage_type* prev = head_;
-            garbage_type* cur  = head_->next();
+            garbage_type* cur  = head_->hp_next();
 
             while (cur) {
                 if (!is_protected(cur)) {
-                    garbage_type* old = ciel::exchange(cur, cur->next());
-                    old->destroy();
-                    prev->set_next(cur);
+                    garbage_type* old = ciel::exchange(cur, cur->hp_next());
+                    old->hp_destroy();
+                    prev->hp_set_next(cur);
 
                 } else {
-                    prev = ciel::exchange(cur, cur->next());
+                    prev = ciel::exchange(cur, cur->hp_next());
                 }
             }
         }
@@ -98,13 +103,12 @@ public:
 // so that threads can scan for the set of current protected pointers.
 //
 // Except for next and in_use, members should not be touched by more than one thread at one time.
-template<class GarbageType>
 struct
 #if CIEL_STD_VER >= 17
     alignas(cacheline_size)
 #endif
         hazard_slot {
-    using garbage_type = GarbageType;
+    using garbage_type = hazard_pointer_obj_base_link;
 
     hazard_slot(const bool iu) noexcept
         : in_use(iu) {}
@@ -127,17 +131,15 @@ struct
     std::unordered_set<garbage_type*> protected_set;
 
     // Garbage collected by this slot.
-    retired_list_detail::retired_list<garbage_type> retired_list;
+    retired_list_detail::retired_list retired_list;
 
 }; // struct alignas(cacheline_size) hazard_slot
 
 } // namespace detail
 
-template<class GarbageType>
 class hazard_pointer {
 private:
-    using garbage_type = GarbageType;
-    using hazard_slot  = detail::hazard_slot<garbage_type>;
+    using hazard_slot  = detail::hazard_slot;
 
     static constexpr size_t cleanup_threshold = 1000;
 
@@ -245,8 +247,9 @@ public:
     hazard_pointer(const hazard_pointer&)            = delete;
     hazard_pointer& operator=(const hazard_pointer&) = delete;
 
-    CIEL_NODISCARD garbage_type* protect(std::atomic<garbage_type*>& src) noexcept {
-        garbage_type* res = src.load(std::memory_order_relaxed);
+    template<class T>
+    CIEL_NODISCARD T* protect(const std::atomic<T*>& src) noexcept {
+        T* res = src.load(std::memory_order_relaxed);
 
         while (true) {
             if (res == nullptr) {
@@ -255,7 +258,7 @@ public:
 
             threadlocal_slot.my_slot->protected_ptr.store(res, std::memory_order_release);
 
-            garbage_type* cur = src.load(std::memory_order_acquire);
+            T* cur = src.load(std::memory_order_acquire);
 
             if CIEL_LIKELY (res == cur) {
                 return res;
@@ -267,19 +270,6 @@ public:
 
     void release() noexcept {
         threadlocal_slot.my_slot->protected_ptr.store(nullptr, std::memory_order_release);
-    }
-
-    void retire(garbage_type* p) {
-        if (p == nullptr) {
-            return;
-        }
-
-        hazard_slot& my_slot = *threadlocal_slot.my_slot;
-        my_slot.retired_list.push(p);
-
-        if CIEL_UNLIKELY (++my_slot.num_retires_since_cleanup >= cleanup_threshold) {
-            cleanup(my_slot);
-        }
     }
 
 private:
@@ -298,7 +288,7 @@ private:
         }
 
         // Cleanup every garbage that is not being protected.
-        slot.retired_list.cleanup([&](garbage_type* p) {
+        slot.retired_list.cleanup([&](hazard_pointer_obj_base_link* p) {
             return slot.protected_set.count(p) > 0;
         });
 
@@ -307,9 +297,69 @@ private:
 
 }; // class hazard_pointer
 
-template<class GarbageType>
-const thread_local
-    typename hazard_pointer<GarbageType>::hazard_slot_owner hazard_pointer<GarbageType>::threadlocal_slot;
+inline const thread_local typename hazard_pointer::hazard_slot_owner hazard_pointer::threadlocal_slot;
+
+template<class T, class D = std::default_delete<T>, bool = std::is_class<D>::value && !is_final<D>::value>
+class hazard_pointer_obj_base : public hazard_pointer_obj_base_link {
+private:
+    D deleter_;
+
+    D& deleter() noexcept {
+        return deleter_;
+    }
+
+protected:
+    hazard_pointer_obj_base()                                          = default;
+    hazard_pointer_obj_base(const hazard_pointer_obj_base&)            = default;
+    hazard_pointer_obj_base(hazard_pointer_obj_base&&)                 = default;
+    hazard_pointer_obj_base& operator=(const hazard_pointer_obj_base&) = default;
+    hazard_pointer_obj_base& operator=(hazard_pointer_obj_base&&)      = default;
+    ~hazard_pointer_obj_base()                                         = default;
+
+public:
+    void retire(D d = D()) noexcept {
+        deleter() = std::move(d);
+    }
+
+    void hp_destroy() noexcept override {
+        deleter()(static_cast<T*>(this));
+    }
+
+}; // class hazard_pointer_obj_base
+
+template<class T, class D>
+class hazard_pointer_obj_base<T, D, true> : public hazard_pointer_obj_base_link,
+                                            public D {
+private:
+    D& deleter() noexcept {
+        return static_cast<D&>(*this);
+    }
+
+protected:
+    hazard_pointer_obj_base()                                          = default;
+    hazard_pointer_obj_base(const hazard_pointer_obj_base&)            = default;
+    hazard_pointer_obj_base(hazard_pointer_obj_base&&)                 = default;
+    hazard_pointer_obj_base& operator=(const hazard_pointer_obj_base&) = default;
+    hazard_pointer_obj_base& operator=(hazard_pointer_obj_base&&)      = default;
+    ~hazard_pointer_obj_base()                                         = default;
+
+public:
+    void retire(D d = D()) noexcept {
+        deleter() = std::move(d);
+
+        hazard_slot& my_slot = *hazard_pointer.get().threadlocal_slot.my_slot;
+        my_slot.retired_list.push(static_cast<T*>(this));
+
+        if CIEL_UNLIKELY (++my_slot.num_retires_since_cleanup >= cleanup_threshold) {
+            cleanup(my_slot);
+        }
+    }
+
+    void hp_destroy() noexcept override {
+        deleter()(static_cast<T*>(this));
+    }
+
+}; // class hazard_pointer_obj_base<T, D, true>
 
 NAMESPACE_CIEL_END
 
