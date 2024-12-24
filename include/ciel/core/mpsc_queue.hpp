@@ -34,6 +34,12 @@ public:
     mpsc_queue(const mpsc_queue&)            = delete;
     mpsc_queue& operator=(const mpsc_queue&) = delete;
 
+    ~mpsc_queue() {
+        T* stub_ptr      = reinterpret_cast<T*>(&stub_);
+        using AtomicTPtr = std::atomic<T*>;
+        stub_ptr->next.~AtomicTPtr();
+    }
+
     void push(T* t) noexcept {
         push(t, t);
     }
