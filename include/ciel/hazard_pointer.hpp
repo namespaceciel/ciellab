@@ -1,9 +1,9 @@
 #ifndef CIELLAB_INCLUDE_CIEL_HAZARD_POINTER_HPP_
 #define CIELLAB_INCLUDE_CIEL_HAZARD_POINTER_HPP_
 
-#include <ciel/core/aligned_storage.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/exchange.hpp>
+#include <ciel/core/is_final.hpp>
 #include <ciel/core/message.hpp>
 
 #include <atomic>
@@ -20,91 +20,34 @@ NAMESPACE_CIEL_BEGIN
 
 // Inspired by Daniel Anderson's hazard_pointer implementation:
 // https://github.com/DanielLiamAnderson/atomic_shared_ptr/blob/master/include/parlay/details/hazard_pointers.hpp
+//
+// Synopsis: https://eel.is/c++draft/saferecl.hp
 
-namespace detail {
-namespace retired_list_detail {
-
-template<class T, class = int, class = void, class = void>
-struct is_garbage_collectible : std::false_type {};
-
-// The garbage type shall have three public member function:
-//     T* next();
-//     void set_next(T*);
-//     void destroy();
-// to be linked by retired_list and be destroyed afterwards.
-template<class T>
-struct is_garbage_collectible<T, enable_if_t<std::is_convertible<decltype(std::declval<T>().next()), T*>::value>,
-                              void_t<decltype(std::declval<T>().set_next(std::declval<T*>()))>,
-                              void_t<decltype(std::declval<T>().destroy())>> : std::true_type {};
-
-// Stuck in hazard_slot, and each slot is owned by one thread at one time,
-// so it don't need synchronizations.
-template<class GarbageType>
-class retired_list {
-    static_assert(is_garbage_collectible<GarbageType>::value, "");
-
+class hazard_pointer_obj_base_link {
 private:
-    using garbage_type = GarbageType;
-
-    garbage_type* head_{nullptr};
+    hazard_pointer_obj_base_link* next_{nullptr};
 
 public:
-    retired_list() = default;
-
-    retired_list(const retired_list&)            = delete;
-    retired_list& operator=(const retired_list&) = delete;
-
-    ~retired_list() {
-        cleanup([](garbage_type*) {
-            return false;
-        });
+    hazard_pointer_obj_base_link* hp_next() const noexcept {
+        return next_;
     }
 
-    void push(garbage_type* p) noexcept {
-        CIEL_PRECONDITION(p != nullptr);
-
-        p->set_next(ciel::exchange(head_, p));
+    void hp_set_next(hazard_pointer_obj_base_link* n) noexcept {
+        next_ = n;
     }
 
-    template<class F>
-    void cleanup(F&& is_protected) {
-        while (head_ && !is_protected(head_)) {
-            garbage_type* old = ciel::exchange(head_, head_->next());
-            old->destroy();
-        }
+    virtual void hp_destroy() noexcept = 0;
 
-        if (head_) {
-            garbage_type* prev = head_;
-            garbage_type* cur  = head_->next();
+}; // class hazard_pointer_obj_base_link
 
-            while (cur) {
-                if (!is_protected(cur)) {
-                    garbage_type* old = ciel::exchange(cur, cur->next());
-                    old->destroy();
-                    prev->set_next(cur);
-
-                } else {
-                    prev = ciel::exchange(cur, cur->next());
-                }
-            }
-        }
-    }
-
-}; // class retired_list
-
-} // namespace retired_list_detail
-
-// Each thread owns a hazard_slot, they are linked together to form a linked list
+// Each hazard_pointer owns a hazard_slot, they are linked together to form a linked list
 // so that threads can scan for the set of current protected pointers.
-//
-// Except for next and in_use, members should not be touched by more than one thread at one time.
-template<class GarbageType>
 struct
 #if CIEL_STD_VER >= 17
     alignas(cacheline_size)
 #endif
         hazard_slot {
-    using garbage_type = GarbageType;
+    using garbage_type = hazard_pointer_obj_base_link;
 
     hazard_slot(const bool iu) noexcept
         : in_use(iu) {}
@@ -127,57 +70,91 @@ struct
     std::unordered_set<garbage_type*> protected_set;
 
     // Garbage collected by this slot.
-    retired_list_detail::retired_list<garbage_type> retired_list;
+    class retired_list {
+    private:
+        using garbage_type = hazard_pointer_obj_base_link;
 
-}; // struct alignas(cacheline_size) hazard_slot
+        garbage_type* head_{nullptr};
 
-} // namespace detail
+    public:
+        retired_list() = default;
 
-template<class GarbageType>
-class hazard_pointer {
-private:
-    using garbage_type = GarbageType;
-    using hazard_slot  = detail::hazard_slot<garbage_type>;
+        retired_list(const retired_list&)            = delete;
+        retired_list& operator=(const retired_list&) = delete;
 
-    static constexpr size_t cleanup_threshold = 1000;
-
-    // Each thread owns a hazard_slot.
-    // Make the slot available for another thread to pick up in destructor.
-    struct hazard_slot_owner {
-        hazard_slot* const my_slot;
-
-        hazard_slot_owner()
-            : my_slot(get_pair().first.get_slot()) {
-            CIEL_PRECONDITION(my_slot != nullptr);
-            get_pair().second.fetch_add(1, std::memory_order_relaxed);
+        ~retired_list() {
+            cleanup([](garbage_type*) {
+                return false;
+            });
         }
 
-        hazard_slot_owner(const hazard_slot_owner&)            = delete;
-        hazard_slot_owner& operator=(const hazard_slot_owner&) = delete;
+        void push(garbage_type* p) noexcept {
+            CIEL_PRECONDITION(p != nullptr);
 
-        ~hazard_slot_owner() {
-            my_slot->protected_ptr.store(nullptr, std::memory_order_release);
-            my_slot->in_use.store(false, std::memory_order_relaxed);
+            p->hp_set_next(ciel::exchange(head_, p));
+        }
 
-            using Pair = std::pair<hazard_pointer, std::atomic<size_t>>;
-            Pair& get  = get_pair();
+        template<class F>
+        void cleanup(F&& is_protected) {
+            while (head_ && !is_protected(head_)) {
+                garbage_type* old = ciel::exchange(head_, head_->hp_next());
+                old->hp_destroy();
+            }
 
-            constexpr size_t off = 1;
-            // Same pattern as control_block_base::weak_count_release
-            if (get.second.load(std::memory_order_acquire) == off) {
-                get.~Pair();
+            if (head_) {
+                garbage_type* prev = head_;
+                garbage_type* cur  = head_->hp_next();
 
-            } else if (get.second.fetch_sub(off, std::memory_order_release) == off) {
-                std::atomic_thread_fence(std::memory_order_acquire);
-                get.~Pair();
+                while (cur) {
+                    if (!is_protected(cur)) {
+                        garbage_type* old = ciel::exchange(cur, cur->hp_next());
+                        old->hp_destroy();
+                        prev->hp_set_next(cur);
+
+                    } else {
+                        prev = ciel::exchange(cur, cur->hp_next());
+                    }
+                }
             }
         }
 
-    }; // struct hazard_slot_owner
+    } retired_list;
 
-    static const thread_local hazard_slot_owner threadlocal_slot;
+}; // struct alignas(cacheline_size) hazard_slot
 
+class hazard_pointer_headquarter {
+private:
     hazard_slot* const hazard_slot_list_head;
+
+    friend class hazard_pointer;
+
+    hazard_pointer_headquarter()
+        : hazard_slot_list_head(new hazard_slot{false}) {
+        // std::thread::hardware_concurrency() may return 0.
+        hazard_slot* cur = hazard_slot_list_head;
+        for (unsigned int i = 1; i < std::thread::hardware_concurrency() * 2; ++i) {
+            hazard_slot* next = new hazard_slot{false};
+            cur->next.store(next, std::memory_order_relaxed);
+            cur = next;
+        }
+    }
+
+public:
+    static hazard_pointer_headquarter& get() {
+        static hazard_pointer_headquarter res;
+        return res;
+    }
+
+    hazard_pointer_headquarter(const hazard_pointer_headquarter&)            = delete;
+    hazard_pointer_headquarter& operator=(const hazard_pointer_headquarter&) = delete;
+
+    ~hazard_pointer_headquarter() {
+        hazard_slot* cur = hazard_slot_list_head;
+        while (cur) {
+            hazard_slot* old = ciel::exchange(cur, cur->next.load(std::memory_order_relaxed));
+            delete old;
+        }
+    }
 
     CIEL_NODISCARD hazard_slot* get_slot() {
         hazard_slot* cur = hazard_slot_list_head;
@@ -190,7 +167,7 @@ private:
             }
 
             hazard_slot* next = cur->next.load(std::memory_order_relaxed);
-            if (next == nullptr) {
+            if CIEL_UNLIKELY (next == nullptr) {
                 hazard_slot* new_slot = new hazard_slot{true};
 
                 while (!cur->next.compare_exchange_weak(next, new_slot, std::memory_order_relaxed)) {
@@ -205,112 +182,212 @@ private:
         }
     }
 
-private:
-    hazard_pointer()
-        : hazard_slot_list_head(new hazard_slot{false}) {
-        // std::thread::hardware_concurrency() may return 0.
-        hazard_slot* cur = hazard_slot_list_head;
-        for (unsigned int i = 1; i < std::thread::hardware_concurrency(); ++i) {
-            hazard_slot* next = new hazard_slot{false};
-            cur->next.store(next, std::memory_order_relaxed);
-            cur = next;
-        }
+    void return_slot(hazard_slot* slot) noexcept {
+        slot->in_use.store(false, std::memory_order_relaxed);
     }
 
-    friend std::pair<hazard_pointer, std::atomic<size_t>>;
+}; // class hazard_pointer_headquarter
 
-    // It can't be `static hazard_pointer res;` since static hazard_slot_owner uses hazard_pointer in destructors,
-    // so hazard_pointer must outlive them. Use a binding reference_counter to conditionally manually destroy it.
-    CIEL_NODISCARD static std::pair<hazard_pointer, std::atomic<size_t>>& get_pair() {
-        using Pair = std::pair<hazard_pointer, std::atomic<size_t>>;
-        static typename aligned_storage<sizeof(Pair), alignof(Pair)>::type buffer;
-        static auto* ptr =
-            new (&buffer) Pair(std::piecewise_construct, std::forward_as_tuple(), std::forward_as_tuple(0));
-        return *ptr;
+class hazard_pointer {
+private:
+    hazard_slot* slot_;
+
+    // Used by make_hazard_pointer().
+    hazard_pointer(hazard_slot* slot) noexcept
+        : slot_(slot) {}
+
+    template<class, class, bool>
+    friend class hazard_pointer_obj_base;
+
+    friend hazard_pointer make_hazard_pointer();
+
+    void clear() noexcept {
+        if (!empty()) {
+            hazard_pointer_headquarter::get().return_slot(ciel::exchange(slot_, nullptr));
+        }
     }
 
 public:
-    CIEL_NODISCARD static hazard_pointer& get() {
-        return get_pair().first;
-    }
+    hazard_pointer() noexcept
+        : slot_(nullptr) {}
 
-    ~hazard_pointer() {
-        hazard_slot* cur = hazard_slot_list_head;
-        while (cur) {
-            hazard_slot* old = ciel::exchange(cur, cur->next.load(std::memory_order_relaxed));
-            delete old;
+    hazard_pointer(hazard_pointer&& other) noexcept
+        : slot_(ciel::exchange(other.slot_, nullptr)) {}
+
+    hazard_pointer& operator=(hazard_pointer&& other) noexcept {
+        if CIEL_UNLIKELY (this == std::addressof(other)) {
+            return *this;
         }
+
+        clear();
+        slot_ = ciel::exchange(other.slot_, nullptr);
+        return *this;
     }
 
     hazard_pointer(const hazard_pointer&)            = delete;
     hazard_pointer& operator=(const hazard_pointer&) = delete;
 
-    CIEL_NODISCARD garbage_type* protect(std::atomic<garbage_type*>& src) noexcept {
-        garbage_type* res = src.load(std::memory_order_relaxed);
+    ~hazard_pointer() {
+        clear();
+    }
 
-        while (true) {
-            if (res == nullptr) {
-                return nullptr;
-            }
+    CIEL_NODISCARD bool empty() const noexcept {
+        return slot_ == nullptr;
+    }
 
-            threadlocal_slot.my_slot->protected_ptr.store(res, std::memory_order_release);
+    template<class T>
+    CIEL_NODISCARD T* protect(const std::atomic<T*>& src) noexcept {
+        T* ptr = src.load(std::memory_order_relaxed);
 
-            garbage_type* cur = src.load(std::memory_order_acquire);
+        while (!try_protect(ptr, src)) {}
 
-            if CIEL_LIKELY (res == cur) {
-                return res;
-            }
+        return ptr;
+    }
 
-            res = cur;
+    template<class T>
+    CIEL_NODISCARD bool try_protect(T*& ptr, const std::atomic<T*>& src) noexcept {
+        CIEL_PRECONDITION(!empty());
+
+        T* p = ptr;
+        reset_protection(p);
+
+        ptr = src.load(std::memory_order_acquire);
+        if CIEL_UNLIKELY (p != ptr) {
+            reset_protection();
+            return false;
+        }
+
+        return true;
+    }
+
+    template<class T>
+    void reset_protection(const T* ptr) noexcept {
+        CIEL_PRECONDITION(!empty());
+
+        slot_->protected_ptr.store(const_cast<T*>(ptr), std::memory_order_release);
+    }
+
+    void reset_protection(nullptr_t = nullptr) noexcept {
+        CIEL_PRECONDITION(!empty());
+
+        slot_->protected_ptr.store(nullptr, std::memory_order_release);
+    }
+
+    void swap(hazard_pointer& other) noexcept {
+        std::swap(slot_, other.slot_);
+    }
+
+private: // Used by hazard_pointer_obj_base.
+    static constexpr size_t cleanup_threshold = 1000;
+
+    void retire(hazard_pointer_obj_base_link* p) {
+        CIEL_PRECONDITION(p != nullptr);
+
+        slot_->retired_list.push(p);
+
+        if CIEL_UNLIKELY (++slot_->num_retires_since_cleanup >= cleanup_threshold) {
+            cleanup();
         }
     }
 
-    void release() noexcept {
-        threadlocal_slot.my_slot->protected_ptr.store(nullptr, std::memory_order_release);
-    }
+    void cleanup() {
+        slot_->num_retires_since_cleanup = 0;
 
-    void retire(garbage_type* p) {
-        if (p == nullptr) {
-            return;
-        }
-
-        hazard_slot& my_slot = *threadlocal_slot.my_slot;
-        my_slot.retired_list.push(p);
-
-        if CIEL_UNLIKELY (++my_slot.num_retires_since_cleanup >= cleanup_threshold) {
-            cleanup(my_slot);
-        }
-    }
-
-private:
-    void cleanup(hazard_slot& slot) {
-        slot.num_retires_since_cleanup = 0;
-
-        // Scan over every hazard_slot, store protected_ptrs into slot.protected_set
-        hazard_slot* cur = hazard_slot_list_head;
+        // Scan over every hazard_slot, store protected_ptrs into slot.protected_set.
+        hazard_slot* cur = hazard_pointer_headquarter::get().hazard_slot_list_head;
         while (cur) {
             auto p = cur->protected_ptr.load(std::memory_order_acquire);
             if (p) {
-                slot.protected_set.insert(p);
+                slot_->protected_set.insert(p);
             }
 
             cur = cur->next.load(std::memory_order_relaxed);
         }
 
         // Cleanup every garbage that is not being protected.
-        slot.retired_list.cleanup([&](garbage_type* p) {
-            return slot.protected_set.count(p) > 0;
+        slot_->retired_list.cleanup([&](hazard_pointer_obj_base_link* p) {
+            return slot_->protected_set.count(p) > 0;
         });
 
-        slot.protected_set.clear();
+        slot_->protected_set.clear();
     }
 
 }; // class hazard_pointer
 
-template<class GarbageType>
-const thread_local
-    typename hazard_pointer<GarbageType>::hazard_slot_owner hazard_pointer<GarbageType>::threadlocal_slot;
+hazard_pointer make_hazard_pointer() {
+    hazard_pointer res(hazard_pointer_headquarter::get().get_slot());
+    return res;
+}
+
+template<class T, class D = std::default_delete<T>, bool = std::is_class<D>::value && !is_final<D>::value>
+class hazard_pointer_obj_base : public hazard_pointer_obj_base_link {
+private:
+    D deleter_;
+
+    D& deleter() noexcept {
+        return deleter_;
+    }
+
+protected:
+    hazard_pointer_obj_base()                                          = default;
+    hazard_pointer_obj_base(const hazard_pointer_obj_base&)            = default;
+    hazard_pointer_obj_base(hazard_pointer_obj_base&&)                 = default;
+    hazard_pointer_obj_base& operator=(const hazard_pointer_obj_base&) = default;
+    hazard_pointer_obj_base& operator=(hazard_pointer_obj_base&&)      = default;
+    ~hazard_pointer_obj_base()                                         = default;
+
+public:
+    void retire(D d = D()) noexcept {
+        deleter() = std::move(d);
+
+        auto hp = make_hazard_pointer();
+        hp.retire(this);
+    }
+
+    void hp_destroy() noexcept override {
+        deleter()(static_cast<T*>(this));
+    }
+
+}; // class hazard_pointer_obj_base
+
+template<class T, class D>
+class hazard_pointer_obj_base<T, D, true> : public hazard_pointer_obj_base_link,
+                                            public D {
+private:
+    D& deleter() noexcept {
+        return static_cast<D&>(*this);
+    }
+
+protected:
+    hazard_pointer_obj_base()                                          = default;
+    hazard_pointer_obj_base(const hazard_pointer_obj_base&)            = default;
+    hazard_pointer_obj_base(hazard_pointer_obj_base&&)                 = default;
+    hazard_pointer_obj_base& operator=(const hazard_pointer_obj_base&) = default;
+    hazard_pointer_obj_base& operator=(hazard_pointer_obj_base&&)      = default;
+    ~hazard_pointer_obj_base()                                         = default;
+
+public:
+    void retire(D d = D()) noexcept {
+        deleter() = std::move(d);
+
+        auto hp = make_hazard_pointer();
+        hp.retire(this);
+    }
+
+    void hp_destroy() noexcept override {
+        deleter()(static_cast<T*>(this));
+    }
+
+}; // class hazard_pointer_obj_base<T, D, true>
 
 NAMESPACE_CIEL_END
+
+namespace std {
+
+void swap(ciel::hazard_pointer& lhs, ciel::hazard_pointer& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+    lhs.swap(rhs);
+}
+
+} // namespace std
 
 #endif // CIELLAB_INCLUDE_CIEL_HAZARD_POINTER_HPP_

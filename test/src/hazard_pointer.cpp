@@ -14,24 +14,11 @@ using namespace ciel;
 
 namespace {
 
-struct Garbage {
-    Garbage* next_{this}; // Intentionally
+struct Garbage final : hazard_pointer_obj_base<Garbage> {
     int i{1};
 
     ~Garbage() {
         i = 0;
-    }
-
-    CIEL_NODISCARD Garbage* next() const noexcept {
-        return next_;
-    }
-
-    void set_next(Garbage* n) noexcept {
-        next_ = n;
-    }
-
-    void destroy() noexcept {
-        delete this;
     }
 
 }; // struct Garbage
@@ -46,13 +33,13 @@ TEST(hazard_pointer, singlethread) {
         v.unchecked_emplace_back(new Garbage);
     }
 
-    auto& hp = hazard_pointer<Garbage>::get();
+    hazard_pointer hp = make_hazard_pointer();
     std::atomic<size_t> count{0};
     for (std::atomic<Garbage*>& p : v) {
         Garbage* res = hp.protect(p);
-        hp.retire(res);
+        res->retire();
         count += res->i;
-        hp.release();
+        hp.reset_protection();
     }
 
     ASSERT_EQ(count, garbage_num);
@@ -71,10 +58,13 @@ TEST(hazard_pointer, multithread) {
         store_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            auto& hp = hazard_pointer<Garbage>::get();
+            hazard_pointer hp = make_hazard_pointer();
 
             for (size_t j = 0; j < operations_num; ++j) {
-                hp.retire(ptr.exchange(new Garbage));
+                auto g = ptr.exchange(new Garbage);
+                if (g) {
+                    g->retire();
+                }
             }
         });
     }
@@ -85,14 +75,14 @@ TEST(hazard_pointer, multithread) {
         load_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            auto& hp = hazard_pointer<Garbage>::get();
+            hazard_pointer hp = make_hazard_pointer();
 
             for (size_t j = 0; j < operations_num; ++j) {
                 Garbage* res = hp.protect(ptr);
                 if (res != nullptr) {
                     ASSERT_EQ(res->i, 1);
                 }
-                hp.release();
+                hp.reset_protection();
             }
         });
     }
