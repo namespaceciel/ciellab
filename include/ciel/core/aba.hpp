@@ -3,21 +3,28 @@
 
 #include <ciel/core/config.hpp>
 #include <ciel/core/message.hpp>
+#include <ciel/core/packed_ptr.hpp>
+#include <ciel/core/spinlock_ptr.hpp>
 
 #include <atomic>
 
-#ifndef CIELLAB_USE_SPINLOCK_BACKUP
-
-#  include <ciel/core/packed_ptr.hpp>
-
 NAMESPACE_CIEL_BEGIN
+
+enum struct aba_implementation {
+    PackedPtr,
+    SpinlockPtr
+
+}; // enum struct aba_implementation
+
+template<class, aba_implementation = aba_implementation::PackedPtr>
+class aba;
 
 // The current main implementation of ABA uses packed_ptr to avoid DWCAS,
 // which limits it to support only 2^16 operations. So theoretically, in some absurdly pathological case,
 // the ABA problem could still happen if one thread is pre-empted and then
 // another thread(s) somehow performs more than 2^16 operations before the original thread wakes up again.
 template<class T>
-class aba {
+class aba<T, aba_implementation::PackedPtr> {
 private:
     atomic_packed_ptr<T> ptr_{nullptr};
 
@@ -47,22 +54,16 @@ public:
         return {ptr_.load(std::memory_order_relaxed), this};
     }
 
-#  if CIEL_STD_VER >= 17
+#if CIEL_STD_VER >= 17
     static constexpr bool is_always_lock_free = decltype(ptr_)::is_always_lock_free;
     static_assert(is_always_lock_free);
-#  endif
+#endif
 
-}; // class aba
-
-#else
-
-#  include <ciel/core/spinlock_ptr.hpp>
-
-NAMESPACE_CIEL_BEGIN
+}; // class aba<T, aba_implementation::PackedPtr>
 
 // Use spinlock_based ABA as a backup.
 template<class T>
-class aba {
+class aba<T, aba_implementation::SpinlockPtr> {
 private:
     spinlock_ptr<T> ptr_;
 
@@ -96,13 +97,11 @@ public:
         return {this};
     }
 
-#  if CIEL_STD_VER >= 17
+#if CIEL_STD_VER >= 17
     static constexpr bool is_always_lock_free = false;
-#  endif
-
-}; // class aba
-
 #endif
+
+}; // class aba<T, aba_implementation::SpinlockPtr>
 
 NAMESPACE_CIEL_END
 

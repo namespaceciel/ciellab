@@ -20,15 +20,14 @@ struct Node {
 
 }; // struct Node
 
-} // namespace
-
-TEST(treiber_stack, concurrent_push_and_pop) {
+template<class Stack>
+void test_concurrent_push_and_pop_impl(::testing::Test*) {
     constexpr size_t threads_num    = 64;
     constexpr size_t operations_num = 1000;
 
     std::array<std::array<Node, operations_num>, threads_num / 2> arr;
     SimpleLatch go{threads_num};
-    treiber_stack<Node> stack;
+    Stack stack;
     std::atomic<size_t> count{0};
 
     ciel::vector<std::thread> push_threads;
@@ -73,4 +72,11 @@ TEST(treiber_stack, concurrent_push_and_pop) {
     }
 
     ASSERT_EQ(count, threads_num / 2 * operations_num);
+}
+
+} // namespace
+
+TEST(treiber_stack, concurrent_push_and_pop) {
+    test_concurrent_push_and_pop_impl<treiber_stack<Node, aba_implementation::PackedPtr>>(this);
+    test_concurrent_push_and_pop_impl<treiber_stack<Node, aba_implementation::SpinlockPtr>>(this);
 }

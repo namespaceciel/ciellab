@@ -11,12 +11,12 @@ NAMESPACE_CIEL_BEGIN
 
 // Inspired by Microsoft snmalloc's implementation.
 
-template<class T>
+template<class T, aba_implementation Impl = aba_implementation::PackedPtr>
 class treiber_stack {
     static_assert(std::is_same<decltype(T::next), std::atomic<T*>>::value, "");
 
 private:
-    alignas(cacheline_size) aba<T> stack_;
+    alignas(cacheline_size) aba<T, Impl> stack_;
 
 public:
     treiber_stack() = default;
