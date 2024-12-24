@@ -54,22 +54,25 @@ public:
     }
 
     void shared_add_ref(const size_t count = 1) noexcept {
-        CIEL_PRECONDITION(shared_count_.increment_if_not_zero(count, std::memory_order_relaxed));
+        const bool res = shared_count_.increment_if_not_zero(count, std::memory_order_relaxed);
+
+        CIEL_POSTCONDITION(res);
+        CIEL_UNUSED(res);
     }
 
     void weak_add_ref() noexcept {
         const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
         CIEL_POSTCONDITION(previous != 0);
+        CIEL_UNUSED(previous);
     }
 
     void shared_count_release() noexcept {
-        constexpr size_t off = 1;
         // A decrement-release + an acquire fence is recommended by Boost's documentation:
         // https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html
         // Alternatively, an acquire-release decrement would work, but might be less efficient
         // since the acquire is only relevant if the decrement zeros the counter.
-        if (shared_count_.decrement(off, std::memory_order_release)) {
+        if (shared_count_.decrement(1, std::memory_order_release)) {
             std::atomic_thread_fence(std::memory_order_acquire);
 
             dispose();
@@ -78,13 +81,12 @@ public:
     }
 
     void weak_count_release() noexcept {
-        constexpr size_t off = 1;
         // Avoid expensive atomic stores inspired by LLVM:
         // https://github.com/llvm/llvm-project/commit/ac9eec8602786b13a2bea685257d4f25b36030ff
-        if (weak_count_.load(std::memory_order_acquire) == off) {
+        if (weak_count_.load(std::memory_order_acquire) == 1) {
             destroy();
 
-        } else if (weak_count_.fetch_sub(off, std::memory_order_release) == off) {
+        } else if (weak_count_.fetch_sub(1, std::memory_order_release) == 1) {
             std::atomic_thread_fence(std::memory_order_acquire);
             destroy();
         }
