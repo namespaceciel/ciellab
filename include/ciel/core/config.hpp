@@ -155,59 +155,6 @@ using std::size_t;
 
 NAMESPACE_CIEL_BEGIN
 
-// useless_tag
-
-struct useless_tag {
-    template<class... Args>
-    useless_tag(Args&&...) noexcept {}
-
-}; // struct useless_tag
-
-// void_cast
-
-template<class... Args>
-void void_cast(Args&&...) noexcept {}
-
-// unreachable
-
-[[noreturn]] inline void unreachable() noexcept {
-#if defined(_MSC_VER) && !defined(__clang__) // MSVC
-    __assume(false);
-#else                                        // GCC, Clang
-    __builtin_unreachable();
-#endif
-}
-
-// Used to isolate values on cache lines to prevent false sharing.
-static constexpr size_t cacheline_size = 64;
-
-NAMESPACE_CIEL_END
-
-// unused
-// simple (void) cast won't stop gcc
-
-#define CIEL_UNUSED(...) ciel::void_cast(__VA_ARGS__)
-
-// assume
-
-#if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
-#  define CIEL_ASSUME(cond) [[assume(cond)]]
-#elif defined(__clang__)
-#  if __has_builtin(__builtin_assume)
-#    define CIEL_ASSUME(cond) __builtin_assume(cond)
-#  else
-#    define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
-#  endif
-#elif defined(_MSC_VER)
-#  define CIEL_ASSUME(cond) __assume(cond)
-#elif defined(__GNUC__) && __GNUC__ >= 13
-#  define CIEL_ASSUME(cond) __attribute__((assume(cond)))
-#else
-#  define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
-#endif
-
-NAMESPACE_CIEL_BEGIN
-
 // alias for type_traits
 
 template<class...>
@@ -261,6 +208,90 @@ using add_volatile_t = typename std::add_volatile<T>::type;
 template<class T>
 using add_cv_t = typename std::add_cv<T>::type;
 
+template<class T>
+using make_signed_t = typename std::make_signed<T>::type;
+
+template<class T>
+using make_unsigned_t = typename std::make_unsigned<T>::type;
+
+// useless_tag
+
+struct useless_tag {
+    template<class... Args>
+    useless_tag(Args&&...) noexcept {}
+
+}; // struct useless_tag
+
+// void_cast
+
+template<class... Args>
+void void_cast(Args&&...) noexcept {}
+
+// unreachable
+
+[[noreturn]] inline void unreachable() noexcept {
+#if defined(_MSC_VER) && !defined(__clang__) // MSVC
+    __assume(false);
+#else                                        // GCC, Clang
+    __builtin_unreachable();
+#endif
+}
+
+// Used to isolate values on cache lines to prevent false sharing.
+static constexpr size_t cacheline_size = 64;
+
+// min / max
+// Reduce unneccessary code in algorithm header.
+
+template<class T>
+const T& min(const T& a, const T& b) noexcept {
+    return (b < a) ? b : a;
+}
+
+template<class T>
+const T& max(const T& a, const T& b) noexcept {
+    return (a < b) ? b : a;
+}
+
+// signed_cast / unsigned_cast
+
+template<class T>
+make_signed_t<T> signed_cast(T t) noexcept {
+    static_assert(std::is_unsigned<T>::value, "");
+
+    return static_cast<make_signed_t<T>>(t);
+}
+
+template<class T>
+make_unsigned_t<T> unsigned_cast(T t) noexcept {
+    static_assert(std::is_signed<T>::value, "");
+
+    return static_cast<make_unsigned_t<T>>(t);
+}
+
 NAMESPACE_CIEL_END
+
+// unused
+// simple (void) cast won't stop gcc
+
+#define CIEL_UNUSED(...) ciel::void_cast(__VA_ARGS__)
+
+// assume
+
+#if CIEL_STD_VER >= 23 && ((defined(__clang__) && __clang__ >= 19) || (defined(__GNUC__) && __GNUC__ >= 13))
+#  define CIEL_ASSUME(cond) [[assume(cond)]]
+#elif defined(__clang__)
+#  if __has_builtin(__builtin_assume)
+#    define CIEL_ASSUME(cond) __builtin_assume(cond)
+#  else
+#    define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
+#  endif
+#elif defined(_MSC_VER)
+#  define CIEL_ASSUME(cond) __assume(cond)
+#elif defined(__GNUC__) && __GNUC__ >= 13
+#  define CIEL_ASSUME(cond) __attribute__((assume(cond)))
+#else
+#  define CIEL_ASSUME(cond) CIEL_UNUSED(cond)
+#endif
 
 #endif // CIELLAB_INCLUDE_CIEL_CORE_CONFIG_HPP_
