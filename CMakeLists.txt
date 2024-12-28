@@ -27,3 +27,4 @@ endif ()
 
 add_executable(ciellab_clang_tidy clang_tidy.cpp)
 target_link_libraries(ciellab_clang_tidy ciellab)
+target_compile_options(ciellab_clang_tidy PRIVATE -std=c++11)

@@ -80,7 +80,6 @@ cc:
 	cmake -S . -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 .PHONY: cc
 
-clang_tidy:
+tidy:
 	cmake -S . -B $(BUILD_DIR)/clang_tidy -DCMAKE_CXX_CLANG_TIDY="clang-tidy" && \
 	cmake --build $(BUILD_DIR)/clang_tidy --target ciellab_clang_tidy -j $(NUM_JOB)
-.PHONY: clang_tidy

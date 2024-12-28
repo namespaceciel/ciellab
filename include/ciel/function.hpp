@@ -10,7 +10,6 @@
 #include <ciel/core/is_trivially_relocatable.hpp>
 #include <ciel/core/message.hpp>
 #include <ciel/core/strip_signature.hpp>
-#include <ciel/memory.hpp>
 #include <ciel/swap.hpp>
 
 #include <cstddef>
@@ -25,11 +24,6 @@ NAMESPACE_CIEL_BEGIN
 
 class bad_function_call : public std::exception {
 public:
-    bad_function_call()                                    = default;
-    bad_function_call(const bad_function_call&)            = default;
-    bad_function_call& operator=(const bad_function_call&) = default;
-    ~bad_function_call() override                          = default;
-
     CIEL_NODISCARD const char* what() const noexcept override {
         return "ciel::bad_function_call";
     }
@@ -45,9 +39,7 @@ template<class R, class... Args>
 class func_base<R(Args...)> {
 public:
     func_base(const func_base&)            = delete;
-    func_base(func_base&&)                 = delete;
     func_base& operator=(const func_base&) = delete;
-    func_base& operator=(func_base&&)      = delete;
 
 protected:
     func_base()  = default;
@@ -73,9 +65,7 @@ template<class F, class R, class... Args>
 class func<F, R(Args...)> final : public func_base<R(Args...)> {
 public:
     func(const func&)            = delete;
-    func(func&&)                 = delete;
     func& operator=(const func&) = delete;
-    func& operator=(func&&)      = delete;
 
 private:
     F f_;
@@ -89,23 +79,12 @@ public:
 
     // When callable object is large.
     CIEL_NODISCARD func_base<R(Args...)>* clone() const override {
-        func* res = ciel::allocate<func>(1);
-
-        CIEL_TRY {
-            ::new (res) func(f_);
-        }
-        CIEL_CATCH (...) {
-            ciel::deallocate<func>(res);
-            CIEL_THROW;
-        }
-
-        return res;
+        return new func(f_);
     }
 
     // When stored object is large.
     void destroy_and_deallocate() noexcept override {
-        this->~func();
-        ciel::deallocate<func>(this);
+        delete this;
     }
 
     // When callable object is small, construct on other's buffer_.
@@ -269,17 +248,7 @@ public:
                 f_ = 1;
 
             } else {
-                func_type* res = ciel::allocate<func_type>(1);
-
-                CIEL_TRY {
-                    ::new (res) func_type(std::forward<F>(f));
-                }
-                CIEL_CATCH (...) {
-                    ciel::deallocate<func_type>(res);
-                    CIEL_THROW;
-                }
-
-                f_ = reinterpret_cast<uintptr_t>(res);
+                f_ = reinterpret_cast<uintptr_t>(new func_type(std::forward<F>(f)));
             }
         }
     }
@@ -354,17 +323,7 @@ public:
                 f_ = 1;
 
             } else {
-                func_type* res = ciel::allocate<func_type>(1);
-
-                CIEL_TRY {
-                    ::new (res) func_type(std::forward<F>(f));
-                }
-                CIEL_CATCH (...) {
-                    ciel::deallocate<func_type>(res);
-                    CIEL_THROW;
-                }
-
-                f_ = reinterpret_cast<uintptr_t>(res);
+                f_ = reinterpret_cast<uintptr_t>(new func_type(std::forward<F>(f)));
             }
         }
     }
