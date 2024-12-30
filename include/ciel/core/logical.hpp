@@ -28,7 +28,7 @@ struct disjunction<B1, Bn...> : conditional_t<static_cast<bool>(B1::value), B1, 
 // negation
 
 template<class B>
-struct negation : std::integral_constant<bool, !static_cast<bool>(B::value)> {};
+struct negation : bool_constant<!static_cast<bool>(B::value)> {};
 
 NAMESPACE_CIEL_END
 

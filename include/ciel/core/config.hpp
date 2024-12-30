@@ -213,6 +213,9 @@ NAMESPACE_CIEL_BEGIN
 template<class...>
 using void_t = void;
 
+template<bool B>
+using bool_constant = std::integral_constant<bool, B>;
+
 template<bool B, class T, class F>
 using conditional_t = typename std::conditional<B, T, F>::type;
 

@@ -17,7 +17,7 @@ struct is_trivially_relocatable : disjunction<std::is_trivially_copyable<T>,
 #ifdef _LIBCPP___TYPE_TRAITS_IS_TRIVIALLY_RELOCATABLE_H
                                               std::__libcpp_is_trivially_relocatable<T>,
 #elif __has_builtin(__is_trivially_relocatable)
-                                              std::integral_constant<bool, __is_trivially_relocatable(T)>,
+                                              bool_constant<__is_trivially_relocatable(T)>,
 #endif
                                               std::false_type> {
 };

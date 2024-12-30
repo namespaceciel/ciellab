@@ -18,9 +18,9 @@ private:
 
 public:
     using value_type                             = T;
-    using propagate_on_container_copy_assignment = std::integral_constant<bool, POCCAValue>;
-    using propagate_on_container_move_assignment = std::integral_constant<bool, POCMAValue>;
-    using propagate_on_container_swap            = std::integral_constant<bool, POCSValue>;
+    using propagate_on_container_copy_assignment = bool_constant<POCCAValue>;
+    using propagate_on_container_move_assignment = bool_constant<POCMAValue>;
+    using propagate_on_container_swap            = bool_constant<POCSValue>;
 
     template<class U>
     struct rebind {

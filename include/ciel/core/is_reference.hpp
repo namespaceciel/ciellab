@@ -2,6 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_CORE_IS_REFERENCE_HPP_
 
 #include <ciel/core/config.hpp>
+#include <ciel/core/logical.hpp>
 
 #include <type_traits>
 
@@ -26,8 +27,7 @@ struct is_const_rvalue_reference<const T&&> : std::true_type {};
 // is_const_reference
 
 template<class T>
-struct is_const_reference
-    : std::integral_constant<bool, is_const_lvalue_reference<T>::value || is_const_rvalue_reference<T>::value> {};
+struct is_const_reference : disjunction<is_const_lvalue_reference<T>, is_const_rvalue_reference<T>> {};
 
 NAMESPACE_CIEL_END
 

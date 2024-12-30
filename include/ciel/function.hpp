@@ -120,8 +120,8 @@ public:
 } // namespace details
 
 template<class T>
-struct is_small_object : std::integral_constant<bool, sizeof(T) <= sizeof(void*) * 3 && alignof(void*) % alignof(T) == 0
-                                                          && is_trivially_relocatable<T>::value> {};
+struct is_small_object : bool_constant<sizeof(T) <= sizeof(void*) * 3 && alignof(void*) % alignof(T) == 0
+                                       && is_trivially_relocatable<T>::value> {};
 
 struct assume_trivially_relocatable_t {};
 

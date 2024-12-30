@@ -12,7 +12,7 @@ template<class T>
 using is_final = std::is_final<T>;
 #elif __has_builtin(__is_final)
 template<class T>
-struct is_final : std::integral_constant<bool, __is_final(T)> {};
+struct is_final : bool_constant<__is_final(T)> {};
 #else
 // If is_final is not available, it may be better to manually write explicit template specializations.
 // e.g.

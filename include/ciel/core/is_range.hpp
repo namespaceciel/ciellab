@@ -26,7 +26,7 @@ struct is_range_with_size<T, void_t<decltype(std::declval<T>().begin())>, void_t
                           void_t<decltype(std::declval<T>().size())>> : std::true_type {};
 
 template<class T>
-struct is_range_without_size : std::integral_constant<bool, is_range<T>::value && !is_range_with_size<T>::value> {};
+struct is_range_without_size : bool_constant<is_range<T>::value && !is_range_with_size<T>::value> {};
 
 // from_range_t
 
