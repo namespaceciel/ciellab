@@ -20,8 +20,7 @@ TEST(spinlock_ptr, lock) {
 
     SimpleLatch go{threads_num};
 
-    ciel::vector<std::thread> threads;
-    threads.reserve(threads_num);
+    ciel::vector<std::thread> threads(reserve_capacity, threads_num);
 
     for (size_t i = 0; i < threads_num; ++i) {
         threads.unchecked_emplace_back([&] {

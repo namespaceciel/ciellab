@@ -65,8 +65,7 @@ TEST(mpsc_queue, multithread) {
     mpsc_queue<Node> queue;
     std::atomic<size_t> count{0};
 
-    ciel::vector<std::thread> producer_threads;
-    producer_threads.reserve(producer_threads_num);
+    ciel::vector<std::thread> producer_threads(reserve_capacity, producer_threads_num);
     for (size_t i = 0; i < producer_threads_num; ++i) {
         producer_threads.unchecked_emplace_back([&, i] {
             go.arrive_and_wait();

@@ -29,6 +29,10 @@ NAMESPACE_CIEL_BEGIN
 
 // Inspired by LLVM libc++ and folly's implementation.
 
+struct reserve_capacity_t {};
+
+static constexpr reserve_capacity_t reserve_capacity;
+
 template<class T, class Allocator = std::allocator<T>>
 class vector {
     static_assert(std::is_same<typename Allocator::value_type, T>::value, "");
@@ -410,6 +414,11 @@ public:
             init(count);
             construct_at_end(std::make_move_iterator(rg.begin()), std::make_move_iterator(rg.end()));
         }
+    }
+
+    vector(reserve_capacity_t, const size_type count, const allocator_type& alloc = allocator_type())
+        : vector(alloc) {
+        init(count);
     }
 
     ~vector() {

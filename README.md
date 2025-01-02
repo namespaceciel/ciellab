@@ -61,7 +61,7 @@ for (int i = 0; i < 100; ++i) {
 }
 ```
 
-#### 5. Adding `std::initializer_list` overloads for `emplace` and `emplace_back`.
+#### 5. Add `std::initializer_list` overloads for `emplace` and `emplace_back`.
 
 ```cpp
 ciel::vector<ciel::vector<int>> v;
@@ -99,6 +99,23 @@ v.assign_range(std::move(rg));
 v.insert_range(std::move(rg));
 v.append_range(std::move(rg));
 ```
+
+#### 8. Can preallocate sufficient space for member variable initializations.
+
+```cpp
+ciel::vector<T> v;
+v.reserve(N);
+```
+
+equals to
+
+```cpp
+ciel::vector<T> v{reserve_capacity, N};
+```
+
+It can be used in member variable initializations.
+
+The behavior is undefined if N == 0.
 
 ### function.hpp
 

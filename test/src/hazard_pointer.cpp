@@ -52,8 +52,7 @@ TEST(hazard_pointer, multithread) {
     std::atomic<Garbage*> ptr{nullptr};
     SimpleLatch go{threads_num};
 
-    ciel::vector<std::thread> store_threads;
-    store_threads.reserve(threads_num / 2);
+    ciel::vector<std::thread> store_threads(reserve_capacity, threads_num / 2);
     for (size_t i = 0; i < threads_num / 2; ++i) {
         store_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
@@ -69,8 +68,7 @@ TEST(hazard_pointer, multithread) {
         });
     }
 
-    ciel::vector<std::thread> load_threads;
-    load_threads.reserve(threads_num / 2);
+    ciel::vector<std::thread> load_threads(reserve_capacity, threads_num / 2);
     for (size_t i = 0; i < threads_num / 2; ++i) {
         load_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();

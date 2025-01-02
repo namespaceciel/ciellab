@@ -157,8 +157,7 @@ TEST(atomic_shared_ptr, concurrent_store_and_loads) {
     atomic_shared_ptr<size_t> s;
     ciel::SimpleLatch go{threads_num};
 
-    vector<std::thread> consumers;
-    consumers.reserve(threads_num / 2);
+    vector<std::thread> consumers(reserve_capacity, threads_num / 2);
 
     for (size_t i = 0; i < threads_num / 2; ++i) {
         consumers.unchecked_emplace_back([&s, &go] {
@@ -174,8 +173,7 @@ TEST(atomic_shared_ptr, concurrent_store_and_loads) {
         });
     }
 
-    vector<std::thread> producers;
-    producers.reserve(threads_num / 2);
+    vector<std::thread> producers(reserve_capacity, threads_num / 2);
 
     for (size_t i = 0; i < threads_num / 2; ++i) {
         producers.unchecked_emplace_back([&s, &go] {
@@ -206,8 +204,7 @@ TEST(atomic_shared_ptr, concurrent_exchange) {
     vector<size_t> local_sums_produced(threads_num);
     vector<size_t> local_sums_consumed(threads_num);
     {
-        vector<std::thread> threads;
-        threads.reserve(threads_num);
+        vector<std::thread> threads(reserve_capacity, threads_num);
 
         for (size_t i = 0; i < threads_num; ++i) {
             threads.unchecked_emplace_back([i, &s, &go, &local_sums_produced, &local_sums_consumed] {

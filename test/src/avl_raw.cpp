@@ -10,8 +10,7 @@
 using namespace ciel;
 
 TEST(avl_raw, all) {
-    ciel::vector<avl_node<int>> v;
-    v.reserve(10000);
+    ciel::vector<avl_node<int>> v(reserve_capacity, 10000);
     for (int i = 0; i < 10000; ++i) {
         v.unchecked_emplace_back(i);
     }

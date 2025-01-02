@@ -133,8 +133,7 @@ TEST(shared_ptr, concurrent_store_and_loads) {
     shared_ptr<size_t> s{new size_t{123}};
     SimpleLatch go{threads_num};
 
-    vector<std::thread> consumers;
-    consumers.reserve(threads_num);
+    vector<std::thread> consumers(reserve_capacity, threads_num);
 
     for (size_t i = 0; i < threads_num; ++i) {
         consumers.unchecked_emplace_back([&s, &go] {

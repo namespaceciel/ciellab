@@ -30,8 +30,7 @@ void test_concurrent_push_and_pop_impl(::testing::Test*) {
     Stack stack;
     std::atomic<size_t> count{0};
 
-    ciel::vector<std::thread> push_threads;
-    push_threads.reserve(threads_num / 2);
+    ciel::vector<std::thread> push_threads(reserve_capacity, threads_num / 2);
     for (size_t i = 0; i < threads_num / 2; ++i) {
         push_threads.unchecked_emplace_back([&, i] {
             go.arrive_and_wait();
@@ -42,8 +41,7 @@ void test_concurrent_push_and_pop_impl(::testing::Test*) {
         });
     }
 
-    ciel::vector<std::thread> pop_threads;
-    pop_threads.reserve(threads_num / 2);
+    ciel::vector<std::thread> pop_threads(reserve_capacity, threads_num / 2);
     for (size_t i = 0; i < threads_num / 2; ++i) {
         pop_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();

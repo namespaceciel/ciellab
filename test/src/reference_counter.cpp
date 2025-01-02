@@ -38,8 +38,7 @@ TEST(reference_counter, multithread) {
     std::atomic<size_t> cleanup_count{0};
     std::atomic<bool> hits_zero{false};
 
-    ciel::vector<std::thread> write_threads;
-    write_threads.reserve(threads_num / 2);
+    ciel::vector<std::thread> write_threads(reserve_capacity, threads_num / 2);
     for (size_t i = 0; i < threads_num / 2; ++i) {
         write_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
@@ -54,8 +53,7 @@ TEST(reference_counter, multithread) {
         });
     }
 
-    ciel::vector<std::thread> read_threads;
-    read_threads.reserve(threads_num / 2);
+    ciel::vector<std::thread> read_threads(reserve_capacity, threads_num / 2);
     for (size_t i = 0; i < threads_num / 2; ++i) {
         read_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
