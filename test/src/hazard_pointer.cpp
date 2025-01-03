@@ -57,12 +57,10 @@ TEST(hazard_pointer, multithread) {
         store_threads.unchecked_emplace_back([&] {
             go.arrive_and_wait();
 
-            hazard_pointer hp = make_hazard_pointer();
-
             for (size_t j = 0; j < operations_num; ++j) {
-                auto g = ptr.exchange(new Garbage);
-                if (g) {
-                    g->retire();
+                Garbage* p = ptr.exchange(new Garbage);
+                if (p != nullptr) {
+                    p->retire();
                 }
             }
         });
@@ -76,9 +74,9 @@ TEST(hazard_pointer, multithread) {
             hazard_pointer hp = make_hazard_pointer();
 
             for (size_t j = 0; j < operations_num; ++j) {
-                Garbage* res = hp.protect(ptr);
-                if (res != nullptr) {
-                    ASSERT_EQ(res->i, 1);
+                Garbage* p = hp.protect(ptr);
+                if (p != nullptr) {
+                    ASSERT_EQ(p->i, 1);
                 }
                 hp.reset_protection();
             }

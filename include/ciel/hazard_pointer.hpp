@@ -122,13 +122,13 @@ struct
 
 }; // struct alignas(cacheline_size) hazard_slot
 
-class hazard_pointer_headquarter {
+class hazard_slot_headquarter {
 private:
     hazard_slot* const hazard_slot_list_head;
 
     friend class hazard_pointer;
 
-    hazard_pointer_headquarter()
+    hazard_slot_headquarter()
         : hazard_slot_list_head(new hazard_slot{false}) {
         // std::thread::hardware_concurrency() may return 0.
         hazard_slot* cur = hazard_slot_list_head;
@@ -140,15 +140,15 @@ private:
     }
 
 public:
-    CIEL_NODISCARD static hazard_pointer_headquarter& get() {
-        static hazard_pointer_headquarter res;
+    CIEL_NODISCARD static hazard_slot_headquarter& get() {
+        static hazard_slot_headquarter res;
         return res;
     }
 
-    hazard_pointer_headquarter(const hazard_pointer_headquarter&)            = delete;
-    hazard_pointer_headquarter& operator=(const hazard_pointer_headquarter&) = delete;
+    hazard_slot_headquarter(const hazard_slot_headquarter&)            = delete;
+    hazard_slot_headquarter& operator=(const hazard_slot_headquarter&) = delete;
 
-    ~hazard_pointer_headquarter() {
+    ~hazard_slot_headquarter() {
         hazard_slot* cur = hazard_slot_list_head;
         while (cur) {
             hazard_slot* old = ciel::exchange(cur, cur->next.load(std::memory_order_relaxed));
@@ -186,20 +186,20 @@ public:
         slot->in_use.store(false, std::memory_order_relaxed);
     }
 
-}; // class hazard_pointer_headquarter
+}; // class hazard_slot_headquarter
 
 class hazard_pointer {
 private:
-    hazard_slot* slot_;
-
     template<class, class, bool>
     friend class hazard_pointer_obj_base;
 
     friend hazard_pointer make_hazard_pointer();
 
+    hazard_slot* slot_;
+
     void clear() noexcept {
         if (!empty()) {
-            hazard_pointer_headquarter::get().return_slot(ciel::exchange(slot_, nullptr));
+            hazard_slot_headquarter::get().return_slot(ciel::exchange(slot_, nullptr));
         }
     }
 
@@ -294,7 +294,7 @@ private: // Used by hazard_pointer_obj_base.
         slot_->num_retires_since_cleanup = 0;
 
         // Scan over every hazard_slot, store protected_ptrs into slot.protected_set.
-        hazard_slot* cur = hazard_pointer_headquarter::get().hazard_slot_list_head;
+        hazard_slot* cur = hazard_slot_headquarter::get().hazard_slot_list_head;
         while (cur) {
             auto p = cur->protected_ptr.load(std::memory_order_acquire);
             if (p) {
@@ -315,7 +315,7 @@ private: // Used by hazard_pointer_obj_base.
 }; // class hazard_pointer
 
 CIEL_NODISCARD hazard_pointer make_hazard_pointer() {
-    hazard_pointer res(hazard_pointer_headquarter::get().get_slot());
+    hazard_pointer res(hazard_slot_headquarter::get().get_slot());
     return res;
 }
 
