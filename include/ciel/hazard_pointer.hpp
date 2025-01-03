@@ -28,7 +28,7 @@ private:
     hazard_pointer_obj_base_link* next_{nullptr};
 
 public:
-    hazard_pointer_obj_base_link* hp_next() const noexcept {
+    CIEL_NODISCARD hazard_pointer_obj_base_link* hp_next() const noexcept {
         return next_;
     }
 
@@ -140,7 +140,7 @@ private:
     }
 
 public:
-    static hazard_pointer_headquarter& get() {
+    CIEL_NODISCARD static hazard_pointer_headquarter& get() {
         static hazard_pointer_headquarter res;
         return res;
     }
@@ -192,10 +192,6 @@ class hazard_pointer {
 private:
     hazard_slot* slot_;
 
-    // Used by make_hazard_pointer().
-    hazard_pointer(hazard_slot* slot) noexcept
-        : slot_(slot) {}
-
     template<class, class, bool>
     friend class hazard_pointer_obj_base;
 
@@ -206,6 +202,10 @@ private:
             hazard_pointer_headquarter::get().return_slot(ciel::exchange(slot_, nullptr));
         }
     }
+
+    // Used by make_hazard_pointer().
+    hazard_pointer(hazard_slot* slot) noexcept
+        : slot_(slot) {}
 
 public:
     hazard_pointer() noexcept
@@ -314,7 +314,7 @@ private: // Used by hazard_pointer_obj_base.
 
 }; // class hazard_pointer
 
-hazard_pointer make_hazard_pointer() {
+CIEL_NODISCARD hazard_pointer make_hazard_pointer() {
     hazard_pointer res(hazard_pointer_headquarter::get().get_slot());
     return res;
 }
