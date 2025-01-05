@@ -14,7 +14,7 @@ using namespace ciel;
 
 namespace {
 
-struct Garbage final : hazard_pointer_obj_base<Garbage> {
+struct Garbage : hazard_pointer_obj_base<Garbage> {
     int i{1};
 
     ~Garbage() {

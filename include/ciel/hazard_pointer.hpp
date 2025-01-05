@@ -26,8 +26,12 @@ NAMESPACE_CIEL_BEGIN
 class hazard_pointer_obj_base_link {
 private:
     hazard_pointer_obj_base_link* next_{nullptr};
+    void (*f_)(hazard_pointer_obj_base_link*);
 
 public:
+    hazard_pointer_obj_base_link(void (*f)(hazard_pointer_obj_base_link*)) noexcept
+        : f_(f) {}
+
     CIEL_NODISCARD hazard_pointer_obj_base_link* hp_next() const noexcept {
         return next_;
     }
@@ -36,7 +40,9 @@ public:
         next_ = n;
     }
 
-    virtual void hp_destroy() noexcept = 0;
+    void hp_destroy() noexcept {
+        f_(this);
+    }
 
 }; // class hazard_pointer_obj_base_link
 
@@ -333,7 +339,11 @@ private:
     }
 
 protected:
-    hazard_pointer_obj_base()                                          = default;
+    hazard_pointer_obj_base() noexcept
+        : hazard_pointer_obj_base_link([](hazard_pointer_obj_base_link* s) {
+              static_cast<hazard_pointer_obj_base*>(s)->deleter()(static_cast<T*>(s));
+          }) {}
+
     hazard_pointer_obj_base(const hazard_pointer_obj_base&)            = default;
     hazard_pointer_obj_base(hazard_pointer_obj_base&&)                 = default;
     hazard_pointer_obj_base& operator=(const hazard_pointer_obj_base&) = default;
@@ -346,10 +356,6 @@ public:
 
         auto hp = make_hazard_pointer();
         hp.retire(this);
-    }
-
-    void hp_destroy() noexcept override {
-        deleter()(static_cast<T*>(this));
     }
 
 }; // class hazard_pointer_obj_base
@@ -363,7 +369,11 @@ private:
     }
 
 protected:
-    hazard_pointer_obj_base()                                          = default;
+    hazard_pointer_obj_base() noexcept
+        : hazard_pointer_obj_base_link([](hazard_pointer_obj_base_link* s) {
+              static_cast<hazard_pointer_obj_base*>(s)->deleter()(static_cast<T*>(s));
+          }) {}
+
     hazard_pointer_obj_base(const hazard_pointer_obj_base&)            = default;
     hazard_pointer_obj_base(hazard_pointer_obj_base&&)                 = default;
     hazard_pointer_obj_base& operator=(const hazard_pointer_obj_base&) = default;
@@ -376,10 +386,6 @@ public:
 
         auto hp = make_hazard_pointer();
         hp.retire(this);
-    }
-
-    void hp_destroy() noexcept override {
-        deleter()(static_cast<T*>(this));
     }
 
 }; // class hazard_pointer_obj_base<T, D, true>
