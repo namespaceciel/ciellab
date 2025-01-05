@@ -47,16 +47,13 @@ public:
     }
 
     CIEL_NODISCARD pointer lock(const std::memory_order order = std::memory_order_seq_cst) const noexcept {
-        uintptr_t cur = ptr_.load(std::memory_order_relaxed);
-        while (is_locked(cur)) {
-            std::this_thread::yield();
-            cur = ptr_.load(std::memory_order_relaxed);
-        }
+        uintptr_t cur;
+        do {
+            while (is_locked(cur = ptr_.load(std::memory_order_relaxed))) {
+                std::this_thread::yield();
+            }
 
-        while (!ptr_.compare_exchange_strong(cur, cur | lock_bit, order, std::memory_order_relaxed)) {
-            std::this_thread::yield();
-            cur &= ~lock_bit; // Clear LSB if exists.
-        }
+        } while (!ptr_.compare_exchange_strong(cur, cur | lock_bit, order, std::memory_order_relaxed));
 
         return reinterpret_cast<pointer>(cur);
     }
