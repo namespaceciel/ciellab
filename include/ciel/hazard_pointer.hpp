@@ -128,8 +128,12 @@ private:
 
     friend class hazard_pointer;
 
+    // For exception safety.
+    hazard_slot_headquarter(int)
+        : hazard_slot_list_head(new hazard_slot{false}) {}
+
     hazard_slot_headquarter()
-        : hazard_slot_list_head(new hazard_slot{false}) {
+        : hazard_slot_headquarter(0) {
         // std::thread::hardware_concurrency() may return 0.
         hazard_slot* cur = hazard_slot_list_head;
         for (unsigned int i = 1; i < std::thread::hardware_concurrency() * 2; ++i) {
