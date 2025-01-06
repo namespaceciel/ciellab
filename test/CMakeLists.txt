@@ -17,6 +17,7 @@ set(SOURCES
     src/atomic_shared_ptr.cpp
     src/avl_raw.cpp
     src/can_be_destroyed_from_base.cpp
+    src/combining_lock.cpp
     src/compressed_pair.cpp
     src/do_if_noexcept.cpp
     src/finally.cpp

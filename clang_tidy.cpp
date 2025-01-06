@@ -9,6 +9,7 @@
 #include <ciel/core/as_const.hpp>
 #include <ciel/core/avl_raw.hpp>
 #include <ciel/core/can_be_destroyed_from_base.hpp>
+#include <ciel/core/combining_lock.hpp>
 #include <ciel/core/compressed_pair.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/cstring.hpp>
