@@ -9,6 +9,7 @@
 NAMESPACE_CIEL_BEGIN
 
 // Inspired by Microsoft GSL's implementation.
+// Exception throwing will result in resource leaking, so functions are not supposed to.
 
 template<class F>
 class finally {

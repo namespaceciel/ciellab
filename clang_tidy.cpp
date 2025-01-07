@@ -31,6 +31,7 @@
 #include <ciel/core/mpsc_queue.hpp>
 #include <ciel/core/packed_ptr.hpp>
 #include <ciel/core/reference_counter.hpp>
+#include <ciel/core/spinlock.hpp>
 #include <ciel/core/spinlock_ptr.hpp>
 #include <ciel/core/strip_signature.hpp>
 #include <ciel/core/treiber_stack.hpp>
