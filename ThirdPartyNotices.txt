@@ -2,7 +2,7 @@
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do Not Translate or Localize
 
-CielUtils incorporates third party material from the projects listed below.
+CielLab incorporates third party material from the projects listed below.
 
 -------------------------------------------------------------------------------
 Software: Google Test
