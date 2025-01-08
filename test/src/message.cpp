@@ -35,6 +35,27 @@ TEST(message, text_with_integer) {
     }
 }
 
+TEST(message, text_with_pointer) {
+    {
+        const message_builder<512> mb("{}", reinterpret_cast<void*>(static_cast<uintptr_t>(0)));
+        ASSERT_EQ(std::strcmp(mb.get(), "(nullptr)"), 0);
+    }
+    {
+        const message_builder<512> mb("{}", reinterpret_cast<void*>(static_cast<uintptr_t>(0xffffffffffffffff)));
+        ASSERT_EQ(
+            std::strcmp(mb.get(),
+                        "(0xffffffffffffffff | 0b1111111111111111111111111111111111111111111111111111111111111111)"),
+            0);
+    }
+    {
+        const message_builder<512> mb("{}", reinterpret_cast<void*>(static_cast<uintptr_t>(127)));
+        ASSERT_EQ(
+            std::strcmp(mb.get(),
+                        "(0x000000000000007f | 0b0000000000000000000000000000000000000000000000000000000001111111)"),
+            0);
+    }
+}
+
 TEST(message, print) {
     {
         std::array<char, 64> buf;

@@ -2,6 +2,7 @@
 #define CIELLAB_INCLUDE_CIEL_CORE_MESSAGE_HPP_
 
 #include <ciel/core/config.hpp>
+#include <ciel/core/is_range.hpp>
 
 #include <array>
 #include <cstddef>
@@ -91,22 +92,54 @@ public:
     }
 
     void append(const void* p) noexcept {
-        const char hexdigits[] = "0123456789abcdef";
-
-        uintptr_t s = reinterpret_cast<uintptr_t>(p);
-
-        append('0');
-        append('x');
-
-        std::array<char, 16> temp{};
-
-        for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-            *it = hexdigits[s & 0xf];
-            s >>= 4;
+        if (p == nullptr) {
+            append(nullptr);
+            return;
         }
 
-        for (const char c : temp) {
-            append(c);
+        append("(0x");
+
+        {
+            const char hexdigits[] = "0123456789abcdef";
+
+            uintptr_t s = reinterpret_cast<uintptr_t>(p);
+
+            std::array<char, 16> temp{};
+
+            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
+                *it = hexdigits[s & 0xf];
+                s >>= 4;
+            }
+
+            append(temp);
+        }
+
+        append(" | 0b");
+
+        {
+            uintptr_t s = reinterpret_cast<uintptr_t>(p);
+
+            std::array<char, 64> temp{};
+
+            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
+                *it = '0' + (s & 0x1);
+                s >>= 1;
+            }
+
+            append(temp);
+        }
+
+        append(')');
+    }
+
+    void append(nullptr_t) noexcept {
+        append("(nullptr)");
+    }
+
+    template<class R, enable_if_t<is_range<R>::value> = 0>
+    void append(R&& r) noexcept {
+        for (auto&& e : r) {
+            append(e);
         }
     }
 
