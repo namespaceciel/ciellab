@@ -104,9 +104,15 @@ public:
 
             uintptr_t s = reinterpret_cast<uintptr_t>(p);
 
-            std::array<char, 16> temp{};
+            std::array<char, 14> temp{};
 
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
+            unsigned int to_insert_divider = 0;
+            for (auto it = temp.rbegin(); it != temp.rend(); ++to_insert_divider, ++it) {
+                if (to_insert_divider > 0 && to_insert_divider % 4 == 0) {
+                    *it = '\'';
+                    ++it;
+                }
+
                 *it = hexdigits[s & 0xf];
                 s >>= 4;
             }
@@ -119,9 +125,15 @@ public:
         {
             uintptr_t s = reinterpret_cast<uintptr_t>(p);
 
-            std::array<char, 64> temp{};
+            std::array<char, 59> temp{};
 
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
+            unsigned int to_insert_divider = 0;
+            for (auto it = temp.rbegin(); it != temp.rend(); ++to_insert_divider, ++it) {
+                if (to_insert_divider > 0 && to_insert_divider % 4 == 0) {
+                    *it = '\'';
+                    ++it;
+                }
+
                 *it = '0' + (s & 0x1);
                 s >>= 1;
             }
