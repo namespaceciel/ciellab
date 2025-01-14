@@ -19,7 +19,7 @@ CIEL_NODISCARD inline bool is_pow2(const size_t x) noexcept {
 
 // is_aligned
 
-CIEL_NODISCARD inline bool is_aligned(void* ptr, const size_t alignment) noexcept {
+CIEL_NODISCARD inline bool is_aligned(const void* ptr, const size_t alignment) noexcept {
     CIEL_PRECONDITION(ptr != nullptr);
     CIEL_PRECONDITION(ciel::is_pow2(alignment));
 
