@@ -244,12 +244,12 @@ static constexpr size_t cacheline_size = 64;
 // Reduce unneccessary code in algorithm header.
 
 template<class T>
-const T& min(const T& a, const T& b) noexcept {
+constexpr const T& min(const T& a, const T& b) noexcept {
     return (b < a) ? b : a;
 }
 
 template<class T>
-const T& max(const T& a, const T& b) noexcept {
+constexpr const T& max(const T& a, const T& b) noexcept {
     return (a < b) ? b : a;
 }
 
