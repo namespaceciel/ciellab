@@ -324,7 +324,7 @@ private: // Used by hazard_pointer_obj_base.
 
 }; // class hazard_pointer
 
-CIEL_NODISCARD hazard_pointer make_hazard_pointer() {
+CIEL_NODISCARD inline hazard_pointer make_hazard_pointer() {
     hazard_pointer res(hazard_slot_headquarter::get().get_slot());
     return res;
 }
@@ -394,7 +394,7 @@ NAMESPACE_CIEL_END
 
 namespace std {
 
-void swap(ciel::hazard_pointer& lhs, ciel::hazard_pointer& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+inline void swap(ciel::hazard_pointer& lhs, ciel::hazard_pointer& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 

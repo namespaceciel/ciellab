@@ -123,6 +123,8 @@ public:
         append(" | 0b");
 
         {
+            const char bindigits[] = "01";
+
             uintptr_t s = reinterpret_cast<uintptr_t>(p);
 
             std::array<char, 59> temp{};
@@ -134,7 +136,7 @@ public:
                     ++it;
                 }
 
-                *it = '0' + (s & 0x1);
+                *it = bindigits[s & 0x1];
                 s >>= 1;
             }
 

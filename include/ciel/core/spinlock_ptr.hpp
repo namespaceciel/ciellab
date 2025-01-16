@@ -47,7 +47,7 @@ public:
     }
 
     CIEL_NODISCARD pointer lock(const std::memory_order order = std::memory_order_seq_cst) const noexcept {
-        uintptr_t cur;
+        uintptr_t cur = 0;
         do {
             while (is_locked(cur = ptr_.load(std::memory_order_relaxed))) {
                 std::this_thread::yield();
