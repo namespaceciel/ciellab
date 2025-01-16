@@ -15,11 +15,7 @@ jobs:
       - name: build test against clang
         run: |
             clang --version
-            sudo bash llvm.sh 20
-            sudo cp /usr/bin/clang-20 /usr/bin/clang
-            sudo cp /usr/bin/clang++-20 /usr/bin/clang++
-            clang --version
-
+            sudo apt-get install libc++-dev
             make clang_test_build
 
       - name: build test against gcc

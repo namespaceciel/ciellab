@@ -15,6 +15,7 @@ jobs:
       - name: build benchmark against clang
         run: |
             clang --version
+            sudo apt-get install libc++-dev
             make clang_benchmark_build
 
       - name: build benchmark against gcc
