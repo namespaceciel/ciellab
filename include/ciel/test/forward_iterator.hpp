@@ -32,17 +32,17 @@ public:
         : ptr(p) {}
 
     void go_next() noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         ++ptr;
     }
 
     CIEL_NODISCARD reference operator*() const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         return *ptr;
     }
 
     CIEL_NODISCARD pointer operator->() const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         return ptr;
     }
 

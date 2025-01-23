@@ -450,25 +450,25 @@ public:
     }
 
     CIEL_NODISCARD reference front() {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *begin();
     }
 
     CIEL_NODISCARD const_reference front() const {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *begin();
     }
 
     CIEL_NODISCARD reference back() {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *(--end());
     }
 
     CIEL_NODISCARD const_reference back() const {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *(--end());
     }
@@ -585,7 +585,7 @@ public:
     }
 
     void pop_back() noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         alloc_range_destroy(end().prev(), end());
     }
@@ -604,7 +604,7 @@ public:
     }
 
     void pop_front() noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         alloc_range_destroy(begin(), begin().next());
     }

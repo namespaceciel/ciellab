@@ -13,10 +13,10 @@ NAMESPACE_CIEL_BEGIN
 // memcpy
 
 inline void memcpy(void* dest, const void* src, const size_t count) noexcept {
-    CIEL_PRECONDITION(dest != nullptr);
-    CIEL_PRECONDITION(src != nullptr);
-    CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(dest) + count <= reinterpret_cast<uintptr_t>(src)
-                      || reinterpret_cast<uintptr_t>(src) + count <= reinterpret_cast<uintptr_t>(dest));
+    CIEL_ASSERT(dest != nullptr);
+    CIEL_ASSERT(src != nullptr);
+    CIEL_ASSERT(reinterpret_cast<uintptr_t>(dest) + count <= reinterpret_cast<uintptr_t>(src)
+                || reinterpret_cast<uintptr_t>(src) + count <= reinterpret_cast<uintptr_t>(dest));
 
     std::memcpy(dest, src, count);
 }
@@ -24,8 +24,8 @@ inline void memcpy(void* dest, const void* src, const size_t count) noexcept {
 // memmove
 
 inline void memmove(void* dest, const void* src, const size_t count) noexcept {
-    CIEL_PRECONDITION(dest != nullptr);
-    CIEL_PRECONDITION(src != nullptr);
+    CIEL_ASSERT(dest != nullptr);
+    CIEL_ASSERT(src != nullptr);
 
     std::memmove(dest, src, count);
 }

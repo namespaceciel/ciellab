@@ -326,7 +326,7 @@ private:
     }
 
     void construct_at_end(const size_type n) {
-        CIEL_PRECONDITION(size() + n <= capacity());
+        CIEL_ASSERT(size() + n <= capacity());
 
         for (size_type i = 0; i < n; ++i) {
             ::new (end_()) value_type();
@@ -335,7 +335,7 @@ private:
     }
 
     void construct_at_end(const size_type n, const value_type& value) {
-        CIEL_PRECONDITION(size() + n <= capacity());
+        CIEL_ASSERT(size() + n <= capacity());
 
         for (size_type i = 0; i < n; ++i) {
             ::new (end_()) value_type(value);
@@ -364,17 +364,17 @@ private:
     }
 
     void destroy(pointer p) noexcept {
-        CIEL_PRECONDITION(begin_() <= p);
-        CIEL_PRECONDITION(p < end_());
+        CIEL_ASSERT(begin_() <= p);
+        CIEL_ASSERT(p < end_());
 
         p->~value_type();
         --this->size_;
     }
 
     void destroy(pointer begin, pointer end) noexcept {
-        CIEL_PRECONDITION(begin <= end);
-        CIEL_PRECONDITION(begin_() <= begin);
-        CIEL_PRECONDITION(end <= end_());
+        CIEL_ASSERT(begin <= end);
+        CIEL_ASSERT(begin_() <= begin);
+        CIEL_ASSERT(end <= end_());
 
         for (; begin != end; ++begin) {
             begin->~value_type();
@@ -393,7 +393,7 @@ private:
 
     template<class... Args>
     void unchecked_emplace_back_aux(Args&&... args) {
-        CIEL_PRECONDITION(size() < capacity());
+        CIEL_ASSERT(size() < capacity());
 
         ::new (end_()) value_type(std::forward<Args>(args)...);
         ++this->size_;
@@ -409,7 +409,7 @@ private:
             destroy(begin_() + count, end_());
         }
 
-        CIEL_POSTCONDITION(size() <= count);
+        CIEL_ASSERT(size() <= count);
 
         Iter mid = ciel::copy_n(first, size(), begin_());
 
@@ -504,7 +504,7 @@ public:
             destroy(begin_() + count, end_());
         }
 
-        CIEL_POSTCONDITION(size() <= count);
+        CIEL_ASSERT(size() <= count);
 
         std::fill_n(begin_(), size(), value);
         // if count > size()
@@ -568,37 +568,37 @@ public:
     }
 
     CIEL_NODISCARD reference operator[](const size_type pos) {
-        CIEL_PRECONDITION(pos < size());
+        CIEL_ASSERT(pos < size());
 
         return begin_()[pos];
     }
 
     CIEL_NODISCARD const_reference operator[](const size_type pos) const {
-        CIEL_PRECONDITION(pos < size());
+        CIEL_ASSERT(pos < size());
 
         return begin_()[pos];
     }
 
     CIEL_NODISCARD reference front() {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return begin_()[0];
     }
 
     CIEL_NODISCARD const_reference front() const {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return begin_()[0];
     }
 
     CIEL_NODISCARD reference back() {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *(end_() - 1);
     }
 
     CIEL_NODISCARD const_reference back() const {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *(end_() - 1);
     }
@@ -713,9 +713,9 @@ private:
     template<class AppendCallback, class InsertCallback, class IsInternalValueCallback>
     iterator insert_impl(pointer pos, const size_type count, AppendCallback&& append_callback,
                          InsertCallback&& insert_callback, IsInternalValueCallback&& is_internal_value_callback) {
-        CIEL_PRECONDITION(begin_() <= pos);
-        CIEL_PRECONDITION(pos <= end_());
-        CIEL_PRECONDITION(count != 0);
+        CIEL_ASSERT(begin_() <= pos);
+        CIEL_ASSERT(pos <= end_());
+        CIEL_ASSERT(count != 0);
 
         const size_type pos_index = pos - begin_();
 
@@ -989,7 +989,7 @@ public:
     }
 
     void pop_back() noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         destroy(end_() - 1);
     }
@@ -1037,8 +1037,8 @@ private:
     iterator erase_impl(pointer first, pointer last,
                         const difference_type count) noexcept(is_trivially_relocatable<value_type>::value
                                                               || std::is_nothrow_move_assignable<value_type>::value) {
-        CIEL_PRECONDITION(last - first == count);
-        CIEL_PRECONDITION(count != 0);
+        CIEL_ASSERT(last - first == count);
+        CIEL_ASSERT(count != 0);
 
         const auto index      = first - begin_();
         const auto back_count = end_() - last;
@@ -1067,8 +1067,8 @@ private:
 public:
     iterator erase(const_iterator p) {
         const pointer pos = begin_() + (p - begin());
-        CIEL_PRECONDITION(begin_() <= pos);
-        CIEL_PRECONDITION(pos < end_());
+        CIEL_ASSERT(begin_() <= pos);
+        CIEL_ASSERT(pos < end_());
 
         return erase_impl(pos, pos + 1, 1);
     }
@@ -1076,8 +1076,8 @@ public:
     iterator erase(const_iterator f, const_iterator l) {
         const pointer first = begin_() + (f - begin());
         const pointer last  = begin_() + (l - begin());
-        CIEL_PRECONDITION(begin_() <= first);
-        CIEL_PRECONDITION(last <= end_());
+        CIEL_ASSERT(begin_() <= first);
+        CIEL_ASSERT(last <= end_());
 
         const auto count = last - first;
 

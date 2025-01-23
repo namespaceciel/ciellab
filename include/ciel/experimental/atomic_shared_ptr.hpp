@@ -39,7 +39,7 @@ private:
 
         } while (!packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
 
-        CIEL_POSTCONDITION(new_packed.count() > 0);
+        CIEL_ASSERT(new_packed.count() > 0);
 
         return new_packed;
     }
@@ -47,13 +47,13 @@ private:
     // Atomically decrement the local ref count if old_packed.ptr() == cur_packed.ptr(),
     // or decrement the remote ref count.
     void decrement_local_ref_count(packed_type old_packed) const noexcept {
-        CIEL_PRECONDITION(old_packed.count() > 0);
+        CIEL_ASSERT(old_packed.count() > 0);
 
         packed_type cur_packed = packed_control_block_.load();
         packed_type new_packed;
 
         do {
-            CIEL_PRECONDITION(cur_packed.count() > 0 || cur_packed.ptr() != old_packed.ptr());
+            CIEL_ASSERT(cur_packed.count() > 0 || cur_packed.ptr() != old_packed.ptr());
 
             new_packed = cur_packed;
             new_packed.decrement_count();

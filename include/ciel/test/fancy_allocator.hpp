@@ -334,7 +334,7 @@ public:
 
     template<class U, class... Args>
     void construct(U* p, Args&&... args) {
-        CIEL_PRECONDITION(set.count(p) == 0);
+        CIEL_ASSERT(set.count(p) == 0);
         set.emplace(p);
 
         ::new (static_cast<void*>(p)) U(std::forward<Args>(args)...);
@@ -343,7 +343,7 @@ public:
     template<class U>
     void destroy(U* p) noexcept {
         auto it = set.find(p);
-        CIEL_PRECONDITION(it != set.end());
+        CIEL_ASSERT(it != set.end());
         set.erase(it);
 
         p->~U();

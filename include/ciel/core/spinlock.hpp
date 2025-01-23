@@ -28,7 +28,7 @@ public:
     }
 
     void unlock(std::memory_order order = std::memory_order_seq_cst) {
-        CIEL_PRECONDITION(is_locked(std::memory_order_relaxed));
+        CIEL_ASSERT(is_locked(std::memory_order_relaxed));
 
         flag_.store(false, order);
     }

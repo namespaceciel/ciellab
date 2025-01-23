@@ -45,8 +45,8 @@ public:
     }
 
     void push(T* first, T* last) noexcept {
-        CIEL_PRECONDITION(first != nullptr);
-        CIEL_PRECONDITION(last != nullptr);
+        CIEL_ASSERT(first != nullptr);
+        CIEL_ASSERT(last != nullptr);
 
         last->next.store(nullptr, std::memory_order_relaxed);
         // It needs to be release, so nullptr in next is visible, and needs to be acquire,

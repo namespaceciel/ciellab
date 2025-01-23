@@ -36,8 +36,8 @@ public:
         : ptr(p) {}
 
     void go_next() noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
-        CIEL_PRECONDITION(*ptr != invalid());
+        CIEL_ASSERT(ptr != nullptr);
+        CIEL_ASSERT(*ptr != invalid());
         if (*ptr != -1) {
             *ptr = invalid();
         }
@@ -45,14 +45,14 @@ public:
     }
 
     CIEL_NODISCARD reference operator*() const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
-        CIEL_PRECONDITION(*ptr != invalid());
+        CIEL_ASSERT(ptr != nullptr);
+        CIEL_ASSERT(*ptr != invalid());
         return *ptr;
     }
 
     CIEL_NODISCARD pointer operator->() const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
-        CIEL_PRECONDITION(*ptr != invalid());
+        CIEL_ASSERT(ptr != nullptr);
+        CIEL_ASSERT(*ptr != invalid());
         return ptr;
     }
 

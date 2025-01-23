@@ -59,13 +59,13 @@ public:
     }
 
     CIEL_NODISCARD add_lvalue_reference_t<element_type> operator*() const noexcept {
-        CIEL_PRECONDITION(*this);
+        CIEL_ASSERT(*this);
 
         return *get();
     }
 
     CIEL_NODISCARD element_type* operator->() const noexcept {
-        CIEL_PRECONDITION(*this);
+        CIEL_ASSERT(*this);
 
         return get();
     }

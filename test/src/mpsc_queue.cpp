@@ -28,13 +28,13 @@ TEST(mpsc_queue, singlethread) {
     mpsc_queue<Node> queue;
     std::atomic<size_t> count{0};
     queue.process([&](Node*) {
-        CIEL_PRECONDITION(false);
+        ciel::unreachable();
         return true;
     });
 
     queue.push(arr.data());
     queue.process([&](Node*) {
-        CIEL_PRECONDITION(false);
+        ciel::unreachable();
         return true;
     });
 

@@ -19,9 +19,9 @@ private:
 public:
     packed_ptr(T* ptr = nullptr, const size_t count = 0) noexcept
         : ptr_(reinterpret_cast<uintptr_t>(ptr)), count_(count) {
-        CIEL_PRECONDITION(reinterpret_cast<uintptr_t>(ptr) < (1ULL << 48));
+        CIEL_ASSERT(reinterpret_cast<uintptr_t>(ptr) < (1ULL << 48));
         // For use cases like ABA, It might still be ok when count exceeds 2^16.
-        // CIEL_PRECONDITION(count < (1ULL << 16));
+        // CIEL_ASSERT(count < (1ULL << 16));
     }
 
     CIEL_NODISCARD T* ptr() const noexcept {

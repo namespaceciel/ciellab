@@ -56,15 +56,13 @@ public:
     void shared_add_ref(const size_t count = 1) noexcept {
         const bool res = shared_count_.increment_if_not_zero(count, std::memory_order_relaxed);
 
-        CIEL_POSTCONDITION(res);
-        CIEL_UNUSED(res);
+        CIEL_ASSERT(res);
     }
 
     void weak_add_ref() noexcept {
         const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
-        CIEL_POSTCONDITION(previous != 0);
-        CIEL_UNUSED(previous);
+        CIEL_ASSERT(previous != 0);
     }
 
     void shared_count_release() noexcept {
@@ -495,13 +493,13 @@ public:
     }
 
     CIEL_NODISCARD T& operator*() const noexcept {
-        CIEL_PRECONDITION(*this);
+        CIEL_ASSERT(*this);
 
         return *get();
     }
 
     CIEL_NODISCARD T* operator->() const noexcept {
-        CIEL_PRECONDITION(*this);
+        CIEL_ASSERT(*this);
 
         return get();
     }

@@ -95,7 +95,7 @@ struct
         }
 
         void push(garbage_type* p) noexcept {
-            CIEL_PRECONDITION(p != nullptr);
+            CIEL_ASSERT(p != nullptr);
 
             p->hp_set_next(ciel::exchange(head_, p));
         }
@@ -168,7 +168,7 @@ public:
 
     CIEL_NODISCARD hazard_slot* get_slot() {
         hazard_slot* cur = hazard_slot_list_head;
-        CIEL_PRECONDITION(cur != nullptr);
+        CIEL_ASSERT(cur != nullptr);
 
         while (true) {
             if (!cur->in_use.load(std::memory_order_relaxed)
@@ -256,7 +256,7 @@ public:
 
     template<class T>
     CIEL_NODISCARD bool try_protect(T*& ptr, const std::atomic<T*>& src) noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         T* p = ptr;
         reset_protection(p);
@@ -272,13 +272,13 @@ public:
 
     template<class T>
     void reset_protection(const T* ptr) noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         slot_->protected_ptr.store(const_cast<T*>(ptr), std::memory_order_release);
     }
 
     void reset_protection(nullptr_t = nullptr) noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         slot_->protected_ptr.store(nullptr, std::memory_order_release);
     }
@@ -291,7 +291,7 @@ private: // Used by hazard_pointer_obj_base.
     static constexpr size_t cleanup_threshold = 1000;
 
     void retire(hazard_pointer_obj_base_link* p) {
-        CIEL_PRECONDITION(p != nullptr);
+        CIEL_ASSERT(p != nullptr);
 
         slot_->retired_list.push(p);
 

@@ -110,7 +110,7 @@ private:
     }
 
     CIEL_NODISCARD size_type recommend_cap(const size_type new_size) const {
-        CIEL_PRECONDITION(new_size > 0);
+        CIEL_ASSERT(new_size > 0);
 
         const size_type ms = max_size();
 
@@ -133,16 +133,16 @@ private:
     }
 
     void destroy(pointer p) noexcept {
-        CIEL_PRECONDITION(begin_ <= p);
-        CIEL_PRECONDITION(p < end_);
+        CIEL_ASSERT(begin_ <= p);
+        CIEL_ASSERT(p < end_);
 
         alloc_traits::destroy(allocator_(), ciel::to_address(p));
     }
 
     pointer destroy(pointer first, pointer last) noexcept {
-        CIEL_PRECONDITION(begin_ <= first);
-        CIEL_PRECONDITION(first <= last);
-        CIEL_PRECONDITION(last <= end_);
+        CIEL_ASSERT(begin_ <= first);
+        CIEL_ASSERT(first <= last);
+        CIEL_ASSERT(last <= end_);
 
         const pointer res = first;
 
@@ -154,7 +154,7 @@ private:
     }
 
     void construct_at_end(const size_type n) {
-        CIEL_PRECONDITION(end_ + n <= end_cap_());
+        CIEL_ASSERT(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
             unchecked_emplace_back();
@@ -162,7 +162,7 @@ private:
     }
 
     void construct_at_end(const size_type n, lvalue value) {
-        CIEL_PRECONDITION(end_ + n <= end_cap_());
+        CIEL_ASSERT(end_ + n <= end_cap_());
 
         for (size_type i = 0; i < n; ++i) {
             unchecked_emplace_back(value);
@@ -181,10 +181,10 @@ private:
     }
 
     void init(const size_type count) {
-        CIEL_PRECONDITION(count != 0);
-        CIEL_PRECONDITION(begin_ == nullptr);
-        CIEL_PRECONDITION(end_ == nullptr);
-        CIEL_PRECONDITION(end_cap_() == nullptr);
+        CIEL_ASSERT(count != 0);
+        CIEL_ASSERT(begin_ == nullptr);
+        CIEL_ASSERT(end_ == nullptr);
+        CIEL_ASSERT(end_cap_() == nullptr);
 
         begin_     = alloc_traits::allocate(allocator_(), count);
         end_cap_() = begin_ + count;
@@ -197,7 +197,7 @@ private:
     }
 
     void reset(const size_type count) {
-        CIEL_PRECONDITION(count != 0);
+        CIEL_ASSERT(count != 0);
 
         do_destroy();
         set_nullptr(); // It's neccessary since allocation would throw.
@@ -206,7 +206,7 @@ private:
 
     void swap_out_buffer(split_buffer<value_type, allocator_type&>&& sb) noexcept(
         expand_via_memcpy || std::is_nothrow_move_constructible<value_type>::value) {
-        CIEL_PRECONDITION(sb.front_spare() == size());
+        CIEL_ASSERT(sb.front_spare() == size());
 
         // If either dest or src is an invalid or null pointer, memcpy's behavior is undefined, even if count is zero.
         if (begin_) {
@@ -240,8 +240,8 @@ private:
             const size_type front_count = pos - begin_;
             const size_type back_count  = end_ - pos;
 
-            CIEL_PRECONDITION(sb.front_spare() == front_count);
-            CIEL_PRECONDITION(sb.back_spare() >= back_count);
+            CIEL_ASSERT(sb.front_spare() == front_count);
+            CIEL_ASSERT(sb.back_spare() >= back_count);
 
             if (expand_via_memcpy) {
                 ciel::memcpy(ciel::to_address(sb.begin_cap_), ciel::to_address(begin_),
@@ -287,7 +287,7 @@ private:
 
     template<class... Args>
     void unchecked_emplace_back_aux(Args&&... args) {
-        CIEL_PRECONDITION(end_ < end_cap_());
+        CIEL_ASSERT(end_ < end_cap_());
 
         construct(end_, std::forward<Args>(args)...);
         ++end_;
@@ -572,37 +572,37 @@ public:
     }
 
     CIEL_NODISCARD reference operator[](const size_type pos) {
-        CIEL_PRECONDITION(pos < size());
+        CIEL_ASSERT(pos < size());
 
         return begin_[pos];
     }
 
     CIEL_NODISCARD const_reference operator[](const size_type pos) const {
-        CIEL_PRECONDITION(pos < size());
+        CIEL_ASSERT(pos < size());
 
         return begin_[pos];
     }
 
     CIEL_NODISCARD reference front() {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return begin_[0];
     }
 
     CIEL_NODISCARD const_reference front() const {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return begin_[0];
     }
 
     CIEL_NODISCARD reference back() {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *(end_ - 1);
     }
 
     CIEL_NODISCARD const_reference back() const {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         return *(end_ - 1);
     }
@@ -719,9 +719,9 @@ private:
     iterator insert_impl(pointer pos, const size_type count, ExpansionCallback&& expansion_callback,
                          AppendCallback&& append_callback, InsertCallback&& insert_callback,
                          IsInternalValueCallback&& is_internal_value_callback) {
-        CIEL_PRECONDITION(begin_ <= pos);
-        CIEL_PRECONDITION(pos <= end_);
-        CIEL_PRECONDITION(count != 0);
+        CIEL_ASSERT(begin_ <= pos);
+        CIEL_ASSERT(pos <= end_);
+        CIEL_ASSERT(count != 0);
 
         const size_type pos_index = pos - begin_;
 
@@ -962,8 +962,8 @@ private:
     iterator erase_impl(pointer first, pointer last,
                         const difference_type count) noexcept(move_via_memmove
                                                               || std::is_nothrow_move_assignable<value_type>::value) {
-        CIEL_PRECONDITION(last - first == count);
-        CIEL_PRECONDITION(count != 0);
+        CIEL_ASSERT(last - first == count);
+        CIEL_ASSERT(count != 0);
 
         const auto index      = first - begin_;
         const auto back_count = end_ - last;
@@ -993,8 +993,8 @@ private:
 public:
     iterator erase(const_iterator p) {
         const pointer pos = begin_ + (p - begin());
-        CIEL_PRECONDITION(begin_ <= pos);
-        CIEL_PRECONDITION(pos < end_);
+        CIEL_ASSERT(begin_ <= pos);
+        CIEL_ASSERT(pos < end_);
 
         return erase_impl(pos, pos + 1, 1);
     }
@@ -1002,8 +1002,8 @@ public:
     iterator erase(const_iterator f, const_iterator l) {
         const pointer first = begin_ + (f - begin());
         const pointer last  = begin_ + (l - begin());
-        CIEL_PRECONDITION(begin_ <= first);
-        CIEL_PRECONDITION(last <= end_);
+        CIEL_ASSERT(begin_ <= first);
+        CIEL_ASSERT(last <= end_);
 
         const auto count = last - first;
 
@@ -1057,7 +1057,7 @@ public:
     }
 
     void pop_back() noexcept {
-        CIEL_PRECONDITION(!empty());
+        CIEL_ASSERT(!empty());
 
         destroy(end_ - 1);
         --end_;

@@ -57,16 +57,16 @@ public:
     }
 
     void store(value_type desired, const std::memory_order order = std::memory_order_seq_cst) noexcept {
-        CIEL_PRECONDITION(order != std::memory_order_consume);
-        CIEL_PRECONDITION(order != std::memory_order_acquire);
-        CIEL_PRECONDITION(order != std::memory_order_acq_rel);
+        CIEL_ASSERT(order != std::memory_order_consume);
+        CIEL_ASSERT(order != std::memory_order_acquire);
+        CIEL_ASSERT(order != std::memory_order_acq_rel);
 
         CIEL_UNUSED(exchange(std::move(desired), order));
     }
 
     CIEL_NODISCARD value_type load(std::memory_order order = std::memory_order_seq_cst) const noexcept {
-        CIEL_PRECONDITION(order != std::memory_order_release);
-        CIEL_PRECONDITION(order != std::memory_order_acq_rel);
+        CIEL_ASSERT(order != std::memory_order_release);
+        CIEL_ASSERT(order != std::memory_order_acq_rel);
 
         if (order != std::memory_order_seq_cst) {
             order = std::memory_order_acquire;
@@ -97,8 +97,8 @@ public:
     CIEL_NODISCARD bool compare_exchange_strong(value_type& expected, value_type desired,
                                                 const std::memory_order success,
                                                 const std::memory_order failure) noexcept {
-        CIEL_PRECONDITION(failure != std::memory_order_release);
-        CIEL_PRECONDITION(failure != std::memory_order_acq_rel);
+        CIEL_ASSERT(failure != std::memory_order_release);
+        CIEL_ASSERT(failure != std::memory_order_acq_rel);
 
         control_block_base* cb = control_block_.lock(std::memory_order_acquire);
         if (ptr_ == expected.ptr_ && cb == expected.control_block_) {

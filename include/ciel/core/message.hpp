@@ -230,11 +230,8 @@ template<class... Args>
 
 // assert
 
-CIEL_DIAGNOSTIC_PUSH
-CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wassume")
-
 #ifdef CIEL_IS_DEBUGGING
-#  define CIEL_ASSERT(cond, fmt, ...)                                                                               \
+#  define CIEL_ASSERT_M(cond, fmt, ...)                                                                             \
       do {                                                                                                          \
           if (!(cond)) {                                                                                            \
               ciel::fatal("assertion fail: {} in {} on line {}. " fmt, #cond, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, \
@@ -242,13 +239,10 @@ CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wassume")
           }                                                                                                         \
       } while (false)
 #else
-#  define CIEL_ASSERT(cond, fmt, ...) CIEL_ASSUME(cond)
+#  define CIEL_ASSERT_M(cond, fmt, ...) CIEL_UNUSED(cond)
 #endif
 
-#define CIEL_PRECONDITION(cond)  CIEL_ASSERT(cond, "")
-#define CIEL_POSTCONDITION(cond) CIEL_ASSERT(cond, "")
-
-CIEL_DIAGNOSTIC_POP
+#define CIEL_ASSERT(cond) CIEL_ASSERT_M(cond, "")
 
 NAMESPACE_CIEL_END
 

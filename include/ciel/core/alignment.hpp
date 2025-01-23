@@ -12,7 +12,7 @@ NAMESPACE_CIEL_BEGIN
 // is_pow2
 
 CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline bool is_pow2(const size_t x) noexcept {
-    CIEL_PRECONDITION(x != 0);
+    CIEL_ASSERT(x != 0);
 
     return (x & (x - 1)) == 0;
 }
@@ -20,8 +20,8 @@ CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline bool is_pow2(const size_t x) no
 // is_aligned
 
 CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline bool is_aligned(const uintptr_t ptr, const size_t alignment) noexcept {
-    CIEL_PRECONDITION(ptr != 0);
-    CIEL_PRECONDITION(ciel::is_pow2(alignment));
+    CIEL_ASSERT(ptr != 0);
+    CIEL_ASSERT(ciel::is_pow2(alignment));
 
     return ptr % alignment == 0;
 }
@@ -34,7 +34,7 @@ CIEL_NODISCARD inline bool is_aligned(const void* ptr, const size_t alignment) n
 
 CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline uintptr_t align_up(const uintptr_t sz,
                                                                     const size_t alignment) noexcept {
-    CIEL_PRECONDITION(ciel::is_pow2(alignment));
+    CIEL_ASSERT(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;
 
@@ -45,7 +45,7 @@ CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline uintptr_t align_up(const uintpt
 
 CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline uintptr_t align_down(const uintptr_t sz,
                                                                       const size_t alignment) noexcept {
-    CIEL_PRECONDITION(ciel::is_pow2(alignment));
+    CIEL_ASSERT(ciel::is_pow2(alignment));
 
     const uintptr_t mask = alignment - 1;
 

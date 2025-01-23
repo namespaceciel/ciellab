@@ -42,7 +42,7 @@ public:
     range_destroyer& operator=(const range_destroyer&) = delete;
 
     ~range_destroyer() {
-        CIEL_PRECONDITION(begin_ <= end_);
+        CIEL_ASSERT(begin_ <= end_);
 
         for (; begin_ != end_; ++begin_) {
             alloc_traits::destroy(allocator_, ciel::to_address(begin_));
@@ -88,7 +88,7 @@ public:
     range_destroyer& operator=(const range_destroyer&) = delete;
 
     ~range_destroyer() {
-        CIEL_PRECONDITION(begin_ <= end_);
+        CIEL_ASSERT(begin_ <= end_);
 
         for (; begin_ != end_; ++begin_) {
             begin_->~value_type();

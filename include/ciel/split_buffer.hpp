@@ -48,7 +48,7 @@ private:
     }
 
     void construct_at_end(const size_type n, const value_type& value) {
-        CIEL_PRECONDITION(end_ + n <= end_cap_);
+        CIEL_ASSERT(end_ + n <= end_cap_);
 
         for (size_type i = 0; i < n; ++i) {
             unchecked_emplace_back(value);
@@ -62,7 +62,7 @@ private:
 
     template<class... Args>
     void unchecked_emplace_front(Args&&... args) {
-        CIEL_PRECONDITION(begin_cap_ < begin_);
+        CIEL_ASSERT(begin_cap_ < begin_);
 
         construct(begin_ - 1, std::forward<Args>(args)...);
         --begin_;
@@ -70,7 +70,7 @@ private:
 
     template<class... Args>
     void unchecked_emplace_back(Args&&... args) {
-        CIEL_PRECONDITION(end_ < end_cap_);
+        CIEL_ASSERT(end_ < end_cap_);
 
         construct(end_, std::forward<Args>(args)...);
         ++end_;
@@ -79,8 +79,8 @@ private:
 public:
     explicit split_buffer(Allocator alloc, const size_type cap, const size_type offset)
         : allocator_(alloc) {
-        CIEL_PRECONDITION(cap != 0);
-        CIEL_PRECONDITION(cap >= offset);
+        CIEL_ASSERT(cap != 0);
+        CIEL_ASSERT(cap >= offset);
 
         begin_cap_ = alloc_traits::allocate(allocator_, cap);
         end_cap_   = begin_cap_ + cap;
@@ -99,25 +99,25 @@ public:
     }
 
     CIEL_NODISCARD size_type front_spare() const noexcept {
-        CIEL_PRECONDITION(begin_cap_ <= begin_);
+        CIEL_ASSERT(begin_cap_ <= begin_);
 
         return begin_ - begin_cap_;
     }
 
     CIEL_NODISCARD size_type back_spare() const noexcept {
-        CIEL_PRECONDITION(end_ <= end_cap_);
+        CIEL_ASSERT(end_ <= end_cap_);
 
         return end_cap_ - end_;
     }
 
     CIEL_NODISCARD size_type capacity() const noexcept {
-        CIEL_PRECONDITION(begin_cap_ < end_cap_); // capacity should not be zero.
+        CIEL_ASSERT(begin_cap_ < end_cap_); // capacity should not be zero.
 
         return end_cap_ - begin_cap_;
     }
 
     void clear() noexcept {
-        CIEL_PRECONDITION(begin_ <= end_);
+        CIEL_ASSERT(begin_ <= end_);
 
         for (; begin_ != end_; ++begin_) {
             alloc_traits::destroy(allocator_, ciel::to_address(begin_));

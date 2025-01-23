@@ -79,6 +79,7 @@ TEST(message, expect_message) {
     CIEL_THROW_EXCEPTION(std::bad_array_new_length{});
 #endif
 
-    CIEL_PRECONDITION(false);
+    // CIEL_ASSERT(false);
+    CIEL_ASSERT_M(false, "Test string: {}", "This is string.");
 }
 */

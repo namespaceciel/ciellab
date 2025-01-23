@@ -416,7 +416,7 @@ public:
     }
 
     CIEL_NODISCARD node_type* pop_node(const iterator node) noexcept {
-        CIEL_PRECONDITION(node != end());
+        CIEL_ASSERT(node != end());
 
         if (node == begin()) {
             start_ = node.next().cast();

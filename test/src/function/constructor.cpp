@@ -15,8 +15,8 @@ struct TriviallyRelocatable {
     vector<int> v{42};
 
     void operator()() const noexcept {
-        CIEL_POSTCONDITION(v.size() == 1);
-        CIEL_POSTCONDITION(v[0] == 42);
+        CIEL_ASSERT(v.size() == 1);
+        CIEL_ASSERT(v[0] == 42);
     }
 };
 
@@ -27,7 +27,7 @@ struct NonTriviallyRelocatable {
         auto it = list.begin();
         ++it;
 
-        CIEL_POSTCONDITION(it == list.end());
+        CIEL_ASSERT(it == list.end());
     }
 };
 

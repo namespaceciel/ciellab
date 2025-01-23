@@ -72,7 +72,7 @@ private:
 
         impl(aba* parent) noexcept
             : parent_(parent) {
-            CIEL_PRECONDITION(parent_->ptr_.is_locked());
+            CIEL_ASSERT(parent_->ptr_.is_locked());
         }
 
         ~impl() {

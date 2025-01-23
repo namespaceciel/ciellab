@@ -33,32 +33,32 @@ public:
         : ptr(p) {}
 
     void go_next() noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         ++ptr;
     }
 
     void go_prev() noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         --ptr;
     }
 
     void advance(difference_type n) noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         ptr += n;
     }
 
     CIEL_NODISCARD reference operator*() const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         return *ptr;
     }
 
     CIEL_NODISCARD pointer operator->() const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         return ptr;
     }
 
     CIEL_NODISCARD reference operator[](difference_type n) const noexcept {
-        CIEL_PRECONDITION(ptr != nullptr);
+        CIEL_ASSERT(ptr != nullptr);
         return *(ptr + n);
     }
 
