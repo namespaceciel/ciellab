@@ -72,3 +72,13 @@ TEST(message, print_address) {
 
     ciel::println("Test addresses printing:\n{}\n{}\n{}", &s.a, &s.b, &s.c);
 }
+
+/*
+TEST(message, expect_message) {
+#ifndef CIEL_HAS_EXCEPTIONS
+    CIEL_THROW_EXCEPTION(std::bad_array_new_length{});
+#endif
+
+    CIEL_PRECONDITION(false);
+}
+*/

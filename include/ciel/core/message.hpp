@@ -13,6 +13,15 @@
 #include <type_traits>
 #include <utility>
 
+#ifdef __cpp_lib_source_location
+#  include <source_location>
+#  define CIEL_CURRENT_LINE std::source_location::current().line()
+#  define CIEL_CURRENT_FILE std::source_location::current().file_name()
+#else
+#  define CIEL_CURRENT_LINE CIEL_TO_STRING(__LINE__)
+#  define CIEL_CURRENT_FILE __FILE__
+#endif
+
 NAMESPACE_CIEL_BEGIN
 
 // Inspired by Microsoft snmalloc's implementation.
@@ -213,10 +222,9 @@ template<class... Args>
 #ifdef CIEL_HAS_EXCEPTIONS
 #  define CIEL_THROW_EXCEPTION(e) throw e
 #else
-#  define CIEL_THROW_EXCEPTION(e)                        \
-      do {                                               \
-          ciel::println(stderr, "exception throw: " #e); \
-          ciel::fatal(e.what());                         \
+#  define CIEL_THROW_EXCEPTION(e)                                                                                      \
+      do {                                                                                                             \
+          ciel::fatal("exception throw: {} in {} on line {}. {}", #e, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, e.what()); \
       } while (false)
 #endif
 
@@ -226,15 +234,15 @@ CIEL_DIAGNOSTIC_PUSH
 CIEL_CLANG_DIAGNOSTIC_IGNORED("-Wassume")
 
 #ifdef CIEL_IS_DEBUGGING
-#  define CIEL_ASSERT(cond, msg, ...)                          \
-      do {                                                     \
-          if (!(cond)) {                                       \
-              ciel::println(stderr, "assertion fail: " #cond); \
-              ciel::fatal(msg, ##__VA_ARGS__);                 \
-          }                                                    \
+#  define CIEL_ASSERT(cond, fmt, ...)                                                                               \
+      do {                                                                                                          \
+          if (!(cond)) {                                                                                            \
+              ciel::fatal("assertion fail: {} in {} on line {}. " fmt, #cond, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, \
+                          ##__VA_ARGS__);                                                                           \
+          }                                                                                                         \
       } while (false)
 #else
-#  define CIEL_ASSERT(cond, msg, ...) CIEL_ASSUME(cond)
+#  define CIEL_ASSERT(cond, fmt, ...) CIEL_ASSUME(cond)
 #endif
 
 #define CIEL_PRECONDITION(cond)  CIEL_ASSERT(cond, "")
