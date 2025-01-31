@@ -222,21 +222,21 @@ template<class... Args>
 #ifdef CIEL_HAS_EXCEPTIONS
 #  define CIEL_THROW_EXCEPTION(e) throw e
 #else
-#  define CIEL_THROW_EXCEPTION(e)                                                                                      \
-      do {                                                                                                             \
-          ciel::fatal("exception throw: {} in {} on line {}. {}", #e, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, e.what()); \
+#  define CIEL_THROW_EXCEPTION(e)                                                                              \
+      do {                                                                                                     \
+          ciel::fatal("exception throw: {} in {}:{}. {}", #e, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, e.what()); \
       } while (false)
 #endif
 
 // assert
 
 #ifdef CIEL_IS_DEBUGGING
-#  define CIEL_ASSERT_M(cond, fmt, ...)                                                                             \
-      do {                                                                                                          \
-          if (!(cond)) {                                                                                            \
-              ciel::fatal("assertion fail: {} in {} on line {}. " fmt, #cond, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, \
-                          ##__VA_ARGS__);                                                                           \
-          }                                                                                                         \
+#  define CIEL_ASSERT_M(cond, fmt, ...)                                                                     \
+      do {                                                                                                  \
+          if (!(cond)) {                                                                                    \
+              ciel::fatal("assertion fail: {} in {}:{}. " fmt, #cond, CIEL_CURRENT_FILE, CIEL_CURRENT_LINE, \
+                          ##__VA_ARGS__);                                                                   \
+          }                                                                                                 \
       } while (false)
 #else
 #  define CIEL_ASSERT_M(cond, fmt, ...)
