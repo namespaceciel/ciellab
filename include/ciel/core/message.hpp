@@ -239,7 +239,7 @@ template<class... Args>
           }                                                                                                         \
       } while (false)
 #else
-#  define CIEL_ASSERT_M(cond, fmt, ...) CIEL_UNUSED(cond)
+#  define CIEL_ASSERT_M(cond, fmt, ...)
 #endif
 
 #define CIEL_ASSERT(cond) CIEL_ASSERT_M(cond, "")

@@ -57,12 +57,14 @@ public:
         const bool res = shared_count_.increment_if_not_zero(count, std::memory_order_relaxed);
 
         CIEL_ASSERT(res);
+        CIEL_UNUSED(res);
     }
 
     void weak_add_ref() noexcept {
         const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
         CIEL_ASSERT(previous != 0);
+        CIEL_UNUSED(previous);
     }
 
     void shared_count_release() noexcept {
