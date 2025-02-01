@@ -2,8 +2,6 @@
 #define CIELLAB_INCLUDE_CIEL_CORE_SINGLETON_HPP_
 
 #include <ciel/core/config.hpp>
-#include <ciel/core/finally.hpp>
-#include <ciel/core/message.hpp>
 
 #include <atomic>
 #include <thread>
