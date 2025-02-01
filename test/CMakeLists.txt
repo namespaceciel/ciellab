@@ -31,6 +31,7 @@ set(SOURCES
     src/observer_ptr.cpp
     src/reference_counter.cpp
     src/shared_ptr.cpp
+    src/singleton.cpp
     src/spinlock_ptr.cpp
     src/swap.cpp
     src/treiber_stack.cpp
