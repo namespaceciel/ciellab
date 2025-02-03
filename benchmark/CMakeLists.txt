@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(benchmark)
 
 add_executable(ciellab_benchmark
     src/all.cpp
+    src/singleton.cpp
 )
 
 target_link_libraries(ciellab_benchmark ciellab benchmark::benchmark)
