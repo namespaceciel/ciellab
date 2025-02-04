@@ -3,6 +3,7 @@
 #include <ciel/core/config.hpp>
 #include <ciel/core/singleton.hpp>
 #include <ciel/core/spinlock.hpp>
+#include <thread>
 
 namespace {
 

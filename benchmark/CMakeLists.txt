@@ -16,6 +16,7 @@ FetchContent_MakeAvailable(benchmark)
 add_executable(ciellab_benchmark
     src/main.cpp
     src/lock.cpp
+    src/shared_ptr.cpp
     src/singleton.cpp
     src/vector.cpp
 )

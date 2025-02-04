@@ -4,6 +4,7 @@
 #include <ciel/core/spinlock.hpp>
 #include <cstddef>
 #include <mutex>
+#include <thread>
 
 static void lock_atomic(benchmark::State& state) {
     std::atomic<size_t> counter{0};
