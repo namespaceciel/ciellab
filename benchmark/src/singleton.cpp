@@ -60,20 +60,26 @@ static void singleton_ciel(benchmark::State& state) {
     for (auto _ : state) {
         benchmark::DoNotOptimize(SingletonOfCiel::get());
     }
+
+    benchmark::ClobberMemory();
 }
 
 static void singleton_dclp(benchmark::State& state) {
     for (auto _ : state) {
         benchmark::DoNotOptimize(SingletonOfDCLP::get());
     }
+
+    benchmark::ClobberMemory();
 }
 
 static void singleton_static(benchmark::State& state) {
     for (auto _ : state) {
         benchmark::DoNotOptimize(SingletonOfStatic::get());
     }
+
+    benchmark::ClobberMemory();
 }
 
-BENCHMARK(singleton_ciel)->ThreadRange(1, 64);
-BENCHMARK(singleton_dclp)->ThreadRange(1, 64);
-BENCHMARK(singleton_static)->ThreadRange(1, 64);
+BENCHMARK(singleton_ciel)->Threads(std::thread::hardware_concurrency());
+BENCHMARK(singleton_dclp)->Threads(std::thread::hardware_concurrency());
+BENCHMARK(singleton_static)->Threads(std::thread::hardware_concurrency());
