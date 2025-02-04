@@ -17,6 +17,7 @@ add_executable(ciellab_benchmark
     src/main.cpp
     src/lock.cpp
     src/singleton.cpp
+    src/vector.cpp
 )
 
 target_link_libraries(ciellab_benchmark ciellab benchmark::benchmark)
