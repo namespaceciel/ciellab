@@ -14,7 +14,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(benchmark)
 
 add_executable(ciellab_benchmark
-    src/all.cpp
+    src/main.cpp
     src/lock.cpp
     src/singleton.cpp
 )
