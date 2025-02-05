@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(ciellab_benchmark LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Release")
 
@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(benchmark)
 
 add_executable(ciellab_benchmark
     src/main.cpp
+    src/atomic_shared_ptr.cpp
     src/lock.cpp
     src/shared_ptr.cpp
     src/singleton.cpp
