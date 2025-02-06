@@ -56,14 +56,14 @@ public:
     void shared_add_ref(const size_t count = 1) noexcept {
         const bool res = shared_count_.increment_if_not_zero(count, std::memory_order_relaxed);
 
-        CIEL_ASSERT(res);
+        CIEL_ASSERT_M(res, "shared_ptr::shared_add_ref is pulling shared_count back from zero, count: {}", count);
         CIEL_UNUSED(res);
     }
 
     void weak_add_ref() noexcept {
         const size_t previous = weak_count_.fetch_add(1, std::memory_order_relaxed);
 
-        CIEL_ASSERT(previous != 0);
+        CIEL_ASSERT_M(previous != 0, "shared_ptr::weak_add_ref is pulling weak_count back from zero");
         CIEL_UNUSED(previous);
     }
 
@@ -297,8 +297,7 @@ private:
     }
 
     shared_ptr(control_block_base* control_block) noexcept
-        : ptr_(control_block ? static_cast<pointer>(control_block->managed_pointer()) : nullptr),
-          control_block_(control_block) {}
+        : ptr_(static_cast<pointer>(control_block->managed_pointer())), control_block_(control_block) {}
 
     shared_ptr(pointer ptr, control_block_base* control_block) noexcept
         : ptr_(ptr), control_block_(control_block) {}
