@@ -25,50 +25,7 @@ private:
     // TODO: local pointer?
     mutable atomic_packed_ptr<control_block_base> packed_control_block_{nullptr};
 
-    using packed_type = decltype(packed_control_block_)::value_type;
-
-    // Atomically increment local ref count, so that store() after this can be safe.
-    // Return new packed_control_block.
-    CIEL_NODISCARD packed_type increment_local_ref_count() const noexcept {
-        packed_type cur_packed = packed_control_block_.load();
-        packed_type new_packed;
-
-        do {
-            new_packed = cur_packed;
-            new_packed.increment_count();
-
-        } while (!packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
-
-        CIEL_ASSERT(new_packed.count() > 0);
-
-        return new_packed;
-    }
-
-    // Atomically decrement the local ref count if old_packed.ptr() == cur_packed.ptr(),
-    // or decrement the remote ref count.
-    void decrement_local_ref_count(packed_type old_packed) const noexcept {
-        CIEL_ASSERT(old_packed.count() > 0);
-
-        packed_type cur_packed = packed_control_block_.load();
-        packed_type new_packed;
-
-        do {
-            CIEL_ASSERT(cur_packed.count() > 0 || cur_packed.ptr() != old_packed.ptr());
-
-            new_packed = cur_packed;
-            new_packed.decrement_count();
-
-        } while (cur_packed.ptr() == old_packed.ptr()
-                 && !packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
-        // TODO: Would cur_packed be modified after CAS succeeded?
-
-        // Already pointing to another control_block by store().
-        // store() has already helped us update the remote ref count, so we just decrement that.
-        auto old_cb = old_packed.ptr();
-        if (cur_packed.ptr() != old_cb && old_cb != nullptr) {
-            old_cb->shared_count_release();
-        }
-    }
+    using packed_type = typename decltype(packed_control_block_)::value_type;
 
 public:
     atomic_shared_ptr() = default;
@@ -101,26 +58,78 @@ public:
         return packed_control_block_.is_lock_free();
     }
 
-    void store(value_type desired) noexcept {
-        CIEL_UNUSED(exchange(std::move(desired)));
+    CIEL_NODISCARD
+    operator value_type() const noexcept {
+        return load();
     }
 
+private:
+    // Atomically increment local ref count, so that store() after this can be safe.
+    // Return new packed_control_block.
+    CIEL_NODISCARD packed_type increment_local_ref_count() const noexcept {
+        packed_type cur_packed = packed_control_block_.load();
+        packed_type new_packed;
+
+        do {
+            if (cur_packed.ptr() == nullptr) {
+                return cur_packed;
+            }
+
+            new_packed = cur_packed;
+            new_packed.increment_count();
+
+        } while (!packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
+
+        CIEL_ASSERT(new_packed.count() > 0);
+
+        return new_packed;
+    }
+
+    // Atomically decrement the local ref count if old_packed.ptr() == cur_packed.ptr(),
+    // or decrement the remote ref count.
+    void decrement_local_ref_count(packed_type old_packed) const noexcept {
+        CIEL_ASSERT(old_packed.count() > 0);
+
+        const auto old_packed_ptr = old_packed.ptr();
+        CIEL_ASSERT(old_packed_ptr != nullptr);
+
+        packed_type cur_packed = packed_control_block_.load();
+        packed_type new_packed;
+
+        do {
+            CIEL_ASSERT(cur_packed.count() > 0 || cur_packed.ptr() != old_packed_ptr);
+
+            new_packed = cur_packed;
+            new_packed.decrement_count();
+
+        } while (cur_packed.ptr() == old_packed_ptr
+                 && !packed_control_block_.compare_exchange_weak(cur_packed, new_packed));
+
+        // Already pointing to another control_block by store().
+        // store() has already helped us update the remote ref count, so we just decrement that.
+        if (cur_packed.ptr() != old_packed_ptr) {
+            old_packed_ptr->shared_count_release();
+        }
+    }
+
+public:
     CIEL_NODISCARD value_type load() const noexcept {
         const packed_type cur_packed = increment_local_ref_count();
 
-        auto cur_cb = cur_packed.ptr();
-        if (cur_cb != nullptr) {
-            cur_cb->shared_add_ref();
+        const auto cur_cb = cur_packed.ptr();
+        if (cur_cb == nullptr) {
+            return {nullptr};
         }
+
+        cur_cb->shared_add_ref();
 
         decrement_local_ref_count(cur_packed);
 
         return {cur_cb};
     }
 
-    CIEL_NODISCARD
-    operator value_type() const noexcept {
-        return load();
+    void store(value_type desired) noexcept {
+        CIEL_UNUSED(exchange(std::move(desired)));
     }
 
     CIEL_NODISCARD value_type exchange(value_type desired) noexcept {
@@ -129,11 +138,13 @@ public:
 
         const packed_type cur_packed = packed_control_block_.exchange(new_packed);
 
-        // Help inflight loads to update those local ref counts to the global.
         auto cur_cb = cur_packed.ptr();
-        if (cur_cb != nullptr) {
-            cur_cb->shared_add_ref(cur_packed.count());
+        if (cur_cb == nullptr) {
+            return {nullptr};
         }
+
+        // Help inflight loads to update those local ref counts to the global.
+        cur_cb->shared_add_ref(cur_packed.count());
 
         return {cur_cb};
     }
