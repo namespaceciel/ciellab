@@ -42,15 +42,11 @@ TEST(message, text_with_pointer) {
     }
     {
         const message_builder<512> mb("{}", reinterpret_cast<void*>(static_cast<uintptr_t>(0xffffffffffff)));
-        ASSERT_EQ(
-            std::strcmp(mb.get(), "(0xffff'ffff'ffff | 0b1111'1111'1111'1111'1111'1111'1111'1111'1111'1111'1111'1111)"),
-            0);
+        ASSERT_EQ(std::strcmp(mb.get(), "0xffff'ffff'ffff"), 0);
     }
     {
         const message_builder<512> mb("{}", reinterpret_cast<void*>(static_cast<uintptr_t>(127)));
-        ASSERT_EQ(
-            std::strcmp(mb.get(), "(0x0000'0000'007f | 0b0000'0000'0000'0000'0000'0000'0000'0000'0000'0000'0111'1111)"),
-            0);
+        ASSERT_EQ(std::strcmp(mb.get(), "0x0000'0000'007f"), 0);
     }
 }
 

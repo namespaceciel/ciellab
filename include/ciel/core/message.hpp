@@ -106,53 +106,24 @@ public:
             return;
         }
 
-        append("(0x");
+        const char hexdigits[] = "0123456789abcdef";
 
-        {
-            const char hexdigits[] = "0123456789abcdef";
+        uintptr_t s = reinterpret_cast<uintptr_t>(p);
+        std::array<char, 14> temp{};
 
-            uintptr_t s = reinterpret_cast<uintptr_t>(p);
-
-            std::array<char, 14> temp{};
-
-            unsigned int to_insert_divider = 0;
-            for (auto it = temp.rbegin(); it != temp.rend(); ++to_insert_divider, ++it) {
-                if (to_insert_divider > 0 && to_insert_divider % 4 == 0) {
-                    *it = '\'';
-                    ++it;
-                }
-
-                *it = hexdigits[s & 0xf];
-                s >>= 4;
+        unsigned int to_insert_divider = 0;
+        for (auto it = temp.rbegin(); it != temp.rend(); ++to_insert_divider, ++it) {
+            if (to_insert_divider > 0 && to_insert_divider % 4 == 0) {
+                *it = '\'';
+                ++it;
             }
 
-            append(temp);
+            *it = hexdigits[s & 0xf];
+            s >>= 4;
         }
 
-        append(" | 0b");
-
-        {
-            const char bindigits[] = "01";
-
-            uintptr_t s = reinterpret_cast<uintptr_t>(p);
-
-            std::array<char, 59> temp{};
-
-            unsigned int to_insert_divider = 0;
-            for (auto it = temp.rbegin(); it != temp.rend(); ++to_insert_divider, ++it) {
-                if (to_insert_divider > 0 && to_insert_divider % 4 == 0) {
-                    *it = '\'';
-                    ++it;
-                }
-
-                *it = bindigits[s & 0x1];
-                s >>= 1;
-            }
-
-            append(temp);
-        }
-
-        append(')');
+        append("0x");
+        append(temp);
     }
 
     void append(nullptr_t) noexcept {
