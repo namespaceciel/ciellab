@@ -3,6 +3,7 @@
 
 #include <ciel/core/aba.hpp>
 #include <ciel/core/config.hpp>
+#include <ciel/core/message.hpp>
 
 #include <atomic>
 #include <type_traits>
@@ -29,6 +30,9 @@ public:
     }
 
     void push(T* first, T* last) noexcept {
+        CIEL_ASSERT(first != nullptr);
+        CIEL_ASSERT(last != nullptr);
+
         auto impl = stack_.read();
 
         do {
@@ -50,6 +54,10 @@ public:
                 break;
             }
 
+            // The returned `top` shall not be unmapped immediately as the losers of CAS
+            // may read uninitialized memory by loading `top->next`, leading to crash.
+            // Simply reusing the memory for something else wouldn't be a problem in the real world,
+            // but it's still undefined behavior for this atomic load to race with a non-atomic store.
             next = top->next.load(std::memory_order_relaxed);
 
         } while (!impl.store_conditional(next));
