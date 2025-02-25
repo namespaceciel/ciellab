@@ -5,11 +5,9 @@
 #include <ciel/core/is_range.hpp>
 
 #include <array>
-#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -26,22 +24,39 @@ NAMESPACE_CIEL_BEGIN
 
 // Inspired by Microsoft snmalloc's implementation.
 
-template<size_t BufferSize>
 class message_builder {
 private:
-    static_assert(BufferSize != 0, "At least one char needed to be \\0");
-
-    std::array<char, BufferSize> buffer_{};
-    size_t end_{0};
+    std::array<char, 55> buffer_;
+    uint8_t end_{0};
+    std::FILE* const stream;
 
 public:
     template<class... Args>
-    message_builder(const char* msg, Args... args) noexcept {
+    message_builder(std::FILE* s, const char* msg, Args... args) noexcept
+        : stream(s) {
         append(msg, args...);
     }
 
     message_builder(const message_builder&)            = delete;
     message_builder& operator=(const message_builder&) = delete;
+
+    ~message_builder() {
+        flush();
+    }
+
+    void flush() noexcept {
+        buffer_[end_] = '\0';
+        CIEL_UNUSED(std::fprintf(stream, "%s", buffer_.data()));
+    }
+
+    void append(const char c) noexcept {
+        if CIEL_UNLIKELY (end_ == buffer_.size() - 1) {
+            flush();
+            end_ = 0;
+        }
+
+        buffer_[end_++] = c;
+    }
 
     void append(const char* msg) noexcept {
         for (const char* s = msg; *s != 0; ++s) {
@@ -64,12 +79,6 @@ public:
         append(s + 2, rest...);
     }
 
-    void append(char c) noexcept {
-        if (end_ < buffer_.size() - 1) {
-            buffer_[end_++] = c;
-        }
-    }
-
     template<class Int, enable_if_t<std::is_integral<Int>::value> = 0>
     void append(Int value) noexcept {
         if (value == 0) {
@@ -78,7 +87,7 @@ public:
         }
 
         std::array<char, 20> temp{}; // Enough to hold the longest 64 bit decimal number.
-        size_t p = 0;
+        uint8_t p = 0;
 
         if (value < 0) {
             append('-');
@@ -137,46 +146,28 @@ public:
         }
     }
 
-    CIEL_NODISCARD const char* get() const noexcept {
-        return buffer_.data();
-    }
-
-    // '\0' doesn't count.
-    CIEL_NODISCARD size_t size() const noexcept {
-        return end_;
-    }
-
 }; // class message_builder
 
 // print
 
-template<size_t BufferSize = 512, class... Args>
+template<class... Args>
 void print(std::FILE* stream, const char* msg, Args... args) noexcept {
-    const message_builder<BufferSize> mb(msg, args...);
-    CIEL_UNUSED(std::fprintf(stream, "%s", mb.get()));
+    message_builder{stream, msg, args...};
 }
 
-template<size_t BufferSize = 512, class... Args>
+template<class... Args>
 void print(const char* msg, Args... args) noexcept {
-    print<BufferSize>(stdout, msg, args...);
+    print(stdout, msg, args...);
 }
 
-template<size_t BufferSize = 512, class... Args>
-void print(char* buffer, const char* msg, Args... args) noexcept {
-    const message_builder<BufferSize> mb(msg, args...);
-    std::memmove(buffer, mb.get(), mb.size() + 1);
-}
-
-template<size_t BufferSize = 512, class... Args>
+template<class... Args>
 void println(std::FILE* stream, const char* msg, Args... args) noexcept {
-    message_builder<BufferSize> mb(msg, args...);
-    mb.append('\n');
-    CIEL_UNUSED(std::fprintf(stream, "%s", mb.get()));
+    message_builder{stream, msg, args...}.append('\n');
 }
 
-template<size_t BufferSize = 512, class... Args>
+template<class... Args>
 void println(const char* msg, Args... args) noexcept {
-    println<BufferSize>(stdout, msg, args...);
+    println(stdout, msg, args...);
 }
 
 // fatal
