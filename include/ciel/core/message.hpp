@@ -47,12 +47,12 @@ public:
     void flush() noexcept {
         buffer_[end_] = '\0';
         CIEL_UNUSED(std::fprintf(stream, "%s", buffer_.data()));
+        end_ = 0;
     }
 
     void append(const char c) noexcept {
         if CIEL_UNLIKELY (end_ == buffer_.size() - 1) {
             flush();
-            end_ = 0;
         }
 
         buffer_[end_++] = c;
