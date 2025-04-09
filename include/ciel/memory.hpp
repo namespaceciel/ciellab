@@ -27,6 +27,7 @@ void deallocate(T* ptr) noexcept {
 #if CIEL_STD_VER >= 17
     if CIEL_UNLIKELY (ciel::is_overaligned_for_new(alignof(T))) {
         ::operator delete(ptr, static_cast<std::align_val_t>(alignof(T)));
+        return;
     }
 #endif
     ::operator delete(ptr);
