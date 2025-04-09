@@ -30,10 +30,13 @@ struct strip_signature<R (Class::*)(Args...) const volatile> {
     using type = R(Args...);
 };
 
+// clang-format off
 template<class R, class Class, class... Args>
-struct strip_signature<R (Class::*)(Args...)&> {
+struct strip_signature<R (Class::*)(Args...) &> {
     using type = R(Args...);
 };
+
+// clang-format on
 
 template<class R, class Class, class... Args>
 struct strip_signature<R (Class::*)(Args...) const&> {
