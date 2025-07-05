@@ -34,6 +34,7 @@ set(SOURCES
     src/singleton.cpp
     src/spinlock_ptr.cpp
     src/swap.cpp
+    src/to_chars.cpp
     src/treiber_stack.cpp
     src/with_lock.cpp
     src/worth_move.cpp

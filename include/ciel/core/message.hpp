@@ -3,6 +3,7 @@
 
 #include <ciel/core/config.hpp>
 #include <ciel/core/is_range.hpp>
+#include <ciel/core/to_chars.hpp>
 
 #include <array>
 #include <cstdint>
@@ -79,34 +80,14 @@ public:
         append(s + 2, rest...);
     }
 
-    template<class Int, enable_if_t<std::is_integral<Int>::value> = 0>
-    void append(Int value) noexcept {
-        if (value == 0) {
-            append('0');
-            return;
-        }
+    template<class T, enable_if_t<std::is_arithmetic<T>::value> = 0>
+    void append(T value) noexcept {
+        static_assert(!std::is_floating_point<T>::value, "not implemented yet");
 
-        std::array<char, 20> temp{}; // Enough to hold the longest 64 bit decimal number.
-        uint8_t p = 0;
+        std::array<char, 21> temp{}; // Enough to hold the longest 64 bit decimal number.
+        CIEL_UNUSED(ciel::to_chars(temp.data(), value));
 
-        if (value < 0) {
-            append('-');
-
-            while (value != 0) {
-                temp[p++] = static_cast<char>(-(value % 10) + '0');
-                value /= 10;
-            }
-
-        } else {
-            while (value != 0) {
-                temp[p++] = static_cast<char>(value % 10 + '0');
-                value /= 10;
-            }
-        }
-
-        for (auto it = decltype(temp)::reverse_iterator(temp.begin() + p); it != temp.rend(); ++it) {
-            append(*it);
-        }
+        append(temp.data());
     }
 
     void append(const void* p) noexcept {

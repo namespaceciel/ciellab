@@ -269,6 +269,13 @@ make_unsigned_t<T> unsigned_cast(T t) noexcept {
     return static_cast<make_unsigned_t<T>>(t);
 }
 
+template<class T>
+T complement(const T x) noexcept {
+    static_assert(std::is_unsigned<T>::value, "");
+
+    return ~x + 1;
+}
+
 NAMESPACE_CIEL_END
 
 // unused
