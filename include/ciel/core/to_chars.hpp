@@ -4,12 +4,47 @@
 #include <ciel/core/config.hpp>
 
 #include <cstdint>
+#include <cstring>
+#include <iterator>
 #include <limits>
 #include <type_traits>
 
 NAMESPACE_CIEL_BEGIN
 
-// Inspired by LLVM libc++'s implementation.
+// Inspired by LLVM libc++ and Microsoft snmalloc's implementation.
+
+template<class T, bool = std::is_same<T, bool>::value, bool = std::is_same<T, nullptr_t>::value,
+         bool = std::is_integral<T>::value,
+         bool = std::is_pointer<T>::value && !std::is_same<remove_const_t<remove_pointer_t<T>>, char>::value>
+struct to_chars_width {
+    static constexpr size_t value = -1;
+
+}; // struct to_chars_width
+
+template<class T>
+struct to_chars_width<T, true, false, true, false> {
+    static constexpr size_t value = 5;
+
+}; // struct to_chars_width<bool>
+
+template<class T>
+struct to_chars_width<T, false, true, false, false> {
+    static constexpr size_t value = 9;
+
+}; // struct to_chars_width<nullptr_t>
+
+template<class T>
+struct to_chars_width<T, false, false, true, false> {
+    static constexpr size_t value =
+        std::numeric_limits<T>::digits10 + 1 + static_cast<size_t>(std::is_signed<T>::value);
+
+}; // struct to_chars_width<integer>
+
+template<class T>
+struct to_chars_width<T, false, false, false, true> {
+    static constexpr size_t value = std::numeric_limits<uintptr_t>::digits / 4 + 2; // 0x...
+
+}; // struct to_chars_width<pointer except string>
 
 namespace detail {
 
@@ -70,19 +105,13 @@ char* append10(char* first, T value) noexcept {
 
 } // namespace detail
 
-inline char* to_chars(char* first, const bool value) {
+inline char* to_chars(char* first, const bool value) noexcept {
     if (value) {
-        *first       = 't';
-        *(first + 1) = 'r';
-        *(first + 2) = 'u';
-        *(first + 3) = 'e';
+        std::memcpy(first, "true", 4);
         return first + 4;
     }
-    *first       = 'f';
-    *(first + 1) = 'a';
-    *(first + 2) = 'l';
-    *(first + 3) = 's';
-    *(first + 4) = 'e';
+
+    std::memcpy(first, "false", 5);
     return first + 5;
 }
 
@@ -166,6 +195,39 @@ char* to_chars(char* first, const T value) noexcept {
 // inline char* to_chars(char* first, float value) noexcept;
 // inline char* to_chars(char* first, double value) noexcept;
 // inline char* to_chars(char* first, long double value) noexcept;
+
+inline char* to_chars(char* first, nullptr_t) noexcept {
+    constexpr size_t width = to_chars_width<nullptr_t>::value;
+
+    std::memcpy(first, "(nullptr)", width);
+
+    return first + width;
+}
+
+inline char* to_chars(char* first, const void* value) noexcept {
+    if (value == nullptr) {
+        return ciel::to_chars(first, nullptr);
+    }
+
+    constexpr size_t width = to_chars_width<void*>::value;
+
+    constexpr char hexdigits[] = "0123456789abcdef";
+
+    *first       = '0';
+    *(first + 1) = 'x';
+
+    std::reverse_iterator<char*> it(first + width);
+    std::reverse_iterator<char*> end(first + 2);
+
+    uintptr_t s = reinterpret_cast<uintptr_t>(value);
+
+    for (; it != end; ++it) {
+        *it = hexdigits[s & 0xf];
+        s >>= 4;
+    }
+
+    return first + width;
+}
 
 NAMESPACE_CIEL_END
 

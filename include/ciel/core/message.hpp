@@ -59,15 +59,14 @@ public:
         buffer_[end_++] = c;
     }
 
-    void append(const char* msg) noexcept {
-        for (const char* s = msg; *s != 0; ++s) {
+    void append(const char* s) noexcept {
+        for (; *s != 0; ++s) {
             append(*s);
         }
     }
 
     template<class Front, class... Rest>
-    void append(const char* msg, Front front, Rest... rest) noexcept {
-        const char* s = msg;
+    void append(const char* s, Front&& front, Rest&&... rest) noexcept {
         for (; *s != 0; ++s) {
             if (s[0] == '{' && s[1] == '}') {
                 break;
@@ -76,55 +75,17 @@ public:
             append(*s);
         }
 
-        append(front);
-        append(s + 2, rest...);
+        append(std::forward<Front>(front));
+        append(s + 2, std::forward<Rest>(rest)...);
     }
 
-    template<class T, enable_if_t<std::is_arithmetic<T>::value> = 0>
-    void append(T value) noexcept {
-        static_assert(!std::is_floating_point<T>::value, "not implemented yet");
-
-        std::array<char, 21> temp{}; // Enough to hold the longest 64 bit decimal number.
-        CIEL_UNUSED(ciel::to_chars(temp.data(), value));
+    template<class T, enable_if_t<to_chars_width<T>::value != -1> = 0>
+    void append(const T& value) noexcept {
+        std::array<char, to_chars_width<T>::value + 1> temp;
+        char* end = ciel::to_chars(temp.data(), value);
+        *end      = 0;
 
         append(temp.data());
-    }
-
-    void append(const void* p) noexcept {
-        if (p == nullptr) {
-            append(nullptr);
-            return;
-        }
-
-        const char hexdigits[] = "0123456789abcdef";
-
-        uintptr_t s = reinterpret_cast<uintptr_t>(p);
-        std::array<char, 14> temp{};
-
-        unsigned int to_insert_divider = 0;
-        for (auto it = temp.rbegin(); it != temp.rend(); ++to_insert_divider, ++it) {
-            if (to_insert_divider > 0 && to_insert_divider % 4 == 0) {
-                *it = '\'';
-                ++it;
-            }
-
-            *it = hexdigits[s & 0xf];
-            s >>= 4;
-        }
-
-        append("0x");
-        append(temp);
-    }
-
-    void append(nullptr_t) noexcept {
-        append("(nullptr)");
-    }
-
-    template<class R, enable_if_t<is_range<R>::value> = 0>
-    void append(R&& r) noexcept {
-        for (auto&& e : r) {
-            append(e);
-        }
     }
 
 }; // class message_builder
@@ -132,29 +93,29 @@ public:
 // print
 
 template<class... Args>
-void print(std::FILE* stream, const char* msg, Args... args) noexcept {
-    message_builder{stream, msg, args...};
+void print(std::FILE* stream, const char* msg, Args&&... args) noexcept {
+    message_builder{stream, msg, std::forward<Args>(args)...};
 }
 
 template<class... Args>
-void print(const char* msg, Args... args) noexcept {
-    print(stdout, msg, args...);
+void print(const char* msg, Args&&... args) noexcept {
+    print(stdout, msg, std::forward<Args>(args)...);
 }
 
 template<class... Args>
-void println(std::FILE* stream, const char* msg, Args... args) noexcept {
-    message_builder{stream, msg, args...}.append('\n');
+void println(std::FILE* stream, const char* msg, Args&&... args) noexcept {
+    message_builder{stream, msg, std::forward<Args>(args)...}.append('\n');
 }
 
 template<class... Args>
-void println(const char* msg, Args... args) noexcept {
-    println(stdout, msg, args...);
+void println(const char* msg, Args&&... args) noexcept {
+    println(stdout, msg, std::forward<Args>(args)...);
 }
 
 // fatal
 
 template<class... Args>
-[[noreturn]] void fatal(Args&&... args) {
+[[noreturn]] void fatal(Args&&... args) noexcept {
     ciel::println(stderr, std::forward<Args>(args)...);
     CIEL_UNUSED(std::fflush(nullptr));
     std::abort();

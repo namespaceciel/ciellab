@@ -214,6 +214,9 @@ using make_signed_t = typename std::make_signed<T>::type;
 template<class T>
 using make_unsigned_t = typename std::make_unsigned<T>::type;
 
+template<class T>
+using remove_pointer_t = typename std::remove_pointer<T>::type;
+
 // useless_tag
 
 struct useless_tag {

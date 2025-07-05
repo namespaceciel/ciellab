@@ -127,3 +127,15 @@ TEST(to_chars, int32_t) {
     ASSERT_TRUE(is_string_equal(
         buffer.data(), "0,12,123,1234,12345,123456,1234567,12345678,123456789,1234567890,2147483647,-2147483648"));
 }
+
+TEST(to_chars, pointer) {
+    std::array<char, 128> buffer{};
+    char* it = buffer.data();
+    it       = ciel::to_chars(it, nullptr);
+    *it++    = ',';
+    it       = ciel::to_chars(it, reinterpret_cast<void*>(0x0123456789abcdef));
+    *it++    = ',';
+    it       = ciel::to_chars(it, reinterpret_cast<void*>(0x09ab00ef));
+
+    ASSERT_TRUE(is_string_equal(buffer.data(), "(nullptr),0x0123456789abcdef,0x0000000009ab00ef"));
+}
