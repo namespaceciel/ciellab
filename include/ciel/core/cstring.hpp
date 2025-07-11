@@ -37,12 +37,13 @@ inline void memmove(void* dest, const void* src, const size_t count) noexcept {
 // Return nullptr if substring is not found.
 
 template<class Iter, enable_if_t<std::is_same<Iter, char*>::value || std::is_same<Iter, const char*>::value> = 0>
-Iter find(const Iter first1, const char* const last1, const char c) noexcept {
+CIEL_NODISCARD Iter find(const Iter first1, const char* const last1, const char c) noexcept {
     return static_cast<Iter>(std::memchr(first1, c, last1 - first1));
 }
 
 template<class Iter, enable_if_t<std::is_same<Iter, char*>::value || std::is_same<Iter, const char*>::value> = 0>
-Iter find(const Iter first1, const char* const last1, const char* const first2, const char* const last2) noexcept {
+CIEL_NODISCARD Iter find(const Iter first1, const char* const last1, const char* const first2,
+                         const char* const last2) noexcept {
     const size_t len1 = last1 - first1;
     const size_t len2 = last2 - first2;
 

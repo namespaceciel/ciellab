@@ -48,12 +48,12 @@ struct to_chars_width<T, false, false, false, true> {
 
 namespace detail {
 
-inline char* append1(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append1(char* first, uint32_t value) noexcept {
     *first = '0' + static_cast<char>(value);
     return first + 1;
 }
 
-inline char* append2(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append2(char* first, uint32_t value) noexcept {
     constexpr char digits_base_10[200] = {
         '0', '0', '0', '1', '0', '2', '0', '3', '0', '4', '0', '5', '0', '6', '0', '7', '0', '8', '0', '9',
         '1', '0', '1', '1', '1', '2', '1', '3', '1', '4', '1', '5', '1', '6', '1', '7', '1', '8', '1', '9',
@@ -70,42 +70,42 @@ inline char* append2(char* first, uint32_t value) noexcept {
     return first + 2;
 }
 
-inline char* append3(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append3(char* first, uint32_t value) noexcept {
     return ciel::detail::append2(ciel::detail::append1(first, value / 100), value % 100);
 }
 
-inline char* append4(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append4(char* first, uint32_t value) noexcept {
     return ciel::detail::append2(ciel::detail::append2(first, value / 100), value % 100);
 }
 
-inline char* append5(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append5(char* first, uint32_t value) noexcept {
     return ciel::detail::append4(ciel::detail::append1(first, value / 10000), value % 10000);
 }
 
-inline char* append6(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append6(char* first, uint32_t value) noexcept {
     return ciel::detail::append4(ciel::detail::append2(first, value / 10000), value % 10000);
 }
 
-inline char* append7(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append7(char* first, uint32_t value) noexcept {
     return ciel::detail::append6(ciel::detail::append1(first, value / 1000000), value % 1000000);
 }
 
-inline char* append8(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append8(char* first, uint32_t value) noexcept {
     return ciel::detail::append6(ciel::detail::append2(first, value / 1000000), value % 1000000);
 }
 
-inline char* append9(char* first, uint32_t value) noexcept {
+CIEL_NODISCARD inline char* append9(char* first, uint32_t value) noexcept {
     return ciel::detail::append8(ciel::detail::append1(first, value / 100000000), value % 100000000);
 }
 
 template<class T>
-char* append10(char* first, T value) noexcept {
+CIEL_NODISCARD char* append10(char* first, T value) noexcept {
     return ciel::detail::append8(ciel::detail::append2(first, value / 100000000), value % 100000000);
 }
 
 } // namespace detail
 
-inline char* to_chars(char* first, const bool value) noexcept {
+CIEL_NODISCARD inline char* to_chars(char* first, const bool value) noexcept {
     if (value) {
         std::memcpy(first, "true", 4);
         return first + 4;
@@ -117,7 +117,7 @@ inline char* to_chars(char* first, const bool value) noexcept {
 
 template<class T, enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) <= 4
                               && !std::is_same<T, bool>::value> = 0>
-char* to_chars(char* first, const T value) noexcept {
+CIEL_NODISCARD char* to_chars(char* first, const T value) noexcept {
     if (value < 1000000) {
         if (value < 10000) {
             if (value < 100) {
@@ -169,7 +169,7 @@ char* to_chars(char* first, const T value) noexcept {
 
 // Note: uint64_t is unsigned long long, different from unsigned long.
 template<class T, enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value && sizeof(T) == 8> = 0>
-char* to_chars(char* first, T value) noexcept {
+CIEL_NODISCARD char* to_chars(char* first, T value) noexcept {
     if (value <= std::numeric_limits<uint32_t>::max()) {
         return ciel::to_chars(first, static_cast<uint32_t>(value));
     }
@@ -182,7 +182,7 @@ char* to_chars(char* first, T value) noexcept {
 }
 
 template<class T, enable_if_t<std::is_integral<T>::value && std::is_signed<T>::value> = 0>
-char* to_chars(char* first, const T value) noexcept {
+CIEL_NODISCARD char* to_chars(char* first, const T value) noexcept {
     auto x = ciel::unsigned_cast(value);
     if (value < 0) {
         *first++ = '-';
@@ -196,7 +196,7 @@ char* to_chars(char* first, const T value) noexcept {
 // inline char* to_chars(char* first, double value) noexcept;
 // inline char* to_chars(char* first, long double value) noexcept;
 
-inline char* to_chars(char* first, nullptr_t) noexcept {
+CIEL_NODISCARD inline char* to_chars(char* first, nullptr_t) noexcept {
     constexpr size_t width = to_chars_width<nullptr_t>::value;
 
     std::memcpy(first, "(nullptr)", width);
@@ -204,7 +204,7 @@ inline char* to_chars(char* first, nullptr_t) noexcept {
     return first + width;
 }
 
-inline char* to_chars(char* first, const void* value) noexcept {
+CIEL_NODISCARD inline char* to_chars(char* first, const void* value) noexcept {
     if (value == nullptr) {
         return ciel::to_chars(first, nullptr);
     }
