@@ -1,5 +1,5 @@
-#ifndef CIELLAB_INCLUDE_CIEL_CORE_AVL_RAW_HPP_
-#define CIELLAB_INCLUDE_CIEL_CORE_AVL_RAW_HPP_
+#ifndef CIELLAB_INCLUDE_CIEL_CORE_AVL_TREE_HPP_
+#define CIELLAB_INCLUDE_CIEL_CORE_AVL_TREE_HPP_
 
 #include <ciel/core/compressed_pair.hpp>
 #include <ciel/core/config.hpp>
@@ -76,7 +76,7 @@ public:
 }; // struct avl_node
 
 template<class, class>
-class avl_raw;
+class avl_tree;
 
 template<class T, class Pointer, class Reference>
 class avl_iterator {
@@ -95,7 +95,7 @@ private:
     base_node_type* it_;
 
     template<class, class>
-    friend class avl_raw;
+    friend class avl_tree;
 
 public:
     avl_iterator() noexcept
@@ -236,7 +236,7 @@ CIEL_NODISCARD bool operator!=(const avl_iterator<T, Pointer1, Reference1>& lhs,
 }
 
 template<class T, class Compare>
-class avl_raw {
+class avl_tree {
 public:
     using value_type             = T;
     using value_compare          = Compare;
@@ -664,8 +664,8 @@ public:
         return size() == 0;
     }
 
-}; // class avl_raw
+}; // class avl_tree
 
 NAMESPACE_CIEL_END
 
-#endif // CIELLAB_INCLUDE_CIEL_CORE_AVL_RAW_HPP_
+#endif // CIELLAB_INCLUDE_CIEL_CORE_AVL_TREE_HPP_

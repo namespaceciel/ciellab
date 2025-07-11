@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <ciel/core/avl_raw.hpp>
+#include <ciel/core/avl_tree.hpp>
 #include <ciel/vector.hpp>
 
 #include <algorithm>
@@ -9,7 +9,7 @@
 
 using namespace ciel;
 
-TEST(avl_raw, all) {
+TEST(avl_tree, all) {
     ciel::vector<avl_node<int>> v(reserve_capacity, 10000);
     for (int i = 0; i < 10000; ++i) {
         v.unchecked_emplace_back(i);
@@ -18,7 +18,7 @@ TEST(avl_raw, all) {
     std::mt19937 g(rd());
     std::shuffle(v.begin(), v.end(), g);
 
-    avl_raw<int, std::less<int>> avl;
+    avl_tree<int, std::less<int>> avl;
     for (auto& node : v) {
         ASSERT_TRUE(avl.insert_node_unique(&node).second);
     }
