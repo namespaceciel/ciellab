@@ -7,6 +7,8 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <type_traits>
 
 // exception
@@ -278,6 +280,14 @@ T complement(const T x) noexcept {
 
     return ~x + 1;
 }
+
+// clang-format off
+template<uint64_t MaxSize>
+using narrowest_size_type =
+    conditional_t<MaxSize <= std::numeric_limits<uint8_t>::max(), uint8_t,
+    conditional_t<MaxSize <= std::numeric_limits<uint16_t>::max(), uint16_t,
+    conditional_t<MaxSize <= std::numeric_limits<uint32_t>::max(), uint32_t, uint64_t>>>;
+// clang-format on
 
 NAMESPACE_CIEL_END
 

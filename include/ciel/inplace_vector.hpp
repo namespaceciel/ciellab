@@ -16,9 +16,7 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
-#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
@@ -37,23 +35,16 @@ namespace detail {
 
 // inplace_vector_size
 
-template<class T, size_t Capacity>
+template<size_t Capacity>
 struct inplace_vector_size {
-    // clang-format off
-    using inplace_vector_size_type =
-        conditional_t<Capacity <= std::numeric_limits<uint8_t>::max(), uint8_t,
-        conditional_t<Capacity <= std::numeric_limits<uint16_t>::max(), uint16_t,
-        conditional_t<Capacity <= std::numeric_limits<uint32_t>::max(), uint32_t, size_t>>>;
-    // clang-format on
-
-    inplace_vector_size_type size_{0};
+    narrowest_size_type<Capacity> size_{0};
 
 }; // struct inplace_vector_size
 
 // inplace_vector_storage
 
 template<class T, size_t Capacity, class D, bool = std::is_trivially_destructible<T>::value>
-struct inplace_vector_storage : inplace_vector_size<T, Capacity> {
+struct inplace_vector_storage : inplace_vector_size<Capacity> {
     union {
         T data_[Capacity];
         unsigned char null_state_;
@@ -70,7 +61,7 @@ struct inplace_vector_storage : inplace_vector_size<T, Capacity> {
 }; // struct inplace_vector_storage
 
 template<class T, size_t Capacity, class D>
-struct inplace_vector_storage<T, Capacity, D, true> : inplace_vector_size<T, Capacity> {
+struct inplace_vector_storage<T, Capacity, D, true> : inplace_vector_size<Capacity> {
     union {
         T data_[Capacity];
         unsigned char null_state_;
@@ -253,7 +244,7 @@ class inplace_vector : private detail::maybe_has_trivial_move_assignment<T, Capa
                        private detail::conditional_copyable_and_moveable<T> {
     using base_type = detail::maybe_has_trivial_move_assignment<T, Capacity, inplace_vector<T, Capacity>>;
 
-    template<class, size_t>
+    template<size_t>
     friend struct detail::inplace_vector_size;
     template<class, size_t, class, bool>
     friend struct detail::inplace_vector_storage;
