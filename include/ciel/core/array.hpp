@@ -15,33 +15,33 @@ private:
     std::array<T, End - Begin> arr_;
 
 public:
-    T& operator[](size_t index) noexcept {
+    CIEL_CONSTEXPR_SINCE_CXX17 T& operator[](size_t index) noexcept {
         CIEL_ASSERT_M(Begin <= index && index < End, "Call ciel::array<T, {}, {}>::operator[] at index: {}", Begin, End,
                       index);
 
         return arr_[index - Begin];
     }
 
-    const T& operator[](size_t index) const noexcept {
+    CIEL_CONSTEXPR_SINCE_CXX14 const T& operator[](size_t index) const noexcept {
         CIEL_ASSERT_M(Begin <= index && index < End, "Call ciel::array<T, {}, {}>::operator[] at index: {}", Begin, End,
                       index);
 
         return arr_[index - Begin];
     }
 
-    T* begin() noexcept {
+    CIEL_CONSTEXPR_SINCE_CXX17 T* begin() noexcept {
         return arr_.data();
     }
 
-    const T* begin() const noexcept {
+    CIEL_CONSTEXPR_SINCE_CXX17 const T* begin() const noexcept {
         return arr_.data();
     }
 
-    T* end() noexcept {
+    CIEL_CONSTEXPR_SINCE_CXX17 T* end() noexcept {
         return arr_.data() + arr_.size();
     }
 
-    const T* end() const noexcept {
+    CIEL_CONSTEXPR_SINCE_CXX17 const T* end() const noexcept {
         return arr_.data() + arr_.size();
     }
 
