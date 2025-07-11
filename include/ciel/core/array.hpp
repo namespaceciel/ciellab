@@ -45,6 +45,14 @@ public:
         return arr_.data() + arr_.size();
     }
 
+    constexpr size_t size_begin() const noexcept {
+        return Begin;
+    }
+
+    constexpr size_t size_end() const noexcept {
+        return End;
+    }
+
 }; // class array
 
 NAMESPACE_CIEL_END
