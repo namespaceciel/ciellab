@@ -30,6 +30,7 @@ set(SOURCES
     src/message.cpp
     src/mpsc_queue.cpp
     src/observer_ptr.cpp
+    src/rb_tree.cpp
     src/reference_counter.cpp
     src/shared_ptr.cpp
     src/singleton.cpp
