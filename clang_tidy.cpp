@@ -6,6 +6,7 @@
 #include <ciel/core/aba.hpp>
 #include <ciel/core/aligned_storage.hpp>
 #include <ciel/core/alignment.hpp>
+#include <ciel/core/array.hpp>
 #include <ciel/core/as_const.hpp>
 #include <ciel/core/avl_tree.hpp>
 #include <ciel/core/can_be_destroyed_from_base.hpp>
@@ -30,10 +31,13 @@
 #include <ciel/core/message.hpp>
 #include <ciel/core/mpsc_queue.hpp>
 #include <ciel/core/packed_ptr.hpp>
+#include <ciel/core/rb_tree.hpp>
 #include <ciel/core/reference_counter.hpp>
+#include <ciel/core/singleton.hpp>
 #include <ciel/core/spinlock.hpp>
 #include <ciel/core/spinlock_ptr.hpp>
 #include <ciel/core/strip_signature.hpp>
+#include <ciel/core/to_chars.hpp>
 #include <ciel/core/treiber_stack.hpp>
 #include <ciel/demangle.hpp>
 #include <ciel/function.hpp>

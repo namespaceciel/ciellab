@@ -217,7 +217,7 @@ CIEL_NODISCARD inline char* to_chars(char* first, const void* value) noexcept {
     *(first + 1) = 'x';
 
     std::reverse_iterator<char*> it(first + width);
-    std::reverse_iterator<char*> end(first + 2);
+    const std::reverse_iterator<char*> end(first + 2);
 
     uintptr_t s = reinterpret_cast<uintptr_t>(value);
 
