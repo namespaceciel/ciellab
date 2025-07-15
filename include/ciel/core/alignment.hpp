@@ -30,6 +30,13 @@ CIEL_NODISCARD inline bool is_aligned(const void* ptr, const size_t alignment) n
     return ciel::is_aligned(reinterpret_cast<uintptr_t>(ptr), alignment);
 }
 
+template<class T>
+CIEL_NODISCARD bool is_aligned(const T* ptr) noexcept {
+    return ciel::is_aligned(reinterpret_cast<uintptr_t>(ptr), alignof(T));
+}
+
+inline bool is_aligned(const void*) = delete;
+
 // align_up
 
 CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX20 inline uintptr_t align_up(const uintptr_t sz,
