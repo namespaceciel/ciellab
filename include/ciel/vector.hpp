@@ -1,6 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 #define CIELLAB_INCLUDE_CIEL_VECTOR_HPP_
 
+#include <ciel/allocate_at_least.hpp>
 #include <ciel/allocator_traits.hpp>
 #include <ciel/compare.hpp>
 #include <ciel/copy_n.hpp>
@@ -187,8 +188,10 @@ private:
         CIEL_ASSERT(end_ == nullptr);
         CIEL_ASSERT(end_cap_() == nullptr);
 
-        begin_     = alloc_traits::allocate(allocator_(), count);
-        end_cap_() = begin_ + count;
+        const auto allocation_res = ciel::allocate_at_least(allocator_(), count);
+
+        begin_     = allocation_res.ptr;
+        end_cap_() = begin_ + allocation_res.count;
         end_       = begin_;
     }
 

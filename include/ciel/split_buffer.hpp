@@ -1,6 +1,7 @@
 #ifndef CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
 #define CIELLAB_INCLUDE_CIEL_SPLIT_BUFFER_HPP_
 
+#include <ciel/allocate_at_least.hpp>
 #include <ciel/copy_n.hpp>
 #include <ciel/core/config.hpp>
 #include <ciel/core/message.hpp>
@@ -82,8 +83,10 @@ public:
         CIEL_ASSERT(cap != 0);
         CIEL_ASSERT(cap >= offset);
 
-        begin_cap_ = alloc_traits::allocate(allocator_, cap);
-        end_cap_   = begin_cap_ + cap;
+        const auto allocation_res = ciel::allocate_at_least(allocator_, cap);
+
+        begin_cap_ = allocation_res.ptr;
+        end_cap_   = begin_cap_ + allocation_res.count;
         begin_     = begin_cap_ + offset;
         end_       = begin_;
     }
