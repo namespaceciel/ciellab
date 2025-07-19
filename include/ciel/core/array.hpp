@@ -15,41 +15,41 @@ private:
     std::array<T, End - Begin> arr_;
 
 public:
-    CIEL_CONSTEXPR_SINCE_CXX17 T& operator[](size_t index) noexcept {
+    CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX17 T& operator[](size_t index) noexcept {
         CIEL_ASSERT_M(Begin <= index && index < End, "Call ciel::array<T, {}, {}>::operator[] at index: {}", Begin, End,
                       index);
 
         return arr_[index - Begin];
     }
 
-    CIEL_CONSTEXPR_SINCE_CXX14 const T& operator[](size_t index) const noexcept {
+    CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX14 const T& operator[](size_t index) const noexcept {
         CIEL_ASSERT_M(Begin <= index && index < End, "Call ciel::array<T, {}, {}>::operator[] at index: {}", Begin, End,
                       index);
 
         return arr_[index - Begin];
     }
 
-    CIEL_CONSTEXPR_SINCE_CXX17 T* begin() noexcept {
+    CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX17 T* begin() noexcept {
         return arr_.data();
     }
 
-    CIEL_CONSTEXPR_SINCE_CXX17 const T* begin() const noexcept {
+    CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX17 const T* begin() const noexcept {
         return arr_.data();
     }
 
-    CIEL_CONSTEXPR_SINCE_CXX17 T* end() noexcept {
+    CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX17 T* end() noexcept {
         return arr_.data() + arr_.size();
     }
 
-    CIEL_CONSTEXPR_SINCE_CXX17 const T* end() const noexcept {
+    CIEL_NODISCARD CIEL_CONSTEXPR_SINCE_CXX17 const T* end() const noexcept {
         return arr_.data() + arr_.size();
     }
 
-    constexpr size_t size_begin() const noexcept {
+    CIEL_NODISCARD constexpr size_t size_begin() const noexcept {
         return Begin;
     }
 
-    constexpr size_t size_end() const noexcept {
+    CIEL_NODISCARD constexpr size_t size_end() const noexcept {
         return End;
     }
 
