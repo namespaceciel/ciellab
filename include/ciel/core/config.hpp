@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <errno.h>
 #include <limits>
 #include <type_traits>
 
@@ -288,6 +289,23 @@ using narrowest_size_type =
     conditional_t<MaxSize <= std::numeric_limits<uint16_t>::max(), uint16_t,
     conditional_t<MaxSize <= std::numeric_limits<uint32_t>::max(), uint32_t, uint64_t>>>;
 // clang-format on
+
+class keep_errno {
+private:
+    const int cached_errno;
+
+public:
+    keep_errno() noexcept
+        : cached_errno(errno) {}
+
+    keep_errno(const keep_errno&)            = delete;
+    keep_errno& operator=(const keep_errno&) = delete;
+
+    ~keep_errno() {
+        errno = cached_errno;
+    }
+
+}; // class keep_errno
 
 NAMESPACE_CIEL_END
 
