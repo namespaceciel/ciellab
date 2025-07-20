@@ -34,7 +34,7 @@ TEST(rb_tree, int) {
         tree.remove(p);
     }
 
-    ASSERT_EQ(tree.size(), 0);
+    ASSERT_TRUE(tree.empty());
 }
 
 TEST(rb_tree, void) {
@@ -64,5 +64,5 @@ TEST(rb_tree, void) {
         tree.remove(p);
     }
 
-    ASSERT_EQ(tree.size(), 0);
+    ASSERT_TRUE(tree.empty());
 }

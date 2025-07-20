@@ -590,6 +590,8 @@ public:
     }
 
     CIEL_NODISCARD bool empty() const noexcept {
+        CIEL_ASSERT((size() == 0) == (begin_ == &end_node_));
+
         return size() == 0;
     }
 
