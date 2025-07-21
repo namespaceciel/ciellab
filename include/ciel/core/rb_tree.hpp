@@ -22,11 +22,9 @@ struct rb_end_node {
 
 }; // struct rb_end_node
 
-template<class Derived>
-struct rb_node_base : rb_end_node<Derived> {
-    using pointer      = Derived*;
-    using base_type    = rb_end_node<Derived>;
-    using base_pointer = base_type*;
+struct rb_node_base : rb_end_node<rb_node_base> {
+    using pointer      = rb_node_base*;
+    using base_pointer = rb_end_node<rb_node_base>*;
 
     pointer right;
     uintptr_t parent_ : 63;
@@ -44,47 +42,7 @@ struct rb_node_base : rb_end_node<Derived> {
         parent_ = reinterpret_cast<uintptr_t>(p);
     }
 
-}; // struct rb_node
-
-template<class T>
-struct rb_node : rb_node_base<rb_node<T>> {
-    using value_type = T;
-
-    using base_type = rb_node_base<rb_node<T>>;
-    using base_type::is_black;
-    using base_type::left;
-    using base_type::parent;
-    using base_type::parent_downcast;
-    using base_type::right;
-    using base_type::set_parent;
-
-private:
-    value_type value_;
-
-public:
-    template<class... Args>
-    rb_node(Args&&... args) noexcept(std::is_nothrow_constructible<value_type, Args&&...>::value)
-        : value_(std::forward<Args>(args)...) {}
-
-    CIEL_NODISCARD value_type& value() noexcept {
-        return value_;
-    }
-
-    CIEL_NODISCARD const value_type& value() const noexcept {
-        return value_;
-    }
-
-}; // struct rb_node
-
-template<>
-struct rb_node<void> : rb_node_base<rb_node<void>> {
-    using value_type = uintptr_t;
-
-    CIEL_NODISCARD value_type value() const noexcept {
-        return reinterpret_cast<value_type>(this);
-    }
-
-}; // struct rb_node<void>
+}; // struct rb_node_base
 
 template<class TreeNodePtr>
 CIEL_NODISCARD bool is_left_child(TreeNodePtr p) noexcept {
@@ -403,15 +361,17 @@ void remove(TreeNodePtr root, TreeNodePtr z) noexcept {
     }
 }
 
-template<class T>
+template<class NodeType>
 class rb_iterator {
-private:
-    using TreeNode       = rb_node<T>;
-    using TreeNodePtr    = TreeNode*;
-    using TreeEndNode    = rb_end_node<TreeNode>;
-    using TreeEndNodePtr = TreeEndNode*;
+public:
+    using node_type  = NodeType;
+    using value_type = typename node_type::value_type;
 
-    using value_type = typename TreeNode::value_type;
+private:
+    using TreeNodeBase    = rb_node_base;
+    using TreeNodeBasePtr = TreeNodeBase*;
+    using TreeEndNode     = rb_end_node<TreeNodeBase>;
+    using TreeEndNodePtr  = TreeEndNode*;
 
     TreeEndNodePtr ptr_;
 
@@ -420,7 +380,7 @@ public:
         : ptr_(p) {}
 
     rb_iterator& operator++() noexcept {
-        ptr_ = ciel::next(static_cast<TreeNodePtr>(ptr_));
+        ptr_ = ciel::next(static_cast<TreeNodeBasePtr>(ptr_));
         return *this;
     }
 
@@ -441,8 +401,8 @@ public:
         return res;
     }
 
-    CIEL_NODISCARD auto operator*() const noexcept -> decltype(std::declval<TreeNode>().value()) {
-        return static_cast<TreeNodePtr>(ptr_)->value();
+    CIEL_NODISCARD auto operator*() const noexcept -> decltype(std::declval<node_type>().value()) {
+        return static_cast<node_type*>(ptr_)->value();
     }
 
     CIEL_NODISCARD friend bool operator==(const rb_iterator lhs, const rb_iterator rhs) noexcept {
@@ -455,18 +415,25 @@ public:
 
 }; // class rb_iterator
 
-template<class T, class Compare>
+template<class NodeType, class Compare>
 class rb_tree {
-private:
-    using TreeNode       = rb_node<T>;
-    using TreeNodePtr    = TreeNode*;
-    using TreeEndNode    = rb_end_node<TreeNode>;
-    using TreeEndNodePtr = TreeEndNode*;
+public:
+    using node_type  = NodeType;
+    using value_type = typename node_type::value_type;
 
-    using value_type    = typename TreeNode::value_type;
+    static_assert(std::is_base_of<rb_node_base, node_type>::value, "NodeType must inherit from rb_node_base");
+    static_assert(std::is_same<value_type, remove_cvref_t<decltype(std::declval<node_type>().value())>>::value,
+                  "NodeType must have function {CR_T value()}");
+
+private:
+    using TreeNodeBase    = rb_node_base;
+    using TreeNodeBasePtr = TreeNodeBase*;
+    using TreeEndNode     = rb_end_node<TreeNodeBase>;
+    using TreeEndNodePtr  = TreeEndNode*;
+
     using size_type     = size_t;
     using value_compare = Compare;
-    using iterator      = rb_iterator<T>;
+    using iterator      = rb_iterator<node_type>;
 
     TreeEndNodePtr begin_{&end_node_};
     TreeEndNode end_node_{nullptr};
@@ -488,25 +455,25 @@ private:
         return size_comp_.second();
     }
 
-    TreeNodePtr root() noexcept {
+    TreeNodeBasePtr root() noexcept {
         return end_node_.left;
     }
 
-    TreeNodePtr* root_ptr() noexcept {
+    TreeNodeBasePtr* root_ptr() noexcept {
         return &(end_node_.left);
     }
 
     // Return reference to the insert place and it's parent: <Parent, Child>
-    std::pair<TreeEndNodePtr, TreeNodePtr&> find_equal(const value_type& value) {
-        TreeNodePtr p      = root();
-        TreeNodePtr* p_ptr = root_ptr();
+    std::pair<TreeEndNodePtr, TreeNodeBasePtr&> find_equal(const value_type& value) {
+        TreeNodeBasePtr p      = root();
+        TreeNodeBasePtr* p_ptr = root_ptr();
 
         if (p == nullptr) {
             return {&end_node_, end_node_.left};
         }
 
         while (true) {
-            if (comp_()(value, p->value())) {
+            if (comp_()(value, static_cast<node_type*>(p)->value())) {
                 if (p->left != nullptr) {
                     p_ptr = &(p->left);
                     p     = p->left;
@@ -515,7 +482,7 @@ private:
                     return {p, p->left};
                 }
 
-            } else if (comp_()(p->value(), value)) {
+            } else if (comp_()(static_cast<node_type*>(p)->value(), value)) {
                 if (p->right != nullptr) {
                     p_ptr = &(p->right);
                     p     = p->right;
@@ -530,9 +497,10 @@ private:
         }
     }
 
-    void insert_node_at(std::pair<TreeEndNodePtr, TreeNodePtr&> parent_and_child, TreeNodePtr new_node) noexcept {
-        TreeEndNodePtr parent = parent_and_child.first;
-        TreeNodePtr& child    = parent_and_child.second;
+    void insert_node_at(std::pair<TreeEndNodePtr, TreeNodeBasePtr&> parent_and_child,
+                        TreeNodeBasePtr new_node) noexcept {
+        TreeEndNodePtr parent  = parent_and_child.first;
+        TreeNodeBasePtr& child = parent_and_child.second;
 
         new_node->left  = nullptr;
         new_node->right = nullptr;
@@ -549,8 +517,8 @@ private:
 
 public:
     // Insert node into this tree, return false if the same value exists.
-    CIEL_NODISCARD bool insert(TreeNodePtr new_node) noexcept {
-        std::pair<TreeEndNodePtr, TreeNodePtr&> parent_and_child = find_equal(new_node->value());
+    CIEL_NODISCARD bool insert(node_type* new_node) noexcept {
+        std::pair<TreeEndNodePtr, TreeNodeBasePtr&> parent_and_child = find_equal(new_node->value());
 
         if (parent_and_child.second != nullptr) {
             return false;
@@ -562,19 +530,22 @@ public:
     }
 
     // Remove ptr from this tree, ptr must be valid.
-    void remove(TreeNodePtr ptr) noexcept {
+    void remove(node_type* ptr) noexcept {
+        TreeNodeBasePtr p = ptr;
+
         if (begin_ == ptr) {
-            begin_ = ciel::next(ptr);
+            begin_ = ciel::next(p);
         }
 
-        ciel::remove(root(), ptr);
+        ciel::remove(root(), p);
         --size_();
     }
 
     // Return the node ptr of value, nullptr if not found.
-    CIEL_NODISCARD TreeNodePtr find(const value_type& value) noexcept {
-        std::pair<TreeEndNodePtr, TreeNodePtr&> parent_and_child = find_equal(value);
-        return parent_and_child.second;
+    CIEL_NODISCARD node_type* find(const value_type& value) noexcept {
+        const auto res = find_equal(value).second;
+
+        return static_cast<node_type*>(res);
     }
 
     CIEL_NODISCARD iterator begin() noexcept {
@@ -595,10 +566,10 @@ public:
         return size() == 0;
     }
 
-    CIEL_NODISCARD TreeNodePtr extract_min() noexcept {
+    CIEL_NODISCARD node_type* extract_min() noexcept {
         CIEL_ASSERT(!empty());
 
-        TreeNodePtr res = static_cast<TreeNodePtr>(begin_);
+        node_type* res = static_cast<node_type*>(begin_);
         remove(res);
         return res;
     }
