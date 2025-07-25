@@ -27,7 +27,7 @@ NAMESPACE_CIEL_BEGIN
 
 class message_builder {
 private:
-    std::array<char, 55> buffer_;
+    std::array<char, 119> buffer_;
     uint8_t end_{0};
     std::FILE* const stream;
 
