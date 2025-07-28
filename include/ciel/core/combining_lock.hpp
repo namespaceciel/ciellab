@@ -139,7 +139,7 @@ void with(combining_lock& lock, F&& f) noexcept {
         return;
     }
 
-    combining_lock_node_impl<F> node(lock, std::forward<F>(f));
+    const combining_lock_node_impl<F> node(lock, std::forward<F>(f));
 }
 
 NAMESPACE_CIEL_END

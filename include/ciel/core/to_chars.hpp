@@ -49,7 +49,7 @@ struct to_chars_width<T, false, false, false, true> {
 namespace detail {
 
 CIEL_NODISCARD inline char* append1(char* first, uint32_t value) noexcept {
-    *first = '0' + static_cast<char>(value);
+    *first = static_cast<char>('0' + value);
     return first + 1;
 }
 

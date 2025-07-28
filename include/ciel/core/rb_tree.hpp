@@ -518,7 +518,7 @@ private:
 public:
     // Insert node into this tree, return false if the same value exists.
     CIEL_NODISCARD bool insert(node_type* new_node) noexcept {
-        std::pair<TreeEndNodePtr, TreeNodeBasePtr&> parent_and_child = find_equal(new_node->value());
+        const std::pair<TreeEndNodePtr, TreeNodeBasePtr&> parent_and_child = find_equal(new_node->value());
 
         if (parent_and_child.second != nullptr) {
             return false;
