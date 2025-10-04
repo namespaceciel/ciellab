@@ -21,7 +21,7 @@ CLANGXX_PATH ?= clang++
 CLANGXX_PATH := $(or $(CIELLAB_CLANGXX),$(CLANGXX_PATH))
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) && rm -rf third_party/*build
 .PHONY: clean
 
 clang_test_build:
@@ -75,11 +75,3 @@ format:
 check_format:
 	./format.sh check $(PROJECT_SOURCE_DIR)/include $(PROJECT_SOURCE_DIR)/test/src $(PROJECT_SOURCE_DIR)/benchmark/src $(PROJECT_SOURCE_DIR)/clang_tidy.cpp
 .PHONY: check_format
-
-cc:
-	cmake -S . -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-.PHONY: cc
-
-tidy:
-	cmake -S . -B $(BUILD_DIR)/clang_tidy -DCMAKE_CXX_CLANG_TIDY="clang-tidy" && \
-	cmake --build $(BUILD_DIR)/clang_tidy --target ciellab_clang_tidy -j $(NUM_JOB)
