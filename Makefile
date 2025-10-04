@@ -1,7 +1,8 @@
 PROJECT_SOURCE_DIR := $(abspath ./)
 BUILD_DIR ?= $(PROJECT_SOURCE_DIR)/build
-UNAME_S := $(shell uname -s)
+CONAN_TOOLCHAIN := $(shell find $(BUILD_DIR) -name conan_toolchain.cmake -print -quit)
 
+UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
     NUM_JOB := $(shell nproc)
 else ifeq ($(UNAME_S), Darwin)
@@ -47,25 +48,16 @@ gcc_test: gcc_test_build gcc_test_run
 test: clang_test_build gcc_test_build clang_test_run gcc_test_run
 .PHONY: test
 
-clang_benchmark_build:
-	cmake -S . -B $(BUILD_DIR)/clang -DCMAKE_C_COMPILER=$(CLANG_PATH) -DCMAKE_CXX_COMPILER=$(CLANGXX_PATH) -DCMAKE_CXX_FLAGS="-stdlib=libc++" && \
-    cmake --build $(BUILD_DIR)/clang --target ciellab_benchmark -j $(NUM_JOB)
-
-clang_benchmark_run:
-	$(BUILD_DIR)/clang/benchmark/ciellab_benchmark
-
-clang_benchmark: clang_benchmark_build clang_benchmark_run
-
-gcc_benchmark_build:
-	cmake -S . -B $(BUILD_DIR)/gcc -DCMAKE_C_COMPILER=$(GCC_PATH) -DCMAKE_CXX_COMPILER=$(GXX_PATH) && \
-    cmake --build $(BUILD_DIR)/gcc --target ciellab_benchmark -j $(NUM_JOB)
-
-gcc_benchmark_run:
-	$(BUILD_DIR)/gcc/benchmark/ciellab_benchmark
-
-gcc_benchmark: gcc_benchmark_build gcc_benchmark_run
-
-benchmark: clang_benchmark_build gcc_benchmark_build clang_benchmark_run gcc_benchmark_run
+benchmark:
+ifneq (,$(wildcard $(CONAN_TOOLCHAIN)))
+	@echo "Using toolchain: $(CONAN_TOOLCHAIN)"
+	cmake -S . -B $(BUILD_DIR) -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CONAN_TOOLCHAIN) && \
+	cmake --build $(BUILD_DIR) --target ciellab_benchmark -j $(NUM_JOB) && \
+	$(BUILD_DIR)/benchmark/ciellab_benchmark
+else
+	@echo "ERROR: conan_toolchain.cmake not found! Run 'conan install' first."
+	@exit 1
+endif
 .PHONY: benchmark
 
 format:

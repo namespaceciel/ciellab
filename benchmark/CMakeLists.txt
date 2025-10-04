@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Release")
 
+find_package(absl REQUIRED)
+find_package(Folly REQUIRED)
+find_package(gflags REQUIRED)
+
 include(FetchContent)
 FetchContent_Declare(
     benchmark
@@ -15,13 +19,17 @@ FetchContent_MakeAvailable(benchmark)
 
 add_executable(ciellab_benchmark
     src/main.cpp
-    src/atomic_shared_ptr.cpp
-    src/lock.cpp
-    src/shared_ptr.cpp
-    src/singleton.cpp
-    src/vector.cpp
+    src/hashtable.cpp
 )
 
-target_link_libraries(ciellab_benchmark ciellab benchmark::benchmark)
+target_link_libraries(ciellab_benchmark
+    ciellab
+    benchmark::benchmark
+    absl::flat_hash_set
+    absl::flat_hash_map
+    absl::node_hash_set
+    absl::node_hash_map
+    Folly::folly
+)
 
 target_compile_options(ciellab_benchmark PUBLIC -O3 -Wall -Wextra -fexceptions -frtti)

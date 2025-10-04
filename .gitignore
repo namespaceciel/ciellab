@@ -8,3 +8,4 @@ portable_headers
 .cache
 compile_commands.json
 third_party
+CMakeUserPresets.json
