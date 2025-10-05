@@ -4,8 +4,24 @@
 #include "hashtable/bytell_hash_map.hpp"
 #include "hashtable/flat_hash_map.hpp"
 #include "hashtable/unordered_map.hpp"
+#include <EASTL/unordered_map.h>
 #include <benchmark/benchmark.h>
 #include <unordered_map>
+
+// ============================================= for EASTL =============================================
+#include <cstdlib>
+#include <new>
+
+void* operator new[](size_t size, const char* pName, int flags, unsigned debugFlags, const char* file, int line) {
+    return std::malloc(size);
+}
+
+void* operator new[](size_t size, size_t alignment, size_t alignmentOffset, const char* pName, int flags,
+                     unsigned debugFlags, const char* file, int line) {
+    return std::malloc(size);
+}
+
+// =====================================================================================================
 
 #define BENCH_MACRO(name, range)                                    \
     static void name##_std(benchmark::State& state) {               \
@@ -32,7 +48,11 @@
     static void name##_folly_node(benchmark::State& state) {        \
         bench_##name##_impl<folly::F14NodeMap<int, int>>(state);    \
     }                                                               \
+    static void name##_eastl(benchmark::State& state) {             \
+        bench_##name##_impl<eastl::unordered_map<int, int>>(state); \
+    }                                                               \
     BENCHMARK(name##_std)->Arg(range);                              \
+    BENCHMARK(name##_eastl)->Arg(range);                            \
     BENCHMARK(name##_ska)->Arg(range);                              \
     BENCHMARK(name##_absl_node)->Arg(range);                        \
     BENCHMARK(name##_folly_node)->Arg(range);                       \
@@ -49,7 +69,7 @@ void bench_insert_impl(benchmark::State& state) {
         Container v;
 
         for (int i = 0; i < range; ++i) {
-            v.insert(std::make_pair(i, i));
+            v.insert({i, i});
         }
 
         benchmark::DoNotOptimize(v);
@@ -64,7 +84,7 @@ void bench_found_impl(benchmark::State& state) {
 
     Container v;
     for (int i = 0; i < range; ++i) {
-        v.insert(std::make_pair(i, i));
+        v.insert({i, i});
     }
     benchmark::DoNotOptimize(v);
 
@@ -84,7 +104,7 @@ void bench_not_found_impl(benchmark::State& state) {
 
     Container v;
     for (int i = 0; i < range; ++i) {
-        v.insert(std::make_pair(i, i));
+        v.insert({i, i});
     }
     benchmark::DoNotOptimize(v);
 

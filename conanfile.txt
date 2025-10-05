@@ -1,6 +1,7 @@
 [requires]
 abseil/[>=20250814.0]
 folly/[>=2024.08.12.00]
+eastl/[>=3.21.12]
 
 [generators]
 CMakeDeps

@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE "Release")
 find_package(absl REQUIRED)
 find_package(Folly REQUIRED)
 find_package(gflags REQUIRED)
+find_package(EASTL REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -30,6 +31,7 @@ target_link_libraries(ciellab_benchmark
     absl::node_hash_set
     absl::node_hash_map
     Folly::folly
+    EASTL::EASTL
 )
 
 target_compile_options(ciellab_benchmark PUBLIC -O3 -Wall -Wextra -fexceptions -frtti)
