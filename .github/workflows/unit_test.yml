@@ -12,23 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: build test against clang
+      - name: test
         run: |
-            clang --version
-            sudo apt-get install libc++-dev
-            make clang_test_build
-
-      - name: build test against gcc
-        run: |
-            gcc --version
-            make gcc_test_build
-
-      - name: test against clang
-        run: |
-            clang --version
-            make clang_test_run
-
-      - name: test against gcc
-        run: |
-            gcc --version
-            make gcc_test_run
+            make test

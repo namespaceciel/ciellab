@@ -12,23 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: build benchmark against clang
+      - name: benchmark
         run: |
-            clang --version
-            sudo apt-get install libc++-dev
-            make clang_benchmark_build
-
-      - name: build benchmark against gcc
-        run: |
-            gcc --version
-            make gcc_benchmark_build
-
-      - name: benchmark against clang
-        run: |
-            clang --version
-            make clang_benchmark_run
-
-      - name: benchmark against gcc
-        run: |
-            gcc --version
-            make gcc_benchmark_run
+            make benchmark
